@@ -1463,6 +1463,76 @@ float sbfElement::volume()
 	return (float)vol;
 }
 
+sbfSElement::sbfSElement()
+{initialize();}
+sbfSElement::sbfSElement(sbfMesh * mesh, int index)
+{
+	initialize();
+	mesh_ = mesh;
+	seIndex_ = index;
+}
+void sbfSElement::initialize()
+{
+	numChildren_ = 0;
+	seIndex_ = -1;
+	mesh_ = NULL;
+	parent_ = NULL;
+	childrens_ = NULL;
+	regElemIndexes_ = NULL;
+	nodesIds_ = NULL;
+}
+sbfSElement::~sbfSElement()
+{
+	if(childrens_ != NULL) {delete [] childrens_; childrens_ = NULL;}
+	if(regElemIndexes_ != NULL) {delete [] regElemIndexes_; regElemIndexes_ = NULL;}
+	if(nodesIds_ != NULL) {delete [] nodesIds_; nodesIds_ = NULL;}
+}
+std::vector<int> sbfSElement::regElemIndexes()
+{
+	//Collect regular elements indexes in all underlying (children) SE
+	std::vector<int> indexes;
+
+	if(numChildren_ && regElemIndexes_){//This is a lower level SE, containing only regular elements
+		indexes.resize(numChildren_);
+		for(int ct = 0; ct < numChildren_; ct++) indexes[ct] = regElemIndexes_[ct];
+	}
+	else if(numChildren_ && childrens_){
+		for(int ct = 0; ct < numChildren_; ct++){//Loop on underlying SE's
+			std::vector<int> indexesToAppend = childrens_[ct]->regElemIndexes();
+			indexes.insert(indexes.end(), indexesToAppend.begin(), indexesToAppend.end());
+		}
+	}
+
+	return indexes;
+}
+void sbfSElement::setRegElemIndexes (std::vector<int> regElemIndexes){
+	//Since adding regular element, childrens_ should be void
+	if(childrens_ != NULL) {delete [] childrens_; childrens_ = NULL;}
+	if(regElemIndexes_ != NULL) {delete [] regElemIndexes_; regElemIndexes_ = NULL;}
+	numChildren_ = regElemIndexes.size();
+	regElemIndexes_ = new int [numChildren_];
+	for(int ct = 0; ct < numChildren_; ct++) regElemIndexes_[ct] = regElemIndexes[ct];
+}
+void sbfSElement::setChildrens (std::vector<sbfSElement *> selems){
+	//Since adding super elements, regElemIndexes_ should be void
+	if(childrens_ != NULL) {delete [] childrens_; childrens_ = NULL;}
+	if(regElemIndexes_ != NULL) {delete [] regElemIndexes_; regElemIndexes_ = NULL;}
+	numChildren_ = selems.size();
+	childrens_ = new sbfSElement * [numChildren_];
+	for(int ct = 0; ct < numChildren_; ct++) childrens_[ct] = selems[ct];
+}
+void sbfSElement::addChildren(sbfSElement * selem){
+	//Since adding super elements, regElemIndexes_ should be void
+	if(regElemIndexes_ != NULL) {delete [] regElemIndexes_; regElemIndexes_ = NULL; numChildren_ = 0;}
+	sbfSElement ** tmp = new sbfSElement * [numChildren_ + 1];
+	if(childrens_ != NULL){
+		for(int ct = 0; ct < numChildren_; ct++) tmp[ct] = childrens_[ct];
+		delete [] childrens_;
+	}
+	tmp[numChildren_++] = selem;
+	childrens_ = tmp;
+}
+
 sbfSELevel::sbfSELevel()
 {
 	prevLayer_ = NULL;
@@ -1598,6 +1668,42 @@ int sbfSELevelList::readFromFiles(const char * baseName, int numDigits)
 }
 void sbfSELevelList::setMesh(sbfMesh * mesh)
 {mesh_ = mesh;}
+std::vector< std::vector<sbfSElement *> > sbfSELevelList::selevels (std::vector<sbfSElement *> * fakeSEs)
+{
+	std::vector< std::vector<sbfSElement *> > selements;
+	selements.resize(numLevels());
+
+	for(int ctLevel = 0; ctLevel < numLevels(); ctLevel++){
+		selements[ctLevel].reserve(level(ctLevel).numSE());
+		for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++) selements[ctLevel].push_back(new sbfSElement(mesh_, ctSe));
+		std::vector< std::vector<int> > indexesPerSEs;
+		indexesPerSEs.resize(level(ctLevel).numSE());
+		for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++) indexesPerSEs[ctSe] = level(ctLevel).indexesOfSE(ctSe);
+		if(ctLevel == 0){
+			for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++)
+				selements[ctLevel][ctSe]->setRegElemIndexes(indexesPerSEs[ctSe]);
+			if(fakeSEs && mesh_){
+				fakeSEs->reserve(mesh_->numElements());
+				for(int ctElem = 0; ctElem < mesh_->numElements(); ctElem++)
+					fakeSEs->push_back(new sbfSElement(mesh_, ctElem));
+				for(int ctSe = 0; ctSe < level(0).numSE(); ctSe++)
+					for(size_t ct = 0; ct < indexesPerSEs[ctSe].size(); ct++)
+						(*fakeSEs)[indexesPerSEs[ctSe][ct]]->setParent(selements[ctLevel][ctSe]);
+			}
+		}
+		else{
+			for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++){
+				for(size_t ct = 0; ct < indexesPerSEs[ctSe].size(); ct++){
+					selements[ctLevel][ctSe]->addChildren(selements[ctLevel-1][indexesPerSEs[ctSe][ct]]);
+					selements[ctLevel-1][indexesPerSEs[ctSe][ct]]->setParent(selements[ctLevel][ctSe]);
+				}
+			}
+		}
+	}
+
+
+	return selements;
+}
 
 sbfGroup::sbfGroup()
 {}
