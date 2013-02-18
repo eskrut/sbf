@@ -309,6 +309,11 @@ public:
 	void setRegElemIndexes (std::vector<int> regElemIndexes);
 	void setChildrens (std::vector<sbfSElement *> selems);
 	void addChildren(sbfSElement * selem);
+	sbfSElement * children(int index) {
+		sbfSElement * rez = NULL;
+		if(childrens_ && index < numChildren_) rez = childrens_[index];
+		return rez;
+	}
 	void setMesh (sbfMesh * mesh) { mesh_ = mesh; }
 	sbfMesh * mesh () { return mesh_; }
 	sbfSElement * parent () {return parent_;}

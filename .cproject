@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+<?fileVersion 4.0.0?>
+
+<cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
 		<cconfiguration id="cdt.managedbuild.config.gnu.so.debug.1230782212">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.so.debug.1230782212" moduleId="org.eclipse.cdt.core.settings" name="Debug">
@@ -7,7 +9,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsbf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/Debug"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libsbf-dev" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="libsbf-dev"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -26,7 +28,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.so.debug.1230782212." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1253177721" name="Linux GCC" nonInternalBuilderId="cdt.managedbuild.builder.gnu.cross.1414127132" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.MachO64;org.eclipse.cdt.core.PE" id="cdt.managedbuild.target.gnu.platform.base.1228858301" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder buildPath="${workspace_loc:/libsbf/}/../libsbf-build" id="cdt.managedbuild.target.gnu.builder.base.306855951" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<builder buildPath="${workspace_loc:/libsbf/}/../libsbf-build" id="cdt.managedbuild.target.gnu.builder.base.306855951" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" superClass="cdt.managedbuild.target.gnu.builder.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1557351020" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="g++" id="cdt.managedbuild.tool.gnu.cpp.compiler.base.709782333" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.542965430" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
@@ -40,7 +42,7 @@
 								<option id="gnu.cpp.compiler.option.debugging.level.65102981" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.other.pic.1894279823" name="Position Independent Code (-fPIC)" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.other.pic.807451027" name="Position Independent Code (-fPIC)" superClass="gnu.cpp.compiler.option.other.pic" value="true" valueType="boolean"/>
-								<option id="gnu.cpp.compiler.option.other.other.1523126376" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -pthread -std=c++11" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1523126376" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -pthread -std=c++0x" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.801014557" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool command="g++" id="cdt.managedbuild.tool.gnu.c.compiler.base.1579778209" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
@@ -81,7 +83,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsbf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/Release"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libsbf" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="libsbf"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -100,7 +102,7 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.so.release.256345682." name="/" resourcePath="">
 						<toolChain errorParsers="" id="cdt.managedbuild.toolchain.gnu.so.release.1576695592" name="Linux GCC" nonInternalBuilderId="cdt.managedbuild.target.gnu.builder.so.release" superClass="cdt.managedbuild.toolchain.gnu.so.release">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.MachO64;org.eclipse.cdt.core.PE" id="cdt.managedbuild.target.gnu.platform.so.release.1460374603" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.so.release"/>
-							<builder buildPath="${workspace_loc:/../libsbf-build}" id="cdt.managedbuild.target.gnu.builder.so.release.288620738" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.so.release"/>
+							<builder buildPath="${workspace_loc:/../libsbf-build}" id="cdt.managedbuild.target.gnu.builder.so.release.288620738" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" parallelBuildOn="true" superClass="cdt.managedbuild.target.gnu.builder.so.release"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1776412445" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GCCErrorParser" id="cdt.managedbuild.tool.gnu.cpp.compiler.so.release.300585248" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.release">
 								<option id="gnu.cpp.compiler.so.release.option.optimization.level.1258170260" name="Optimization Level" superClass="gnu.cpp.compiler.so.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
@@ -109,7 +111,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/libsbf/src}&quot;"/>
 									<listOptionValue builtIn="false" value="/usr/include/vtk-5.4"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.1292646262" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -pthread -std=c++11" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.1292646262" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -pthread -std=c++0x" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.optimization.flags.216599432" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" value="-funroll-loops -march=native" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.warnings.pedantic.1267179331" name="Pedantic (-pedantic)" superClass="gnu.cpp.compiler.option.warnings.pedantic" value="true" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.other.verbose.1077726340" name="Verbose (-v)" superClass="gnu.cpp.compiler.option.other.verbose" value="false" valueType="boolean"/>
@@ -225,7 +227,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsbf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/debugMac"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libsbf-dev" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="libsbf-dev"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -298,7 +300,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsbf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/Release icc"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libsbf" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="libsbf"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -368,7 +370,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsbf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/releaseCrossWin32"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libsbf" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="libsbf"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -443,7 +445,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsbf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/build python binding"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="_libsbf" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="_libsbf"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -517,7 +519,7 @@
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsbf"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsbf/releaseWin"/>
-						<entry flags="RESOLVED" kind="libraryFile" name="libsbf" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="libsbf"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -590,31 +592,8 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="libsbf.cdt.managedbuild.target.gnu.so.1803363032" name="Shared Library" projectType="cdt.managedbuild.target.gnu.so"/>
 	</storageModule>
-	<storageModule moduleId="refreshScope" versionNumber="2">
-		<configuration configurationName="Release">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
-		<configuration configurationName="testDebugLinux">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
-		<configuration configurationName="debugMac">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
-		<configuration configurationName="build python binding">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
-		<configuration configurationName="releaseWin">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
-		<configuration configurationName="releaseCrossWin32">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
-		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
-		<configuration configurationName="Release icc">
-			<resource resourceType="PROJECT" workspacePath="/libsbf"/>
-		</configuration>
+	<storageModule moduleId="refreshScope" versionNumber="1">
+		<resource resourceType="PROJECT" workspacePath="/libsbf"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
