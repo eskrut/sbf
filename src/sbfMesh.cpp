@@ -800,7 +800,7 @@ void sbfMesh::addMesh(sbfMesh & mesh, bool passGroups, bool checkExisted, float 
 	}
 	if(passGroups)
 	{
-		//Not implemented yet!!!!
+		//TODO Not implemented yet!!!!
 	}
 }
 void sbfMesh::addMesh(sbfMesh * mesh, bool passGroups, bool checkExisted, float tol)
@@ -821,7 +821,7 @@ void sbfMesh::addMesh(sbfMesh * mesh, bool passGroups, bool checkExisted, float 
 	}
 	if(passGroups)
 	{
-		//Not implemented yet!!!!
+		//TODO Not implemented yet!!!!
 	}
 }
 
@@ -829,6 +829,7 @@ void sbfMesh::addMesh(sbfMesh * mesh, bool passGroups, bool checkExisted, float 
 void sbfMesh::scale(float scaleX, float scaleY, float scaleZ)
 {
 	int nnode = numNodes();
+	//TODO parallelize this
 	for(int ct = 0; ct < nnode; ct++){
 		nodes_[ct].setX(nodes_[ct].x()*scaleX);
 		nodes_[ct].setY(nodes_[ct].y()*scaleY);
@@ -840,6 +841,7 @@ void sbfMesh::scale(float scale_)
 void sbfMesh::translate(float transX, float transY, float transZ)
 {
 	int nnode = numNodes();
+	//TODO parallelize this
 	for(int ct = 0; ct < nnode; ct++){
 		nodes_[ct].setX(nodes_[ct].x() + transX);
 		nodes_[ct].setY(nodes_[ct].y() + transY);
@@ -853,6 +855,7 @@ void sbfMesh::rotate(float rotX, float rotY, float rotZ)
 	//Generate rotate matrix.
 	float angle, dirx, diry, dirz, cs, sn;
 	angle = sqrt(pow(rotX, (float)2.0) + pow(rotY, (float)2.0) + pow(rotZ, (float)2.0));
+	if(angle == 0) return;
 	dirx = rotX/angle;
 	diry = rotY/angle;
 	dirz = rotZ/angle;
@@ -873,6 +876,7 @@ void sbfMesh::rotate(float rotX, float rotY, float rotZ)
 	L[2][2] = cs + dirz*dirz*(1.0f - cs);
 
 	int nnode = numNodes();
+	//TODO parallelize this
 	for(int ct = 0; ct < nnode; ct++){
 		float crd_[3];
 		crd_[0] = nodes_[ct].x();
