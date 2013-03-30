@@ -1,3 +1,8 @@
 .DS_Store
+<<<<<<< HEAD
 *elease*/*
 *ebug*/*
+=======
+*ebug*/*
+*elease*/*
+>>>>>>> add in gitignore
