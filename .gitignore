@@ -1,8 +1,5 @@
-.DS_Store
-<<<<<<< HEAD
-*elease*/*
-*ebug*/*
-=======
-*ebug*/*
-*elease*/*
->>>>>>> add in gitignore
+*.DS_Store
+*elease*
+*ebug*
+*build*
+*.pro.user*

@@ -1,0 +1,58 @@
+#-------------------------------------------------
+#
+# Project created by QtCreator 2013-10-04T15:41:30
+#
+#-------------------------------------------------
+
+QT       -= core gui
+
+TARGET = sbf
+CONFIG(debug, debug|release){
+    TARGET = $$join(TARGET,,,-dev)
+}
+TEMPLATE = lib
+
+DEFINES += LIBSBF_LIBRARY
+
+QMAKE_CXXFLAGS += -std=c++11 -Wall -pedantic
+
+VER_MAJ = 0
+VER_MIN = 3
+VER_PAT = 0
+
+SOURCES += \
+    src/sbfNode.cpp \
+    src/sbfElement.cpp \
+    src/sbfMesh.cpp \
+    src/sbfMeshBuilders.cpp \
+    src/sbfGroupFilter.cpp \
+    src/sbfGroup.cpp \
+    src/sbfElementGroup.cpp \
+    src/sbfNodeGroup.cpp \
+    src/sbfSElement.cpp \
+    src/sbfSELevel.cpp \
+    src/sbfSELevelList.cpp
+
+HEADERS += \
+    src/sbf.h \
+    src/sbfNode.h \
+    src/sbfElement.h \
+    src/sbfMesh.h \
+    src/sbfGroupFilter.h \
+    src/sbfAdditions.h \
+    src/sbfGroup.h \
+    src/sbfElementGroup.h \
+    src/sbfNodeGroup.h \
+    src/sbfEnums.h \
+    src/sbfSElement.h \
+    src/sbfSELevel.h \
+    src/sbfSELevelList.h
+
+unix:!symbian {
+    maemo5 {
+        target.path = /opt/usr/lib
+    } else {
+        target.path = /usr/lib
+    }
+    INSTALLS += target
+}
