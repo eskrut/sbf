@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <limits>
+#include <initializer_list>
 
 #include "sbfEnums.h"
 
@@ -17,6 +18,7 @@ public:
     sbfElement(const int numNodes);
     //Construct sbfElement by type and node indexes
     sbfElement(const ElementType type, const std::vector<int> & indexes);
+    sbfElement(const ElementType type, const std::initializer_list<int> & indexes);
     ~sbfElement();
 
 private:
@@ -29,11 +31,13 @@ private:
 public:
     //Set element information
     void setNumNodes(const int nNodes = 8);
-    void setNode(const int sequenceNumber, const int nodeNumber);
-    void addNode(const int nodeNumber);
-    //!!!! should be replaced to variadic or list initialization
-    void setNodes(const int nodeNumber, int first, ...);
+    void setNode(const int sequenceNumber, const int nodeInd);
+    void addNode(const int nodeInd);
+    //TODO should be replaced to variadic or list initialization
+    void setNodes(const int nodesNumber, int first, ...);
     void setNodes(const std::vector<int> & indexes);
+    void setNodes(const int nodesNumber, const int * const firstNodeIndPtr);
+    void setNodes(const std::initializer_list<int> & indexes);
     void setMtr(const int material = 1);
     void setType(const ElementType & type);
     //Set/get pointer to mesh, associated with this element
@@ -48,7 +52,8 @@ public:
     int mtr() const;
     ElementType type() const;
     //Returns nodes indexes on all element faces
-    std::vector< std::vector<int> > facesNodesIndexes() const;
+    using FacesNodesIndsContainer = std::vector<std::vector<int>>;
+    FacesNodesIndsContainer facesNodesIndexes() const;
     //Returns average coordinate of all nodes
     sbfNode centreOfMass() const;
     //Get information about max/min coordinates of element nodes

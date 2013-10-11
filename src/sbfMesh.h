@@ -99,7 +99,6 @@ public:
     //Delete node with index nodeIndex from mesh and optionally make renumbering of elements indexes
     void deleteNode(int nodeIndex, bool renumberElemIndexes = true);
     //Merge and renumber nodes in mesh. Coinsident nodes with tolerance tol will be dropped.
-    //!!!!!!!!!!!!!!!!! not working now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     int mergeNodes(float tol = 0.001);
     //Renumber nodes in mesh, newIndexes represents new indexes of existing nodes after renumbering.
     void renumberNodes(int * newIndexes);

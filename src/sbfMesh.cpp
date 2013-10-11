@@ -549,7 +549,7 @@ int sbfMesh::nodeAt(float x, float y, float z, float tol) const
 }
 int sbfMesh::mergeNodes(float tol)
 {
-    //clock_t start, stop;
+    //TODO seems to be working, make it parallel (if possible)
     std::vector<int> newInd, oldInd, shiftInd;
     std::vector<int> toDelete;
     std::vector<int> sortX, newSortX;
@@ -566,24 +566,15 @@ int sbfMesh::mergeNodes(float tol)
 
     int numMergedNodes = 0;
 
-    //start = clock();
     std::vector<float> crdX;
     crdX.resize(nnodes, 0.0);
     for(int ct = 0; ct < nnodes; ct++) crdX[ct] = nodes_[ct].x();
     quickAssociatedSort<float, int>(&crdX[0], &sortX[0], 0, nnodes-1);
     newSortX = sortX;
 
-    //stop = clock();
-    //cout << "dt = " << stop - start << endl;
-    //start = clock();
-
-    //int shiftSumm;
-    //shiftSumm = 0;
-    //start = clock();
-    std::vector <int> equalInd;
+    std::vector<int> equalInd;
     equalInd.reserve(nnodes);
     for(int ct1 = 0; ct1 < nnodes-1; ct1++){
-        //cout << "\r" << ct1+1 << " / " << nnodes;
         int ind1, ind2;
         ind1 = sortX[ct1];
         if(isMerged[ind1])
@@ -645,48 +636,6 @@ int sbfMesh::mergeNodes(float tol)
         for(std::vector<int>::iterator itInd = indexes.begin(); itInd != indexes.end(); itInd++)
             (*itInd) += shiftInd[*itInd];
     }
-
-    //	stop = clock();
-    //	//cout << "dt = " << stop - start << endl;
-    //	start = clock();
-    //	for(int ct = 0; ct < nnodes; ct++){
-    //		shiftInd[ct] = shiftSumm;
-    //		if(oldInd[ct] > newInd[ct]){
-    //			shiftSumm++;
-    //			shiftInd[ct] = shiftInd[newInd[ct]];
-    //		}
-    //	}
-    //	stop = clock();
-    //	//cout << "dt = " << stop - start << endl;
-    //	start = clock();
-    //	int nelems = numElements();
-    //	for(int ct = 0; ct < nelems; ct++){
-    //		int nnodes = elems_[ct].numNodes();
-    //		for(int ct1 = 0; ct1 < nnodes; ct1++){
-    //			int temp_i = elems_[ct].nodeIndex(ct1);
-    //			elems_[ct].setNode(ct1, newInd[temp_i] - shiftInd[temp_i]);
-    //		}
-    //	}
-    //	stop = clock();
-    //	//cout << "dt = " << stop - start << endl;
-    //	start = clock();
-    //	int deleteLen = (int) toDelete.size();
-    //	quickSortIntUp(toDelete, 0, deleteLen-1);
-    //	stop = clock();
-    //	//cout << "dt = " << stop - start << endl;
-    //	start = clock();
-    //	int countDelete = 0, countStore = 0;
-    ////	for(int ct = 0; ct < deleteLen; ct++)
-    ////		nodes.erase(nodes.begin() + toDelete[ct]);
-    //	for(int ct = 0; ct < nnodes; ct++)
-    //		if(ct != toDelete[countDelete])
-    //			nodes_[countStore++] = nodes_[ct];
-    //		else
-    //			countDelete++;
-    //	nodes_.resize(countStore+1);
-    //	stop = clock();
-    //	//cout << "dt = " << stop - start << endl;
-    //	return shiftSumm;
     return numMergedNodes;
 }
 void sbfMesh::renumberNodes(int * newIndexes)
@@ -853,6 +802,7 @@ void sbfMesh::addMesh(sbfMesh * mesh, bool passGroups, bool checkExisted, float 
 //Geometry modifications
 void sbfMesh::scale(float scaleX, float scaleY, float scaleZ)
 {
+    //FIXME what to do with negative or zero scales?
     int nnode = numNodes();
     //TODO parallelize this
     for(int ct = 0; ct < nnode; ct++){
@@ -987,7 +937,8 @@ void computeGraph(sbfMesh * mesh, int *** graph)
     int numElems = mesh->numElements();
     int **localGraph;
 
-    localGraph = new int * [numNodes]; //!!!!!!!!!!!!!!!!!! Possible leak of memory !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //FIXME Possible leak of memory
+    localGraph = new int * [numNodes];
     mask = new int [numNodes];
     numMask = 0;
 
@@ -1046,7 +997,8 @@ void computeGraphAlter(sbfMesh * mesh, int *** graph)
     int **localGraph;
 
     elemInd.resize(numNodes);
-    localGraph = new int * [numNodes]; //!!!!!!!!!!!!!!!!!! Possible leak of memory !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    //FIXME Possible leak of memory
+    localGraph = new int * [numNodes];
     mask = new int [numNodes];
     //numMask = 0;
     //numNeighbors = 0;

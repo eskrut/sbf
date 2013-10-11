@@ -33,5 +33,4 @@ void TestSbfNode::case04_distance()
     const CrdFloatType eps = std::numeric_limits<CrdFloatType>::epsilon();
     QString err = QString("Fail to compute distance! Expected %1, got %2. Eps = %3").arg(5).arg(node0.distance(node1)).arg(eps);
     QVERIFY2(std::fabs(node0.distance(node1) - 5) < eps, err.toStdString().c_str());
-
 }

@@ -2,15 +2,29 @@
 #include "sbfNode.h"
 #include "sbfMesh.h"
 
-sbfElement::sbfElement()
-{}
-sbfElement::sbfElement(const int numNodes)
+sbfElement::sbfElement() :
+    mtr_(0),
+    type_(ElementType::NO_DEFINED_ELEMENT),
+    mesh_(nullptr)
+{
+}
+sbfElement::sbfElement(const int numNodes) :
+    sbfElement()
 {
     ind_.resize(numNodes, -1);
 }
-sbfElement::sbfElement(const ElementType type, const std::vector<int> & indexes)
+sbfElement::sbfElement(const ElementType type, const std::vector<int> & indexes) :
+    sbfElement()
 {
-    type_ = type; setNodes(indexes);
+    type_ = type;
+    setNodes(indexes);
+}
+
+sbfElement::sbfElement(const ElementType type, const std::initializer_list<int> &indexes) :
+    sbfElement()
+{
+    type_ = type;
+    setNodes(indexes);
 }
 sbfElement::~sbfElement()
 {
@@ -25,13 +39,13 @@ int sbfElement::numNodes() const
 {
     return static_cast<int>(ind_.size());
 }
-void sbfElement::setNode(const int sequenceNumber, const int nodeNumber)
+void sbfElement::setNode(const int sequenceNumber, const int nodeInd)
 {
-    ind_[sequenceNumber] = nodeNumber;
+    ind_[sequenceNumber] = nodeInd;
 }
-void sbfElement::addNode(const int nodeNumber)
+void sbfElement::addNode(const int nodeInd)
 {
-    ind_.push_back(nodeNumber);
+    ind_.push_back(nodeInd);
 }
 int sbfElement::nodeIndex(const int sequenceNumber) const
 {
@@ -41,15 +55,29 @@ std::vector<int> sbfElement::indexes() const
 {
     return ind_;
 }
-void sbfElement::setNodes(const int nodeNumber, int first, ...)
+void sbfElement::setNodes(const int nodesNumber, int first, ...)
 {
-    for(int ct = 0; ct < nodeNumber; ct++)
+    //TODO check nodesNumber and type compability
+    for(int ct = 0; ct < nodesNumber; ct++)
         ind_[ct] = *(&first + ct);
 }
 void sbfElement::setNodes(const std::vector<int> & indexes)
 {
+    //TODO check nodesNumber and type compability
     ind_.clear();
     ind_ = indexes;
+}
+void sbfElement::setNodes(const int nodesNumber, const int * const firstNodeIndPtr)
+{
+    //TODO check nodesNumber and type compability
+    ind_.clear();
+    ind_.insert(ind_.begin(), firstNodeIndPtr, firstNodeIndPtr + nodesNumber);
+}
+void sbfElement::setNodes(const std::initializer_list<int> &indexes)
+{
+    //TODO check nodesNumber and type compability
+    ind_.clear();
+    ind_.insert(ind_.begin(), indexes);
 }
 void sbfElement::setMtr(const int material)
 {
@@ -68,9 +96,10 @@ ElementType sbfElement::type() const
 {
     return type_;
 }
-std::vector<std::vector<int> > sbfElement::facesNodesIndexes() const
+sbfElement::FacesNodesIndsContainer sbfElement::facesNodesIndexes() const
 {
-    std::vector<std::vector<int> > facesNodes;
+    //FIXME add other elements
+    FacesNodesIndsContainer facesNodes;
     switch (type()){
     case ElementType::TETRAHEDRON_LINEAR : {
         facesNodes.push_back(std::vector<int>{ind_[0], ind_[1], ind_[2]});
@@ -134,8 +163,8 @@ sbfMesh * sbfElement::mesh() const
 float sbfElement::max(const int kort) const
 {
     int nNode = numNodes();
-    if(nNode == 0)
-        return -std::numeric_limits<float>::max();
+    if(nNode == 0 || mesh_ == nullptr)
+        return std::numeric_limits<float>::quiet_NaN();
     float max = mesh_->node(nodeIndex(0)).crdAtKort(kort);
     for(int ct = 1; ct < nNode; ct++)
         if(max < mesh_->node(nodeIndex(ct)).crdAtKort(kort))
@@ -145,8 +174,8 @@ float sbfElement::max(const int kort) const
 float sbfElement::min(const int kort) const
 {
     int nNode = numNodes();
-    if(nNode == 0)
-        return std::numeric_limits<float>::max();
+    if(nNode == 0 || mesh_ == nullptr)
+        return std::numeric_limits<float>::quiet_NaN();
     float min = mesh_->node(nodeIndex(0)).crdAtKort(kort);
     for(int ct = 1; ct < nNode; ct++)
         if(min > mesh_->node(nodeIndex(ct)).crdAtKort(kort))
