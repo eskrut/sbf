@@ -25,4 +25,24 @@ enum class RenumberOptimizationType : short {
     FIND_FIRST_NODE = 1
 };
 
+
+enum class BlockType : short {
+    NO_DEFINED_BLOCK,
+    DIAGONAL_BLOCK,
+    UP_TREANGLE_BLOCK,
+    DOWN_TREANGLE_BLOCK
+};
+
+enum MatrixType : short {
+    NO_DEFINED_MATRIX,
+    FULL_MATRIX,
+    UP_TREANGLE_MATRIX,
+    DOWN_TREANGLE_MATRIX
+};
+
+enum LockType : short {
+    EXACT_LOCK_TYPE,
+    APPROXIMATE_LOCK_TYPE
+};
+
 #endif // SBFENUMS_H

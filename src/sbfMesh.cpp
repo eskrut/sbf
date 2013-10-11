@@ -928,6 +928,16 @@ void sbfMesh::optimizeNodesNumbering(RenumberOptimizationType type)
     delete [] newToOld;
     delete [] oldToNew;
 }
+
+void sbfMesh::applyToAllNodes(std::function<void (sbfNode &)> lambda)
+{
+    for(auto & node : nodes_) lambda(node);
+}
+
+void sbfMesh::applyToAllElements(std::function<void (sbfElement &)> lambda)
+{
+    for(auto & elem : elems_) lambda(elem);
+}
 void computeGraph(sbfMesh * mesh, int *** graph)
 {
     std::list<int> neighbors;

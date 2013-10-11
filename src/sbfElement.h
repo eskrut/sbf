@@ -6,11 +6,12 @@
 #include <initializer_list>
 
 #include "sbfEnums.h"
+#include "sbfDeclspec.h"
 
 class sbfMesh;
 class sbfNode;
 
-class /*DECLSPEC*/ sbfElement
+class DECLSPEC sbfElement
 {
 public:
     sbfElement();
@@ -70,6 +71,6 @@ public:
 
 };
 
-/*DECLSPEC*/ int numNodesInElement(const ElementType type);
+DECLSPEC int numNodesInElement(const ElementType type);
 
 #endif // SBFELEMENT_H

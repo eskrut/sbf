@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include <iomanip>
 #include <limits>
+#include <functional>
 
 class sbfNode;
 class sbfElement;
@@ -18,12 +19,15 @@ class sbfElementGroup;
 class sbfNodeGroup;
 class sbfGroupFilter;
 
-template < class ArrayType, int numComp = 3> class NodesData;
-template < class ArrayType, int numArrays = 20> class SolutionBundle;
+using DefaultWorkDataType = double;
+using DefaultStorageDataType = float;
+template < class ArrayType = DefaultWorkDataType, int numComp = 3> class NodesData;
+template < class ArrayType = DefaultWorkDataType, int numArrays = 20> class SolutionBundle;
 
 #include "sbfEnums.h"
+#include "sbfDeclspec.h"
 
-class /*DECLSPEC*/ sbfMesh
+class DECLSPEC sbfMesh
 //sbfMesh class stores all information abaut FE mesh
 {
 public:
@@ -119,6 +123,9 @@ public:
     void reserveElementsNumber(const int newElementNumber);
     void optimizeNodesNumbering(RenumberOptimizationType type = RenumberOptimizationType::SIMPLE);//Make nodes numbering optimization
 
+    void applyToAllNodes(std::function<void (sbfNode &)> lambda);
+    void applyToAllElements(std::function<void (sbfElement &)> lambda);
+
     void addDVData(NodesData<double, 3> * data) {nodesDVDataList_.push_back(data);}
     NodesData<double, 3> * dVData(const int seqNumber) {return nodesDVDataList_[seqNumber];}
     void addDSData(NodesData<double, 1> * data) {nodesDSDataList_.push_back(data);}
@@ -203,10 +210,10 @@ public:
     void setNumDigits(int numDigits) {numDigits_ = numDigits;}
     Type type() {return type_;}
     void setType(Type type) {type_ = type;}
-    template <class StorageType> int writeToFile(const char *name, int step, const char * extension = ".sba", int numDigits = 4);
-    template <class StorageType> int readFromFile(const char * name, int step, const char * extension = ".sba", int numDigits = 4);
-    template <class StorageType> int writeToFile();//Short forms
-    template <class StorageType> int readFromFile();
+    template <class StorageType = DefaultStorageDataType> int writeToFile(const char *name, int step, const char * extension = ".sba", int numDigits = 4);
+    template <class StorageType = DefaultStorageDataType> int readFromFile(const char * name, int step, const char * extension = ".sba", int numDigits = 4);
+    template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
+    template <class StorageType = DefaultStorageDataType> int readFromFile();
     bool exist();//Check if file with current step exists
 
     //Useful mathematics functions
@@ -433,10 +440,10 @@ public:
     void free(int index);
     void allocate();
     void allocate(int index);
-    template <class StorageType> int writeToFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4);
-    template <class StorageType> int readFromFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4);
-    template <class StorageType> int writeToFile();//Short forms
-    template <class StorageType> int readFromFile();
+    template <class StorageType = DefaultStorageDataType> int writeToFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4);
+    template <class StorageType = DefaultStorageDataType> int readFromFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4);
+    template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
+    template <class StorageType = DefaultStorageDataType> int readFromFile();
     int writeNames();
     int readNames();
     bool exist();//Check if file with current step exists

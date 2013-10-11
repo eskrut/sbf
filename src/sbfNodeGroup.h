@@ -5,7 +5,7 @@
 
 class sbfMesh;
 
-class /*DECLSPEC*/ sbfNodeGroup : public sbfGroup
+class DECLSPEC sbfNodeGroup : public sbfGroup
 //Holds information abaut nodes group
 {
 public:

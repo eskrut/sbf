@@ -2,6 +2,7 @@
 #include "test_sbfNode.h"
 #include "test_sbfElement.h"
 #include "test_sbfMesh.h"
+#include "test_stiffMatrices.h"
 
 #include <cstdio>
 
@@ -12,6 +13,7 @@ int main() {
     testObjects << new TestSbfNode();
     testObjects << new TestSbfElement();
     testObjects << new TestSbfMesh();
+    testObjects << new TestStiffMatrices();
 
     int status = 0;
     for ( auto obj : testObjects )

@@ -2,10 +2,11 @@
 #define SBFSELEVEL_H
 
 #include <vector>
+#include "sbfDeclspec.h"
 
 class sbfMesh;
 
-class /*DECLSPEC*/ sbfSELevel
+class DECLSPEC sbfSELevel
 //Holds information about indexes of elements in super element
 {
 public:

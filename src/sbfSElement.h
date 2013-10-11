@@ -2,10 +2,11 @@
 #define SBFSELEMENT_H
 
 #include <vector>
+#include "sbfDeclspec.h"
 
 class sbfMesh;
 
-class /*DECLSPEC*/ sbfSElement
+class DECLSPEC sbfSElement
 {
 public:
     sbfSElement();

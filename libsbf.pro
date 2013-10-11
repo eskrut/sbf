@@ -31,7 +31,13 @@ SOURCES += \
     src/sbfNodeGroup.cpp \
     src/sbfSElement.cpp \
     src/sbfSELevel.cpp \
-    src/sbfSELevelList.cpp
+    src/sbfSELevelList.cpp \
+    src/sbfPropertyTable.cpp \
+    src/sbfMaterialProperties.cpp \
+    src/sbfPropertiesSet.cpp \
+    src/sbfStiffBlock3x3.cpp \
+    src/sbfStiffMatrixBlock3x3.cpp \
+    src/sbfElemStiffMatrixHexa8.cpp
 
 HEADERS += \
     src/sbf.h \
@@ -46,7 +52,14 @@ HEADERS += \
     src/sbfEnums.h \
     src/sbfSElement.h \
     src/sbfSELevel.h \
-    src/sbfSELevelList.h
+    src/sbfSELevelList.h \
+    src/sbfDeclspec.h \
+    src/sbfPropertyTable.h \
+    src/sbfMaterialProperties.h \
+    src/sbfPropertiesSet.h \
+    src/sbfStiffBlock3x3.h \
+    src/sbfStiffMatrixBlock3x3.h \
+    src/sbfElemStiffMatrixHexa8.h
 
 unix:!symbian {
     maemo5 {

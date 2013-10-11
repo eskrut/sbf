@@ -26,11 +26,13 @@ SOURCES += \
     test_sbfNode.cpp \
     test_sbfAdditions.cpp \
     test_sbfElement.cpp \
-    test_sbfMesh.cpp
+    test_sbfMesh.cpp \
+    test_stiffMatrices.cpp
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 HEADERS += \
     test_sbfNode.h \
     test_sbfAdditions.h \
     test_sbfElement.h \
-    test_sbfMesh.h
+    test_sbfMesh.h \
+    test_stiffMatrices.h

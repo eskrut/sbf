@@ -3,12 +3,13 @@
 
 #include <list>
 #include <vector>
+#include "sbfDeclspec.h"
 
 class sbfMesh;
 class sbfSElement;
 class sbfSELevel;
 
-class /*DECLSPEC*/ sbfSELevelList
+class DECLSPEC sbfSELevelList
 //Holds information about super element layers
 {
 public:

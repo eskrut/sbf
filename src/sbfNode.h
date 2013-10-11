@@ -2,10 +2,11 @@
 #define SBFNODE_H
 
 #include <cmath>
+#include "sbfDeclspec.h"
 
 using CrdFloatType = float;
 
-class /*DECLSPEC*/ sbfNode
+class DECLSPEC sbfNode
 //Holds information about node coordinates
 {
 public:

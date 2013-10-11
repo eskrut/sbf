@@ -2,12 +2,13 @@
 #define SBFGROUPFILTER_H
 
 #include <limits>
+#include "sbfDeclspec.h"
 enum class ElementType: short;
 class sbfMesh;
 class sbfNode;
 class sbfElement;
 
-class /*DECLSPEC*/ sbfGroupFilter
+class DECLSPEC sbfGroupFilter
 //Holds information abaut filter used for grouping
 {
 public:

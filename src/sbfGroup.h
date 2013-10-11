@@ -2,10 +2,11 @@
 #define SBFGROUP_H
 
 #include <vector>
+#include "sbfDeclspec.h"
 
 class sbfGroupFilter;
 
-class /*DECLSPEC*/ sbfGroup
+class DECLSPEC sbfGroup
 //Base class for grouping
 {
 public:

@@ -2,11 +2,12 @@
 #define SBFELEMENTGROUP_H
 
 #include "sbfGroup.h"
+#include "sbfDeclspec.h"
 
 class sbfMesh;
 enum class ElementType : short;
 
-class /*DECLSPEC*/ sbfElementGroup : public sbfGroup
+class DECLSPEC sbfElementGroup : public sbfGroup
 //Holds information abaut elements group
 {
 public:
