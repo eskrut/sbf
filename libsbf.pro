@@ -14,12 +14,8 @@ TEMPLATE = lib
 
 DEFINES += LIBSBF_LIBRARY
 
-QMAKE_CXXFLAGS += -std=c++11 -Wall -pedantic
-macx:{
-    QMAKE_LFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
-    QMAKE_CXXFLAGS += -mmacosx-version-min=10.7 -stdlib=libc++
-}
-
+CONFIG += c++11
+QMAKE_CXXFLAGS += -Wall -pedantic
 
 VER_MAJ = 0
 VER_MIN = 3
@@ -70,7 +66,7 @@ unix:!symbian {
     maemo5 {
         target.path = /opt/usr/lib
     } else {
-        target.path = /usr/lib
+        target.path = ~/lib
     }
     INSTALLS += target
 }
