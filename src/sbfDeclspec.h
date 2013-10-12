@@ -141,7 +141,7 @@ const int sbfNumThreads = 8;
  {
      pthread_mutexattr_t mAttr;
      pthread_mutexattr_init(&mAttr);
-     pthread_mutexattr_settype(&mAttr, PTHREAD_MUTEX_RECURSIVE_NP);
+     pthread_mutexattr_settype(&mAttr, PTHREAD_MUTEX_RECURSIVE);
      pthread_mutex_init(critSec, &mAttr);
      pthread_mutexattr_destroy(&mAttr);
  }
