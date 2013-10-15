@@ -27,7 +27,8 @@ SOURCES += \
     test_sbfAdditions.cpp \
     test_sbfElement.cpp \
     test_sbfMesh.cpp \
-    test_stiffMatrices.cpp
+    test_stiffMatrices.cpp \
+    test_sbfWorker.cpp
 DEFINES += SRCDIR=\\\"$$PWD/\\\"
 
 HEADERS += \
@@ -35,4 +36,5 @@ HEADERS += \
     test_sbfAdditions.h \
     test_sbfElement.h \
     test_sbfMesh.h \
-    test_stiffMatrices.h
+    test_stiffMatrices.h \
+    test_sbfWorker.h

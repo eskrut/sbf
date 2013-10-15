@@ -38,7 +38,8 @@ SOURCES += \
     src/sbfPropertiesSet.cpp \
     src/sbfStiffBlock3x3.cpp \
     src/sbfStiffMatrixBlock3x3.cpp \
-    src/sbfElemStiffMatrixHexa8.cpp
+    src/sbfElemStiffMatrixHexa8.cpp \
+    src/sbfWorker.cpp
 
 HEADERS += \
     src/sbf.h \
@@ -60,7 +61,8 @@ HEADERS += \
     src/sbfPropertiesSet.h \
     src/sbfStiffBlock3x3.h \
     src/sbfStiffMatrixBlock3x3.h \
-    src/sbfElemStiffMatrixHexa8.h
+    src/sbfElemStiffMatrixHexa8.h \
+    src/sbfWorker.h
 
 unix:!symbian {
     maemo5 {
