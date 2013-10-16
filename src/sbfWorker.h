@@ -12,9 +12,10 @@ class DECLSPEC sbfWorkerAtributes
 {
 public:
     sbfWorkerAtributes();
-    virtual ~sbfWorkerAtributes() {}
+    virtual ~sbfWorkerAtributes();
 protected:
     std::function<void (sbfWorkerAtributes *)> workFunction_;
+    ThreadType * thread_;
     EventType * start_;
     EventType * stop_;
     int ID_;

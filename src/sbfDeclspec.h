@@ -74,16 +74,18 @@ const int sbfNumThreads = 8;
      pthread_mutex_t lock;
      pthread_cond_t event;
      bool flag;
+     bool autoResetFlag;
  }event_t;
  typedef pthread_t ThreadType;
  typedef event_t EventType;
  typedef pthread_mutex_t CritSecType;
 
- static inline void event_init(event_t* event, bool initState = false)
+ static inline void event_init(event_t* event, bool initState = false, bool autoReset = true)
  {
      pthread_mutex_init(&event->lock,0);
      pthread_cond_init(&event->event,0);
      event->flag=initState;
+     event->autoResetFlag = autoReset;
  }
  static inline void event_destroy(event_t* event)
  {
