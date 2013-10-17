@@ -8,32 +8,35 @@ enum class WorkerPolitics : short {
 
 };
 
-class DECLSPEC sbfWorkerAtributes
+class DECLSPEC sbfWorkerAttributes
 {
 public:
-    sbfWorkerAtributes();
-    virtual ~sbfWorkerAtributes();
+    sbfWorkerAttributes();
+    virtual ~sbfWorkerAttributes();
 protected:
-    std::function<void (sbfWorkerAtributes *)> workFunction_;
+    std::function<void (sbfWorkerAttributes *)> workFunction_;
     ThreadType * thread_;
     EventType * start_;
     EventType * stop_;
     int ID_;
 public:
-    const EventType * start() { return start_; }
-    const EventType * stop() { return stop_; }
-    std::function<void (sbfWorkerAtributes *)> workFunction() const;
-    void setWorkFunction(const std::function<void (sbfWorkerAtributes *)> &workFunction);
+    EventType * start() { return start_; }
+    EventType * stop() { return stop_; }
+    std::function<void (sbfWorkerAttributes *)> workFunction() const;
+    void setWorkFunction(const std::function<void (sbfWorkerAttributes *)> &workFunction);
+    int ID() const;
+    void setID(int ID);
 };
 
 class DECLSPEC sbfWorker
 {
 public:
-    sbfWorker(sbfWorkerAtributes * atributes);
+    sbfWorker(sbfWorkerAttributes * attributes = nullptr);
     virtual ~sbfWorker();
+    void setAtributes(sbfWorkerAttributes * attributes) { attr_ = attributes; }
     void execOnce() { attr_->workFunction()(attr_); }
 private:
-    sbfWorkerAtributes * attr_;
+    sbfWorkerAttributes * attr_;
 };
 
 #endif // SBFWORKER_H

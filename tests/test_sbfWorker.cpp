@@ -8,14 +8,14 @@ void TestSbfWorker::case00_dummy()
     vecToSum.resize(vecLength, 1);
 
     //Parallel summation
-    class TaskAtributes : public sbfWorkerAtributes {
+    class TaskAtributes : public sbfWorkerAttributes {
     public:
         double sum{0};
         double *portion{nullptr};
         int portionLength{0};
     };
 
-    auto lambda = [](sbfWorkerAtributes * attrRaw){
+    auto lambda = [](sbfWorkerAttributes * attrRaw){
         TaskAtributes * attr = reinterpret_cast<TaskAtributes*>(attrRaw);
         for(int ct = 0; ct < attr->portionLength; ct++)
             attr->sum += attr->portion[ct];

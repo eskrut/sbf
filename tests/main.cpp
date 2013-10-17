@@ -4,6 +4,7 @@
 #include "test_sbfMesh.h"
 #include "test_stiffMatrices.h"
 #include "test_sbfWorker.h"
+#include "test_sbfParalleltask.h"
 
 #include <cstdio>
 
@@ -16,6 +17,7 @@ int main() {
     testObjects << new TestSbfMesh();
     testObjects << new TestStiffMatrices();
     testObjects << new TestSbfWorker();
+    testObjects << new TestSbfParallelTask();
 
     int status = 0;
     for ( auto obj : testObjects )

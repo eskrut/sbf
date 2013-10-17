@@ -39,7 +39,8 @@ SOURCES += \
     src/sbfStiffBlock3x3.cpp \
     src/sbfStiffMatrixBlock3x3.cpp \
     src/sbfElemStiffMatrixHexa8.cpp \
-    src/sbfWorker.cpp
+    src/sbfWorker.cpp \
+    src/sbfParallelTask.cpp
 
 HEADERS += \
     src/sbf.h \
@@ -62,7 +63,8 @@ HEADERS += \
     src/sbfStiffBlock3x3.h \
     src/sbfStiffMatrixBlock3x3.h \
     src/sbfElemStiffMatrixHexa8.h \
-    src/sbfWorker.h
+    src/sbfWorker.h \
+    src/sbfParallelTask.h
 
 unix:!symbian {
     maemo5 {

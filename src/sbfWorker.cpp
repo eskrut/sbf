@@ -1,5 +1,5 @@
 #include "sbfWorker.h"
-sbfWorkerAtributes::sbfWorkerAtributes() :
+sbfWorkerAttributes::sbfWorkerAttributes() :
     workFunction_(nullptr),
     thread_(nullptr),
     start_(nullptr),
@@ -11,7 +11,7 @@ sbfWorkerAtributes::sbfWorkerAtributes() :
     event_init(stop_ = new EventType);
 }
 
-sbfWorkerAtributes::~sbfWorkerAtributes()
+sbfWorkerAttributes::~sbfWorkerAttributes()
 {
     event_destroy(start_);
     event_destroy(stop_);
@@ -19,19 +19,29 @@ sbfWorkerAtributes::~sbfWorkerAtributes()
     delete stop_;
     delete thread_;
 }
+int sbfWorkerAttributes::ID() const
+{
+    return ID_;
+}
 
-std::function<void (sbfWorkerAtributes *)> sbfWorkerAtributes::workFunction() const
+void sbfWorkerAttributes::setID(int ID)
+{
+    ID_ = ID;
+}
+
+
+std::function<void (sbfWorkerAttributes *)> sbfWorkerAttributes::workFunction() const
 {
     return workFunction_;
 }
 
-void sbfWorkerAtributes::setWorkFunction(const std::function<void (sbfWorkerAtributes *)> &workFunction)
+void sbfWorkerAttributes::setWorkFunction(const std::function<void (sbfWorkerAttributes *)> &workFunction)
 {
     workFunction_ = workFunction;
 }
 
-sbfWorker::sbfWorker(sbfWorkerAtributes *atributes) :
-    attr_(atributes)
+sbfWorker::sbfWorker(sbfWorkerAttributes *attributes) :
+    attr_(attributes)
 {
 }
 
