@@ -2,7 +2,7 @@
 #include "test_sbfNode.h"
 #include "test_sbfElement.h"
 #include "test_sbfMesh.h"
-#include "test_stiffMatrices.h"
+#include "test_stiffMatrixes.h"
 #include "test_sbfWorker.h"
 #include "test_sbfParalleltask.h"
 
@@ -15,7 +15,7 @@ int main() {
     testObjects << new TestSbfNode();
     testObjects << new TestSbfElement();
     testObjects << new TestSbfMesh();
-    testObjects << new TestStiffMatrices();
+    testObjects << new TestStiffMatrixes();
     testObjects << new TestSbfWorker();
     testObjects << new TestSbfParallelTask();
 

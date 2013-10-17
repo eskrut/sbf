@@ -1357,7 +1357,7 @@ sbfPropertiesSet * sbfStiffMatrixBlock3x3::propSet()
 
 sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thresholdAmp*/)
 {
-    if(this->isDOFMerged_ == false) return NULL;
+    if(this->isDOFMerged_ == false) return nullptr;
 
     sbfStiffMatrixBlock3x3 * cholFactor = new sbfStiffMatrixBlock3x3();
 
@@ -1431,7 +1431,7 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
     for(int diagCt = 0; diagCt < numTargetNodes; diagCt++){//Loop on block rows
         //Process diagonal block
         //if(diagCt % (numTargetNodes/1000) == 0) std::cout << "\r" << diagCt << "\t/" << numTargetNodes;
-        blockDiag = this->data(diagCt, diagCt, NULL);//Diagonal block is always at normal storage
+        blockDiag = this->data(diagCt, diagCt, nullptr);//Diagonal block is always at normal storage
         blockDiagTarget = cholFactor->blockPtr(diagCt, diagCt);//Look only in normal storage
         blockDiagTarget[1] = 0;//Nulling above diagonal elements
         blockDiagTarget[2] = 0;

@@ -6,12 +6,13 @@
 
 #include "sbf.h"
 
-class TestStiffMatrices : public QObject
+class TestStiffMatrixes : public QObject
 {
     Q_OBJECT
 private Q_SLOTS:
     void case01_patchTest01();
-
+    void case02_createIncompleteChol();
+    void case03_CGMwP();
 };
 
 #endif // TEST_STIFFMATRICES_H
