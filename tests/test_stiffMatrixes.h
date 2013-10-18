@@ -12,7 +12,8 @@ class TestStiffMatrixes : public QObject
 private Q_SLOTS:
     void case01_patchTest01();
     void case02_createIncompleteChol();
-    void case03_CGMwP();
+    void case03_solveLLTuf();
+    void case04_CGMwP();
 };
 
 #endif // TEST_STIFFMATRICES_H

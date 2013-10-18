@@ -4,10 +4,10 @@
 #include <fstream>
 #include "sbfDeclspec.h"
 #include "sbfEnums.h"
+#include "sbfMesh.h"
 
 class sbfStiffBlock3x3;
 class sbfPropertiesSet;
-class sbfMesh;
 class sbfStiffMatrixBlock3x3;
 
 struct StiffMatrixBlock3x3MultiplicationData
@@ -137,6 +137,7 @@ public:
 
     //Create new low triangle matrix with incomplete cholessky factor
     sbfStiffMatrixBlock3x3 * makeIncompleteChol();
+    void solve_L_LT_u_eq_f(double *u, double *f);
 };
 
 #endif // SBFSTIFFMATRIXBLOCK3X3_H

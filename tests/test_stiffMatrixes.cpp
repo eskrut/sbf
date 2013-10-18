@@ -126,12 +126,70 @@ void TestStiffMatrixes::case02_createIncompleteChol(){
         qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
 
     QVERIFY2(pass, "Fail to compute incomplete Chol");
+    //delete matrix;
+    //delete iChol;
 }
 
-void TestStiffMatrixes::case03_CGMwP()
+void TestStiffMatrixes::case03_solveLLTuf()
 {
-    float xSide = 1000, ySide = 1, zSide = 1;
-    int xPart = 25, yPart = 5, zPart = 8;
+    //Create simple matrix
+    sbfStiffMatrixBlock3x3 * matrix = new sbfStiffMatrixBlock3x3(3, 2);
+    /*
+     *
+     *  [   10  0   0   0   0   0   ]   [1]     [10]
+     *  [   1   10  0   0   0   0   ]   [1.9]   [20]
+     *  [   0   0   10  0   0   0   ] * [1]   = [10]
+     *  [   2   0   0   20  0   0   ]   [1]     [22]
+     *  [   0   0   0   3   10  0   ]   [2]     [23]
+     *  [   1   1   1   1   1   10  ]   [0]     [6.9]
+     *
+     */
+    matrix->setType(MatrixType::DOWN_TREANGLE_MATRIX);
+    std::vector<int> indJ{0, 0, 1}, shiftInd{0, 1, 3};
+    matrix->setIndData(2, 3, &indJ[0], &shiftInd[0]);
+    matrix->null();
+    double * block = matrix->blockPtr(0, 0);
+    block[0] = 10;
+    block[3] = 1; block[4] = 10;
+    block[8] = 10;
+    block = matrix->blockPtr(1, 0);
+    block[0] = 2;
+    block[6] = 1; block[7] = 1; block[8] = 1;
+    block = matrix->blockPtr(1, 1);
+    block[0] = 20;
+    block[3] = 3; block[4] = 10;
+    block[6] = 1; block[7] = 1; block[8] = 10;
+
+    NodesData<> u(2), f(2), uTarget(2);
+    f.data()[0] = 10;
+    f.data()[1] = 20;
+    f.data()[2] = 10;
+    f.data()[3] = 22;
+    f.data()[4] = 23;
+    f.data()[5] = 6.9;
+
+    uTarget.data()[0] = 7.7000e-02;
+    uTarget.data()[1] = 1.9000e-01;
+    uTarget.data()[2] = 1.0000e-01;
+    uTarget.data()[3] = 2.0000e-02;
+    uTarget.data()[4] = 2.0000e-01;
+    uTarget.data()[5] = 0.0;
+
+    matrix->solve_L_LT_u_eq_f(u.data(), f.data());
+
+    bool pass = true;
+    double eps = 1e-8;
+    for(int ct = 0; ct < 6; ct++)
+        if ( fabs(u.data()[ct] - uTarget.data()[ct]) > eps ) pass = false;
+
+    QVERIFY2(pass, "Failed to make LLTuf solution");
+    //delete matrix;
+}
+
+void TestStiffMatrixes::case04_CGMwP()
+{
+    float xSide = 10, ySide = 1, zSide = 1;
+    int xPart = 40, yPart = 10, zPart = 10;
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
     mesh->applyToAllElements([](sbfElement & elem){elem.setMtr(1);});
@@ -178,40 +236,62 @@ void TestStiffMatrixes::case03_CGMwP()
     //Conjugate Gradient Method with Preconditioning
     //FEP - Bathe p.763
 
+    const int numDOF = mesh->numNodes()*3;
+
     //_p1 stands for 'plus one'
-    NodesData<> KU(mesh), Kp(mesh), r(mesh), r_p1(mesh), p(mesh), p_p1(mesh);
+    NodesData<> KU(mesh), Kp(mesh), r(mesh), r_p1(mesh), z(mesh), z_p1(mesh), p(mesh), p_p1(mesh), tmp(mesh);
+    double *KU_ptr, *Kp_ptr, *r_ptr, *r_p1_ptr, *z_ptr, *z_p1_ptr, *p_ptr, *p_p1_ptr, *tmp_ptr, *disp_ptr;
+    KU_ptr = KU.data();
+    Kp_ptr = Kp.data();
+    r_ptr = r.data();
+    r_p1_ptr = r_p1.data();
+    z_ptr = z.data();
+    z_p1_ptr = z_p1.data();
+    p_ptr = p.data();
+    p_p1_ptr = p_p1.data();
+    tmp_ptr = tmp.data();
+    disp_ptr = disp.data();
     double alpha, betta;
 
     //initial step
+    disp.copyData(force.data());
     stiff->multiplyByVector(disp.data(), KU.data());
     r.copyData((force - KU).data());
-    const int numNodes = mesh->numNodes();
-    double sum[3], vecPart[3];
-    //L p' = r
-    for (int ctRow = 0; ctRow < numNodes; ctRow++) {//Loop on rows
-        sum[0] = sum[1] = sum[2] = 0.0;
-        double * block;
-        for (int ctColumn = 0; ctColumn < ctRow; ctColumn++){//Loop on non diagonal blocks
-            block = iChol->blockPtr(ctRow, ctColumn);
-            if (!block) continue;
-            vecPart[0] = p.data(ctColumn, 0);
-            vecPart[1] = p.data(ctColumn, 1);
-            vecPart[2] = p.data(ctColumn, 2);
-            sum[0] += block[0]*vecPart[0] + block[1]*vecPart[1] + block[2]*vecPart[2];
-            sum[1] += block[3]*vecPart[0] + block[4]*vecPart[1] + block[5]*vecPart[2];
-            sum[2] += block[6]*vecPart[0] + block[7]*vecPart[1] + block[8]*vecPart[2];
-        }//Loop on non diagonal blocks
-        block = stiff->blockPtr(ctRow, ctRow);
 
-        vecPart[0] = (r.data(ctRow, 0) - sum[0]) / block[0];
-        sum[1] += block[3]*vecPart[0];
-        sum[2] += block[6]*vecPart[0];
-        vecPart[1] = (r.data(ctRow, 1) - sum[1]) / block[4];
-        sum[2] += block[7]*vecPart[1];
-        vecPart[2] = (r.data(ctRow, 2) - sum[2]) / block[8];
-        p.data(ctRow, 0) = vecPart[0];
-        p.data(ctRow, 1) = vecPart[1];
-        p.data(ctRow, 2) = vecPart[2];
-    }//Loop on rows
-    //L^T p = p'
+    //Solve L*L^T*z = r
+    iChol->solve_L_LT_u_eq_f(z.data(), r.data());
+    p.copyData(z.data());
+
+    double rNorm = 0.0;
+    for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
+    int numIterations = 0;
+    double rNormTarget = 1e-6;
+    while(rNorm > rNormTarget) {
+        stiff->multiplyByVector(p_ptr, Kp_ptr);
+        alpha = z.scalMul(r)/p.scalMul(Kp);
+        for(int ct = 0; ct < numDOF; ct++) {
+            disp_ptr[ct] += alpha*p_ptr[ct];
+            r_p1_ptr[ct] = r_ptr[ct] - alpha*Kp_ptr[ct];
+        }
+        iChol->solve_L_LT_u_eq_f(z_p1_ptr, r_p1_ptr);
+        betta = z_p1.scalMul(r_p1)/z.scalMul(r);
+        for(int ct = 0; ct < numDOF; ct++) {
+            p_p1_ptr[ct] = z_p1_ptr[ct] + betta*p_ptr[ct];
+        }
+        z.copyData(z_p1_ptr);
+        p.copyData(p_p1_ptr);
+        r.copyData(r_p1_ptr);
+        rNorm = 0.0;
+        for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
+        numIterations++;
+        if ( numIterations % 1 == 0) qDebug() << numIterations << rNorm << rNormTarget;
+    }
+
+    double averDisp = 0.0;
+    for( auto node : loadInds ) averDisp += disp.data(node, 0);
+    averDisp /= loadInds.size();
+    double E = propSet.material(0)->propertyTable("elastic module")->curValue();
+    double dL = xSide*1.0/E/ySide/zSide;
+
+    qDebug() << numIterations << averDisp << dL;
 }
