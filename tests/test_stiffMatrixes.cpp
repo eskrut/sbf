@@ -1,6 +1,7 @@
 #include "test_stiffMatrixes.h"
 
 #include <memory>
+#include <chrono>
 
 void TestStiffMatrixes::case01_patchTest01()
 {
@@ -175,7 +176,13 @@ void TestStiffMatrixes::case03_solveLLTuf()
     uTarget.data()[4] = 2.0000e-01;
     uTarget.data()[5] = 0.0;
 
-    matrix->solve_L_LT_u_eq_f(u.data(), f.data());
+    std::vector<std::vector<int> > rowsInColumnsIndexes;
+    rowsInColumnsIndexes.resize(2);
+    rowsInColumnsIndexes[0].push_back(0);
+    rowsInColumnsIndexes[0].push_back(1);
+    rowsInColumnsIndexes[1].push_back(1);
+
+    matrix->solve_L_LT_u_eq_f(u.data(), f.data(), &rowsInColumnsIndexes);
 
     bool pass = true;
     double eps = 1e-8;
@@ -188,12 +195,15 @@ void TestStiffMatrixes::case03_solveLLTuf()
 
 void TestStiffMatrixes::case04_CGMwP()
 {
-    float xSide = 10, ySide = 1, zSide = 1;
-    int xPart = 40, yPart = 10, zPart = 10;
+    float xSide = 1000, ySide = 10, zSide = 10;
+    int xPart = 1000, yPart = 10, zPart = 10;
+    qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
     mesh->applyToAllElements([](sbfElement & elem){elem.setMtr(1);});
+    mesh->optimizeNodesNumbering();
 
+    qDebug() << "Prepare groups";
     sbfNodeGroup * grLock = mesh->addNodeGroup();
     sbfNodeGroup * grLoad = mesh->addNodeGroup();
 
@@ -218,11 +228,13 @@ void TestStiffMatrixes::case04_CGMwP()
     stiff->setPropSet(&propSet);
     stiff->updateIndexesFromMesh();
 
+    qDebug() << "Compute stiff matrix";
     stiff->compute();
 
     NodesData<> force(mesh), disp(mesh);
     force.null();
     disp.null();
+    qDebug() << "Fixing nodes";
     for( auto node : lockInds ) stiff->lockKort(node, 0, 0, force.data());
     stiff->lockKort(mesh->nodeAt(0, 0, 0), 1, 0, force.data());
     stiff->lockKort(mesh->nodeAt(0, 0, 0), 2, 0, force.data());
@@ -230,9 +242,20 @@ void TestStiffMatrixes::case04_CGMwP()
     //FIXME make normal loading
     for( auto node : loadInds ) force.data(node, 0) = 1.0/loadInds.size();
 
+    qDebug() << "Make incomplete Chol";
     std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(stiff->makeIncompleteChol());
     sbfStiffMatrixBlock3x3 * iChol = iCholRes.get();
 
+    qDebug() << "Prepare indexes";
+    std::vector<std::vector<int>> rowsInColumnsIndexes;
+    rowsInColumnsIndexes.resize(mesh->numNodes());
+    for(int ctRow = 0; ctRow < mesh->numNodes(); ctRow++) {
+        for(int ctColumn = 0; ctColumn <= ctRow; ctColumn++)
+            if (iChol->data(ctRow, ctColumn))
+                rowsInColumnsIndexes[ctColumn].push_back(ctRow);
+    }
+
+    qDebug() << "Actual start";
     //Conjugate Gradient Method with Preconditioning
     //FEP - Bathe p.763
 
@@ -255,25 +278,32 @@ void TestStiffMatrixes::case04_CGMwP()
 
     //initial step
     disp.copyData(force.data());
+//    iChol->solve_L_LT_u_eq_f(disp.data(), force.data());
     stiff->multiplyByVector(disp.data(), KU.data());
     r.copyData((force - KU).data());
 
     //Solve L*L^T*z = r
-    iChol->solve_L_LT_u_eq_f(z.data(), r.data());
+    iChol->solve_L_LT_u_eq_f(z.data(), r.data(), &rowsInColumnsIndexes);
     p.copyData(z.data());
 
     double rNorm = 0.0;
     for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
     int numIterations = 0;
     double rNormTarget = 1e-6;
+//    stiff->prepareParallelMultiplyByVector(p_ptr, Kp_ptr);
     while(rNorm > rNormTarget) {
+        auto timePoint1 = std::chrono::high_resolution_clock::now();
         stiff->multiplyByVector(p_ptr, Kp_ptr);
+//        stiff->makeParallelMultiplyByVector();
+        auto timePoint2 = std::chrono::high_resolution_clock::now();
         alpha = z.scalMul(r)/p.scalMul(Kp);
         for(int ct = 0; ct < numDOF; ct++) {
             disp_ptr[ct] += alpha*p_ptr[ct];
             r_p1_ptr[ct] = r_ptr[ct] - alpha*Kp_ptr[ct];
         }
-        iChol->solve_L_LT_u_eq_f(z_p1_ptr, r_p1_ptr);
+        auto timePoint3 = std::chrono::high_resolution_clock::now();
+        iChol->solve_L_LT_u_eq_f(z_p1_ptr, r_p1_ptr, &rowsInColumnsIndexes);
+        auto timePoint4 = std::chrono::high_resolution_clock::now();
         betta = z_p1.scalMul(r_p1)/z.scalMul(r);
         for(int ct = 0; ct < numDOF; ct++) {
             p_p1_ptr[ct] = z_p1_ptr[ct] + betta*p_ptr[ct];
@@ -284,7 +314,15 @@ void TestStiffMatrixes::case04_CGMwP()
         rNorm = 0.0;
         for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
         numIterations++;
-        if ( numIterations % 1 == 0) qDebug() << numIterations << rNorm << rNormTarget;
+        auto timePoint5 = std::chrono::high_resolution_clock::now();
+
+        if ( numIterations % 1 == 0) {
+            std::cout << "MatMul         :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint2 - timePoint1).count() << std::endl;
+            std::cout << "VectOperation  :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint3 - timePoint2).count() << std::endl;
+            std::cout << "LLTSolve       :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint4 - timePoint3).count() << std::endl;
+            std::cout << "VectOperation2 :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint5 - timePoint4).count() << std::endl;
+            qDebug() << numIterations << rNorm << rNormTarget;
+        }
     }
 
     double averDisp = 0.0;
@@ -294,4 +332,6 @@ void TestStiffMatrixes::case04_CGMwP()
     double dL = xSide*1.0/E/ySide/zSide;
 
     qDebug() << numIterations << averDisp << dL;
+
+    QVERIFY2(std::fabs(averDisp - dL)/dL < 0.001, "Fail to make simple tensile solution");
 }

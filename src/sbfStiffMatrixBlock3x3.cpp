@@ -1439,6 +1439,7 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
         double sum[6];// 00 11 22 01 02 12 - regular and cross sums
         sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
         for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
+            //FIXME This is VERY slow!!!
             blockCt = cholFactor->blockPtr(diagCt, colCt);
             if(!blockCt) continue;
             sum[0] += blockCt[0]*blockCt[0] + blockCt[1]*blockCt[1] + blockCt[2]*blockCt[2];
@@ -1510,16 +1511,23 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
     return cholFactor;
 }
 
-void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f)
+void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f, const std::vector<std::vector<int> > * rowsInColumnsIndexes)
 {
     //Solve L*L^T*u = f
-    const int numNodes = this->numNodes();
+    const int numNodes = numNodes_;
     double sum[3], vecPart[3];
+    double * block = data_;
+    sum[0] = sum[1] = sum[2] = 0.0;
     //L u' = f
-    for (int ctRow = 0; ctRow < numNodes; ctRow++) {//Loop on rows
-        sum[0] = sum[1] = sum[2] = 0.0;
-        double * block;
-        for (int ctColumn = 0; ctColumn < ctRow; ctColumn++){//Loop on non diagonal blocks
+    int ctRow = 0;
+    int ctColumn = 0;
+    for (int ctBlock = 0; ctBlock < numBlocks_; ctBlock++) {//Loop on blocks
+        if( ctBlock == shiftInd_[ctRow+1] ) {
+            ctRow++;
+            sum[0] = sum[1] = sum[2] = 0.0;
+        }
+        ctColumn = indJ_[ctBlock];
+        if( ctRow != ctColumn ){//process non diagonal block
             block = blockPtr(ctRow, ctColumn);
             if (!block) continue;
             vecPart[0] = u[ctColumn*3 + 0];
@@ -1528,43 +1536,74 @@ void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f)
             sum[0] += block[0]*vecPart[0] + block[1]*vecPart[1] + block[2]*vecPart[2];
             sum[1] += block[3]*vecPart[0] + block[4]*vecPart[1] + block[5]*vecPart[2];
             sum[2] += block[6]*vecPart[0] + block[7]*vecPart[1] + block[8]*vecPart[2];
-        }//Loop on non diagonal blocks
-        block = blockPtr(ctRow, ctRow);
-
-        vecPart[0] = (f[ctRow*3 + 0] - sum[0]) / block[0];
-        sum[1] += block[3]*vecPart[0];
-        sum[2] += block[6]*vecPart[0];
-        vecPart[1] = (f[ctRow*3 + 1] - sum[1]) / block[4];
-        sum[2] += block[7]*vecPart[1];
-        vecPart[2] = (f[ctRow*3 + 2] - sum[2]) / block[8];
-        u[ctRow*3 + 0] = vecPart[0];
-        u[ctRow*3 + 1] = vecPart[1];
-        u[ctRow*3 + 2] = vecPart[2];
-    }//Loop on rows
+        }//process non diagonal block
+        else {
+            vecPart[0] = (f[ctRow*3 + 0] - sum[0]) / block[0];
+            sum[1] += block[3]*vecPart[0];
+            sum[2] += block[6]*vecPart[0];
+            vecPart[1] = (f[ctRow*3 + 1] - sum[1]) / block[4];
+            sum[2] += block[7]*vecPart[1];
+            vecPart[2] = (f[ctRow*3 + 2] - sum[2]) / block[8];
+            u[ctRow*3 + 0] = vecPart[0];
+            u[ctRow*3 + 1] = vecPart[1];
+            u[ctRow*3 + 2] = vecPart[2];
+        }
+        block += 9;
+    }//Loop on blocks
     //L^T u = u'
-    for (int ctRow = numNodes - 1; ctRow >= 0; ctRow--) {//Loop on rows
-        sum[0] = sum[1] = sum[2] = 0.0;
-        double * block;
-        for (int ctColumn = numNodes - 1; ctColumn > ctRow; ctColumn--){//Loop on non diaonal blocks
-            block = blockPtr(ctColumn, ctRow);//swap row and column ndexes
-            if ( !block ) continue;
-            vecPart[0] = u[ctColumn*3 + 0];
-            vecPart[1] = u[ctColumn*3 + 1];
-            vecPart[2] = u[ctColumn*3 + 2];
-            //transposed indexing to block
-            sum[0] += block[0]*vecPart[0] + block[3]*vecPart[1] + block[6]*vecPart[2];
-            sum[1] += block[1]*vecPart[0] + block[4]*vecPart[1] + block[7]*vecPart[2];
-            sum[2] += block[2]*vecPart[0] + block[5]*vecPart[1] + block[8]*vecPart[2];
-        }//Loop on non diaonal blocks
-        block = blockPtr(ctRow, ctRow);
-        vecPart[2] = (u[ctRow*3 + 2] - sum[2]) / block[8];
-        sum[0] += block[6]*vecPart[2];
-        sum[1] += block[7]*vecPart[2];
-        vecPart[1] = (u[ctRow*3 + 1] - sum[1]) / block[4];
-        sum[0] += block[3]*vecPart[1];
-        vecPart[0] = (u[ctRow*3 + 0] - sum[0]) / block[0];
-        u[ctRow*3 + 0] = vecPart[0];
-        u[ctRow*3 + 1] = vecPart[1];
-        u[ctRow*3 + 2] = vecPart[2];
-    }//Loop on rows
+    if ( rowsInColumnsIndexes == nullptr ) {
+        for (int ctRow = numNodes_ - 1; ctRow >= 0; ctRow--) {//Loop on rows
+            sum[0] = sum[1] = sum[2] = 0.0;
+            for (int ctColumn = numNodes - 1; ctColumn > ctRow; ctColumn--){//Loop on non diaonal blocks
+                block = blockPtr(ctColumn, ctRow);//swap row and column ndexes
+                if ( !block ) continue;
+                vecPart[0] = u[ctColumn*3 + 0];
+                vecPart[1] = u[ctColumn*3 + 1];
+                vecPart[2] = u[ctColumn*3 + 2];
+                //transposed indexing to block
+                sum[0] += block[0]*vecPart[0] + block[3]*vecPart[1] + block[6]*vecPart[2];
+                sum[1] += block[1]*vecPart[0] + block[4]*vecPart[1] + block[7]*vecPart[2];
+                sum[2] += block[2]*vecPart[0] + block[5]*vecPart[1] + block[8]*vecPart[2];
+            }//Loop on non diaonal blocks
+            block = blockPtr(ctRow, ctRow);
+            vecPart[2] = (u[ctRow*3 + 2] - sum[2]) / block[8];
+            sum[0] += block[6]*vecPart[2];
+            sum[1] += block[7]*vecPart[2];
+            vecPart[1] = (u[ctRow*3 + 1] - sum[1]) / block[4];
+            sum[0] += block[3]*vecPart[1];
+            vecPart[0] = (u[ctRow*3 + 0] - sum[0]) / block[0];
+            u[ctRow*3 + 0] = vecPart[0];
+            u[ctRow*3 + 1] = vecPart[1];
+            u[ctRow*3 + 2] = vecPart[2];
+        }//Loop on rows
+    }
+    else {
+        for (int ctRow = numNodes_ - 1; ctRow >= 0; ctRow--) {//Loop on rows
+            sum[0] = sum[1] = sum[2] = 0.0;
+//            for (int ctColumn = numNodes - 1; ctColumn > ctRow; ctColumn--){//Loop on non diaonal blocks
+            auto & row = (*rowsInColumnsIndexes)[ctRow];
+            for (auto it = row.rbegin(); it < row.rend()-1; it++){//Loop on non diaonal blocks
+                ctColumn = *it;
+                block = blockPtr(ctColumn, ctRow);//swap row and column ndexes
+                if ( !block ) continue;
+                vecPart[0] = u[ctColumn*3 + 0];
+                vecPart[1] = u[ctColumn*3 + 1];
+                vecPart[2] = u[ctColumn*3 + 2];
+                //transposed indexing to block
+                sum[0] += block[0]*vecPart[0] + block[3]*vecPart[1] + block[6]*vecPart[2];
+                sum[1] += block[1]*vecPart[0] + block[4]*vecPart[1] + block[7]*vecPart[2];
+                sum[2] += block[2]*vecPart[0] + block[5]*vecPart[1] + block[8]*vecPart[2];
+            }//Loop on non diaonal blocks
+            block = blockPtr(ctRow, ctRow);
+            vecPart[2] = (u[ctRow*3 + 2] - sum[2]) / block[8];
+            sum[0] += block[6]*vecPart[2];
+            sum[1] += block[7]*vecPart[2];
+            vecPart[1] = (u[ctRow*3 + 1] - sum[1]) / block[4];
+            sum[0] += block[3]*vecPart[1];
+            vecPart[0] = (u[ctRow*3 + 0] - sum[0]) / block[0];
+            u[ctRow*3 + 0] = vecPart[0];
+            u[ctRow*3 + 1] = vecPart[1];
+            u[ctRow*3 + 2] = vecPart[2];
+        }//Loop on rows
+    }
 }

@@ -24,6 +24,16 @@ struct StiffMatrixBlock3x3MultiplicationData
 
 class DECLSPEC sbfStiffMatrixBlock3x3
 {
+    //FIXME class should provide indexes of rows number for sertain columns.
+    //Otherwice loops like
+    /*
+     *for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
+     *  blockCt = cholFactor->blockPtr(diagCt, colCt);
+     *  if(!blockCt) continue;
+     *  ...
+     *}
+    */
+    // will be uneffitient
 public:
     sbfStiffMatrixBlock3x3();
     sbfStiffMatrixBlock3x3(int numBlocks, int numNodes);
@@ -137,7 +147,7 @@ public:
 
     //Create new low triangle matrix with incomplete cholessky factor
     sbfStiffMatrixBlock3x3 * makeIncompleteChol();
-    void solve_L_LT_u_eq_f(double *u, double *f);
+    void solve_L_LT_u_eq_f(double *u, double *f, const std::vector<std::vector<int>> * rowsInColumnsIndexes = nullptr);
 };
 
 #endif // SBFSTIFFMATRIXBLOCK3X3_H
