@@ -127,6 +127,20 @@ void TestStiffMatrixes::case02_createIncompleteChol(){
         qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
 
     QVERIFY2(pass, "Fail to compute incomplete Chol");
+
+    auto colsInRows = iChol->columnsInRows();
+    pass = true;
+    if( colsInRows[0] != std::vector<int>({0}) ) pass = false;
+    if( colsInRows[1] != std::vector<int>({0, 1}) ) pass = false;
+    QVERIFY2(pass, "Fail to get column indexes in rows");
+
+    auto rowsInCols = iChol->rowsInColumns();
+    pass = true;
+    if( rowsInCols[0] != std::vector<int>({0, 1}) ) pass = false;
+    if( rowsInCols[1] != std::vector<int>({1}) ) pass = false;
+    QVERIFY2(pass, "Fail to get rows indexes in columns");
+
+    //FIXME not working
     //delete matrix;
     //delete iChol;
 }
@@ -195,8 +209,8 @@ void TestStiffMatrixes::case03_solveLLTuf()
 
 void TestStiffMatrixes::case04_CGMwP()
 {
-    float xSide = 1000, ySide = 10, zSide = 10;
-    int xPart = 1000, yPart = 10, zPart = 10;
+    float xSide = 100, ySide = 10, zSide = 10;
+    int xPart = 100, yPart = 10, zPart = 10;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
@@ -316,7 +330,7 @@ void TestStiffMatrixes::case04_CGMwP()
         numIterations++;
         auto timePoint5 = std::chrono::high_resolution_clock::now();
 
-        if ( numIterations % 1 == 0) {
+        if ( numIterations % 1 == 10) {
             std::cout << "MatMul         :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint2 - timePoint1).count() << std::endl;
             std::cout << "VectOperation  :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint3 - timePoint2).count() << std::endl;
             std::cout << "LLTSolve       :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint4 - timePoint3).count() << std::endl;

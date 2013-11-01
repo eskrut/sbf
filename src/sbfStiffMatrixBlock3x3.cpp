@@ -471,6 +471,48 @@ int sbfStiffMatrixBlock3x3::checkNulls()
     return 1;//Some are nulls
 }
 
+std::vector<std::vector<int> > sbfStiffMatrixBlock3x3::columnsInRows()
+{
+    /*
+     *return indexes of columns for each row
+     */
+    std::vector<std::vector<int> > colsInRows;
+    colsInRows.resize(numNodes());
+    int ctRow = 0;
+    while(true){
+        if ( shiftInd_[ctRow+1] == shiftInd_[ctRow] )
+            ctRow++;
+        else
+            break;
+    }
+    for ( int ct = ctRow; ct < numBlocks_; ct++ ) {
+        if ( shiftInd_[ctRow+1] == ct ) ctRow++;
+        colsInRows[ctRow].push_back(indJ_[ct]);
+    }
+    return colsInRows;
+}
+
+std::vector<std::vector<int> > sbfStiffMatrixBlock3x3::rowsInColumns()
+{
+    /*
+     *return indexes of rows for each column
+     */
+    std::vector<std::vector<int> > rowsInCols;
+    rowsInCols.resize(numNodes());
+    int ctRow = 0;
+    while(true){
+        if ( shiftInd_[ctRow+1] == shiftInd_[ctRow] )
+            ctRow++;
+        else
+            break;
+    }
+    for ( int ct = ctRow; ct < numBlocks_; ct++ ) {
+        if ( shiftInd_[ctRow+1] == ct ) ctRow++;
+        rowsInCols[indJ_[ct]].push_back(ctRow);
+    }
+    return rowsInCols;
+}
+
 //TODO merge versions () and (int *elemIndexes, int elemIndexesLength) by using (int *elemIndexes = NULL, int elemIndexesLength = NULL)
 
 void sbfStiffMatrixBlock3x3::compute()
@@ -1425,6 +1467,9 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
 
     //Serial code of incomplete chol fill
 
+    auto colsInRows = cholFactor->columnsInRows();
+    auto rowsInCols = cholFactor->rowsInColumns();
+
     double * blockDiag, * blockCt, * blockCt1, *block;
     double * blockDiagTarget, * blockTarget;
     bool isDirect;
@@ -1438,7 +1483,10 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
         blockDiagTarget[5] = 0;
         double sum[6];// 00 11 22 01 02 12 - regular and cross sums
         sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
-        for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
+
+        //for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
+        for(auto colCt : colsInRows[diagCt]){//Loop on blocks in row
+            if (colCt >= diagCt) break;
             //FIXME This is VERY slow!!!
             blockCt = cholFactor->blockPtr(diagCt, colCt);
             if(!blockCt) continue;
@@ -1472,7 +1520,9 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
             if(isDirect) for(int ct = 0; ct < 9; ct++) blockData[ct] = block[ct];
             else for(int ctI = 0; ctI < 3; ctI++) for(int ctJ = 0; ctJ < 3; ctJ++) blockData[ctI*3+ctJ] = block[ctJ*3+ctI];
             rowSum[0] = rowSum[1] = rowSum[2] = rowSum[3] = rowSum[4] = rowSum[5] = rowSum[6] = rowSum[7] = rowSum[8] = 0.0;
-            for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
+            //for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
+            for(auto colCt : colsInRows[diagCt]){//Loop on blocks in row
+                if (colCt >= diagCt) break;
                 blockCt = cholFactor->blockPtr(rowCt, colCt);
                 if(!blockCt) continue;
                 blockCt1 = cholFactor->blockPtr(diagCt, colCt);

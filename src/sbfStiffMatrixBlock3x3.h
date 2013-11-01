@@ -112,6 +112,13 @@ public:
     void null(int indI, int indJ);
     //Check if all block are initialized; 0 - all are nulls, 1 - some blocks are null, 2 - all are initialized
     int checkNulls();
+    std::vector<std::vector<int>> columnsInRows();
+    std::vector<std::vector<int>> rowsInColumns();
+
+    //TODO make methods like:
+    //void setRefBlock(int indI, int indJ);
+    //std::pair<double * blockPtr, int columnInd> nextInRow();
+    //std::pair<double * blockPtr, int rowInd> nextInColumn();
 
     //Compute stiffness matrixes of all elements and assembly to this
     void compute();

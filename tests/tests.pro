@@ -22,7 +22,8 @@ CONFIG(debug){
 LIBS += -lsbf-dev \
         -L "$$OUT_PWD"/../build-libsbf-debug
 }
-CONFIG(release){
+#CONFIG(release){
+else {
 LIBS += -lsbf \
         -L "$$OUT_PWD"/../build-libsbf-release
 }
