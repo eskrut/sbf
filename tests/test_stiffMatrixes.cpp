@@ -210,7 +210,7 @@ void TestStiffMatrixes::case03_solveLLTuf()
 void TestStiffMatrixes::case04_CGMwP()
 {
     float xSide = 100, ySide = 10, zSide = 10;
-    int xPart = 100, yPart = 10, zPart = 10;
+    int xPart = 500, yPart = 10, zPart = 10;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();

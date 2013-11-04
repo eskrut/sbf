@@ -5,6 +5,7 @@
 #include "sbfNode.h"
 #include "sbfMaterialProperties.h"
 #include "sbfPropertiesSet.h"
+#include "sbfReporter.h"
 
 const double intCrd1[] = {0.0};
 const double intWgh1[] = {2.0};

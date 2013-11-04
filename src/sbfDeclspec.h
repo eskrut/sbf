@@ -156,12 +156,4 @@ const int sbfNumThreads = 8;
  #define USE_MATMUL_UNROLL//Allows usage of unrolled functions in matrix multiplication
 #endif
 
-//Debugging messages
-#ifdef DEBUG
- #define debugMsg(msg) \
- std::cout << "debugMsg:	" << msg;
-#else
- #define debugMsg(msg)
-#endif//DEBUG
-
 #endif // SBFDECLSPEC_H

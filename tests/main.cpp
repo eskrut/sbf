@@ -5,12 +5,14 @@
 #include "test_stiffMatrixes.h"
 #include "test_sbfWorker.h"
 #include "test_sbfParalleltask.h"
+#include "test_sbfReporter.h"
 
 #include <cstdio>
 
 int main() {
     QList<QObject*> testObjects;
 
+    testObjects << new TestSbfReporter();
     testObjects << new TestSbfAdditions();
     testObjects << new TestSbfNode();
     testObjects << new TestSbfElement();

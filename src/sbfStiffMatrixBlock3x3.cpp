@@ -4,6 +4,7 @@
 #include "sbfElement.h"
 #include "sbfMesh.h"
 #include "sbfElemStiffMatrixHexa8.h"
+#include "sbfReporter.h"
 
 /*typedef */struct indexes2{
     int i, j;
@@ -547,7 +548,7 @@ void sbfStiffMatrixBlock3x3::compute()
                     else if(type_ == DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     pBlock = addBlockData(blockData, indexes[ctI], indexes[ctJ]);
-                    if(pBlock == NULL) std::cout << "Error while processing local indexes " << ctI << ", " << ctJ << " of element " << ct << ". Can't find appropriate block in stiffness matrix" << std::endl;
+                    if(pBlock == NULL) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
                 }
             break;
         }
@@ -593,7 +594,7 @@ void sbfStiffMatrixBlock3x3::compute(int *elemIndexes, int elemIndexesLength)
                     else if(type_ == DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     pBlock = addBlockData(blockData, indexes[ctI], indexes[ctJ]);
-                    if(pBlock == NULL) std::cout << "Error while processing local indexes " << ctI << ", " << ctJ << " of element " << ct << ". Can't find appropriate block in stiffness matrix" << std::endl;
+                    if(pBlock == NULL) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
                 }
             break;
         }
@@ -673,7 +674,6 @@ static void StiffMatrixBlock3x3ComputeThread(void * rawData)
         elem = mesh->elemPtr(ct);
         switch(elem->type()){
         case ElementType::HEXAHEDRON_LINEAR:{
-            //std::cout << "Tread " << data->threadID << " computing element " << ct << std::endl;
             stiffHexa8->setElem(elem);
             stiffHexa8->computeSM();
             indexes = elem->indexes();
@@ -684,10 +684,9 @@ static void StiffMatrixBlock3x3ComputeThread(void * rawData)
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     stiffnessPart = indexes[ctI]/coeff;
                     if(stiffnessPart > sbfNumThreads-1) stiffnessPart = sbfNumThreads-1;
-                    //std::cout << "Tread " << data->threadID << " waiting to access to part " << stiffnessPart << std::endl;
                     event_wait(&signalsUnlock[stiffnessPart]);//Wait for access to row in certain part of stiffness matrix
                     pBlock = data->stiffMatrix->addBlockData(blockData, indexes[ctI], indexes[ctJ]);
-                    if(pBlock == NULL) std::cout << "Error while processing local indexes " << ctI << ", " << ctJ << " (" << indexes[ctI] << ", " << indexes[ctJ] << ") of element " << ct << ". Can't find block ptr" << std::endl;
+                    if(pBlock == NULL) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " (", indexes[ctI], ", ", indexes[ctJ], ") of element ", ct, ". Can't find block ptr");
                     event_set(&signalsUnlock[stiffnessPart]);
                 }
             break;
@@ -700,7 +699,6 @@ static void StiffMatrixBlock3x3ComputeThread(void * rawData)
 
     delete [] blockData;
     delete stiffHexa8;
-    //std::cout << "Tread " << data->threadID << " done" << std::endl;
     return;
 }
 void sbfStiffMatrixBlock3x3::lockKort(int indI, int kort, double val, double * force, LockType lockType)
@@ -1401,6 +1399,8 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
 {
     if(this->isDOFMerged_ == false) return nullptr;
 
+    report.createNewProgress("Compute incomplete cholesky");
+
     sbfStiffMatrixBlock3x3 * cholFactor = new sbfStiffMatrixBlock3x3();
 
     cholFactor->setType(DOWN_TREANGLE_MATRIX);
@@ -1475,7 +1475,7 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
     bool isDirect;
     for(int diagCt = 0; diagCt < numTargetNodes; diagCt++){//Loop on block rows
         //Process diagonal block
-        //if(diagCt % (numTargetNodes/1000) == 0) std::cout << "\r" << diagCt << "\t/" << numTargetNodes;
+        if(numTargetNodes > 100 && (diagCt % (numTargetNodes/100) == 0)) report.updateProgress(0, numTargetNodes, diagCt);
         blockDiag = this->data(diagCt, diagCt, nullptr);//Diagonal block is always at normal storage
         blockDiagTarget = cholFactor->blockPtr(diagCt, diagCt);//Look only in normal storage
         blockDiagTarget[1] = 0;//Nulling above diagonal elements
@@ -1557,6 +1557,8 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
 
         //Process blocks under diagonal - END
     }//Loop on block rows
+
+    report.finalizeProgress();
 
     return cholFactor;
 }

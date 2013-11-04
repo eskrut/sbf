@@ -13,6 +13,8 @@
 #include <limits>
 #include <functional>
 
+#include "sbfReporter.h"
+
 class sbfNode;
 class sbfElement;
 class sbfElementGroup;
@@ -272,7 +274,10 @@ int NodesData<ArrayType, numComp>::writeToFile(const char * name, int step, cons
     std::stringstream sstr;
     sstr << name << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
-    if(!out.good()) {std::cout << "Error while writing file \"" << sstr.str().c_str() << "\"" << sstr.str() << std::endl; return 1;}
+    if(!out.good()) {
+        report.error("Error while writing file \"", sstr.str(), "\"");
+        return 1;
+    }
     //TODO implement compile time ArrayType comparison
     if(typeid(StorageType) == typeid(ArrayType)){
         if(type_ == ByNodes){
@@ -305,10 +310,13 @@ int NodesData<ArrayType, numComp>::readFromFile(const char * name, int step, con
     std::stringstream sstr;
     sstr << name << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
-    if(!in.good()) {std::cout << "Error while reading file \"" << sstr.str().c_str() << "\"" << sstr.str() << std::endl; return 1;}
+    if(!in.good()) {
+        report.error("Error while reading file \"", sstr.str(), "\"");
+        return 1;
+    }
     in.seekg(0, std::ios_base::end);
     size_t length = in.tellg();
-    if(length != sizeof(StorageType)*numNodes_*numComp) {std::cout << "Error! Data in file \"" << sstr.str().c_str() << "\" not corresponds to data type and nodes number" << sstr.str() << std::endl; return 2;}
+    if(length != sizeof(StorageType)*numNodes_*numComp) {report.error("Error! Data in file \"", sstr.str().c_str(), "\" not corresponds to data type and nodes number", sstr.str()); return 2;}
     in.seekg(0, std::ios_base::beg);
     //TODO implement compile time comparison
     if(typeid(StorageType) == typeid(ArrayType)){
@@ -341,7 +349,7 @@ int NodesData<ArrayType, numComp>::writeToFile()
     std::stringstream sstr;
     sstr << name_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
     std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
-    if(!out.good()) {std::cout << "Error while writing file \"" << sstr.str().c_str() << "\" " << sstr.str() << std::endl; return 1;}
+    if(!out.good()) {report.error("Error while writing file \"", sstr.str().c_str(), "\""); return 1;}
     //TODO implement compile time comparison
     if(typeid(StorageType) == typeid(ArrayType)){
         if(type_ == ByNodes){
@@ -373,10 +381,10 @@ int NodesData<ArrayType, numComp>::readFromFile()
     std::stringstream sstr;
     sstr << name_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
     std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
-    if(!in.good()) {std::cout << "Error while reading file \"" << sstr.str().c_str() << "\"" << sstr.str() << std::endl; return 1;}
+    if(!in.good()) {report.error("Error while reading file \"", sstr.str().c_str(), "\""); return 1;}
     in.seekg(0, std::ios_base::end);
     size_t length = in.tellg();
-    if(length != sizeof(ArrayType)*numNodes_*numComp) {std::cout << "Error! Data in file \"" << sstr.str().c_str() << "\" not corresponds to data type and nodes number" << sstr.str() << std::endl; return 2;}
+    if(length != sizeof(ArrayType)*numNodes_*numComp) {report.error("Error! Data in file \"", sstr.str().c_str(), "\" not corresponds to data type and nodes number"); return 2;}
     in.seekg(0, std::ios_base::beg);
     //TODO implement compile time comparison
     if(typeid(StorageType) == typeid(ArrayType)){
@@ -490,7 +498,7 @@ int SolutionBundle<ArrayType, numArrays>::writeToFile(const char * baseName, int
     std::stringstream sstr;
     sstr << baseName << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
-    if(!out.good()) {std::cout << "Error while opening file to write " << sstr.str() << std::endl; return 1;}
+    if(!out.good()) {report.error("Error while opening file to write ", sstr.str()); return 1;}
     int flags[numArrays];
     for(int ct = 0; ct < numArrays; ct++) flags[ct] = arrays_[ct] ? 1 : 0;
     out.write((const char *)flags, sizeof(int)*numArrays);
@@ -518,7 +526,7 @@ int SolutionBundle<ArrayType, numArrays>::readFromFile(const char * baseName, in
     std::stringstream sstr;
     sstr << baseName << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
-    if(!in.good()) {std::cout << "Error while reading file " << sstr.str() << std::endl; return 1;}
+    if(!in.good()) {report.error("Error while reading file ", sstr.str()); return 1;}
     int flags[numArrays];
     in.read((char *)flags, sizeof(int)*numArrays);
     for(int ct = 0; ct < numArrays; ct++) if(flags[ct]) allocate(ct);
@@ -544,7 +552,7 @@ int SolutionBundle<ArrayType, numArrays>::writeToFile()
     std::stringstream sstr;
     sstr << baseName_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
     std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
-    if(!out.good()) {std::cout << "Error while writing file " << sstr.str() << std::endl; return 1;}
+    if(!out.good()) {report.error("Error while writing file ", sstr.str()); return 1;}
     int flags[numArrays];
     for(int ct = 0; ct < numArrays; ct++) flags[ct] = arrays_[ct] ? 1 : 0;
     out.write((const char *)flags, sizeof(int)*numArrays);
@@ -571,7 +579,7 @@ int SolutionBundle<ArrayType, numArrays>::readFromFile()
     std::stringstream sstr;
     sstr << baseName_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
     std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
-    if(!in.good()) {std::cout << "Error while reading file " << sstr.str() << std::endl; return 1;}
+    if(!in.good()) {report.error("Error while reading file ", sstr.str()); return 1;}
     int flags[numArrays];
     in.read((char *)flags, sizeof(int)*numArrays);
     for(int ct = 0; ct < numArrays; ct++) if(flags[ct]) allocate(ct);
