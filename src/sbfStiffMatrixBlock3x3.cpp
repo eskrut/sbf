@@ -60,36 +60,36 @@ void sbfStiffMatrixBlock3x3::init()
     numNodes_ = 0;
     numBlocks_ = 0;
     numBlocksAlter_ = 0;
-    data_ = NULL;
-    indJ_ = NULL;
-    shiftInd_ = NULL;
-    indJAlter_ = NULL;
-    shiftIndAlter_ = NULL;
-    ptrDataAlter_ = NULL;
-    flagInitialized_ = NULL;
+    data_ = nullptr;
+    indJ_ = nullptr;
+    shiftInd_ = nullptr;
+    indJAlter_ = nullptr;
+    shiftIndAlter_ = nullptr;
+    ptrDataAlter_ = nullptr;
+    flagInitialized_ = nullptr;
     isDOFMerged_ = true;
-    //threadsData_ = NULL;
-    mesh_ = NULL;
-    propSet_ = NULL;
+    //threadsData_ = nullptr;
+    mesh_ = nullptr;
+    propSet_ = nullptr;
 }
 void sbfStiffMatrixBlock3x3::clean()
 {
-    if(data_ != NULL)
-    {delete [] data_; data_ = NULL;}
-    if(indJ_ != NULL)
-    {delete [] indJ_; indJ_ = NULL;}
-    if(shiftInd_ != NULL)
-    {delete [] shiftInd_; shiftInd_ = NULL;}
-    if(indJAlter_ != NULL)
-    {delete [] indJAlter_; indJAlter_ = NULL;}
-    if(shiftIndAlter_ != NULL)
-    {delete [] shiftIndAlter_; shiftIndAlter_ = NULL;}
-    if(ptrDataAlter_ != NULL)
-    {delete [] ptrDataAlter_; ptrDataAlter_ = NULL;}
-    if(flagInitialized_ != NULL)
-    {delete [] flagInitialized_; flagInitialized_ = NULL;}
-    //if(threadsData_ != NULL)
-    //{delete [] threadsData_; threadsData_ = NULL;}
+    if(data_ != nullptr)
+    {delete [] data_; data_ = nullptr;}
+    if(indJ_ != nullptr)
+    {delete [] indJ_; indJ_ = nullptr;}
+    if(shiftInd_ != nullptr)
+    {delete [] shiftInd_; shiftInd_ = nullptr;}
+    if(indJAlter_ != nullptr)
+    {delete [] indJAlter_; indJAlter_ = nullptr;}
+    if(shiftIndAlter_ != nullptr)
+    {delete [] shiftIndAlter_; shiftIndAlter_ = nullptr;}
+    if(ptrDataAlter_ != nullptr)
+    {delete [] ptrDataAlter_; ptrDataAlter_ = nullptr;}
+    if(flagInitialized_ != nullptr)
+    {delete [] flagInitialized_; flagInitialized_ = nullptr;}
+    //if(threadsData_ != nullptr)
+    //{delete [] threadsData_; threadsData_ = nullptr;}
 }
 void sbfStiffMatrixBlock3x3::allocate()
 {
@@ -142,7 +142,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
     else
         type_ = type;
 
-    if(mesh_ == NULL){/*Throw an exception*/}
+    if(mesh_ == nullptr){/*Throw an exception*/}
     int numNodes = mesh_->numNodes();
 
     isDOFMerged_ = merge;
@@ -271,7 +271,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
                 int length = indBandLength[ctNodes], * band = indBandInd[ctNodes];
                 for(int ctColumn = 0; ctColumn < length; ctColumn++){//Loop over indexes in row
                     if(band[ctColumn] >= ctNodes) indJ_[ctNorm++] = band[ctColumn];
-                    else {indJAlter_[ctAlter] = band[ctColumn]; ptrDataAlter_[ctAlter] = NULL; ctAlter++;}
+                    else {indJAlter_[ctAlter] = band[ctColumn]; ptrDataAlter_[ctAlter] = nullptr; ctAlter++;}
                 }//Loop over indexes in row
                 shiftInd_[countNorm++] = ctNorm;
                 shiftIndAlter_[countAlter++] = ctAlter;
@@ -281,7 +281,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
                 int length = indBandLength[ctNodes], * band = indBandInd[ctNodes];
                 for(int ctColumn = 0; ctColumn < length; ctColumn++){//Loop over indexes in row
                     if(band[ctColumn] <= ctNodes) indJ_[ctNorm++] = band[ctColumn];
-                    else {indJAlter_[ctAlter] = band[ctColumn]; ptrDataAlter_[ctAlter] = NULL; ctAlter++;}
+                    else {indJAlter_[ctAlter] = band[ctColumn]; ptrDataAlter_[ctAlter] = nullptr; ctAlter++;}
                 }//Loop over indexes in row
                 shiftInd_[countNorm++] = ctNorm;
                 shiftIndAlter_[countAlter++] = ctAlter;
@@ -318,7 +318,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int startElemIndex, int stopE
 }
 void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(MatrixType type, bool merge)
 {
-    if(mesh_ == NULL){/*Throw an exception*/}
+    if(mesh_ == nullptr){/*Throw an exception*/}
     updateIndexesFromMesh(0, mesh_->numElements(), type, merge);
 }
 void sbfStiffMatrixBlock3x3::updataAlterPtr()
@@ -364,7 +364,7 @@ double * sbfStiffMatrixBlock3x3::blockPtr(int indI, int indJ)
         base += 9;
     }
 
-    return NULL;
+    return nullptr;
 }
 double * sbfStiffMatrixBlock3x3::data(int indI, int indJ, bool *isDirect)
 {
@@ -391,7 +391,7 @@ double * sbfStiffMatrixBlock3x3::data(int indI, int indJ, bool *isDirect)
             return ptrDataAlter_[ct];
     }
 
-    return NULL;
+    return nullptr;
 }
 double * sbfStiffMatrixBlock3x3::addBlockData(double * data, int indI, int indJ)
 {
@@ -421,7 +421,7 @@ double * sbfStiffMatrixBlock3x3::addBlockData(double * data, int indI, int indJ)
         for(int count = 0; count < 9; count++) dataIter[count] += data[count];
         flagInitialized_[shift+ct] = true;
     }
-    else base = NULL;
+    else base = nullptr;
     return base;
 }
 const double * sbfStiffMatrixBlock3x3::data()
@@ -453,7 +453,7 @@ void sbfStiffMatrixBlock3x3::null()
 void sbfStiffMatrixBlock3x3::null(int indI, int indJ)
 {
     double * data = blockPtr(indI, indJ);
-    if(data != NULL)
+    if(data != nullptr)
         for(int ct = 0; ct < 9; *(data + ct++) = 0);
     flagInitialized_[(data-data_)/9] = false;
 }
@@ -514,15 +514,15 @@ std::vector<std::vector<int> > sbfStiffMatrixBlock3x3::rowsInColumns()
     return rowsInCols;
 }
 
-//TODO merge versions () and (int *elemIndexes, int elemIndexesLength) by using (int *elemIndexes = NULL, int elemIndexesLength = NULL)
+//TODO merge versions () and (int *elemIndexes, int elemIndexesLength) by using (int *elemIndexes = nullptr, int elemIndexesLength = nullptr)
 
 void sbfStiffMatrixBlock3x3::compute()
 {
     /*
      * Compute stiffnesses of elements in mesh_ and assembly them to this
      */
-    if(mesh_ == NULL){/*Throw an exception*/}
-    if(propSet_ == NULL){/*Throw an exception*/}
+    if(mesh_ == nullptr){/*Throw an exception*/}
+    if(propSet_ == nullptr){/*Throw an exception*/}
     int numElements = mesh_->numElements();
     sbfElement * elem;
     std::vector<int> indexes;
@@ -548,7 +548,7 @@ void sbfStiffMatrixBlock3x3::compute()
                     else if(type_ == DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     pBlock = addBlockData(blockData, indexes[ctI], indexes[ctJ]);
-                    if(pBlock == NULL) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
+                    if(pBlock == nullptr) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
                 }
             break;
         }
@@ -566,8 +566,8 @@ void sbfStiffMatrixBlock3x3::compute(int *elemIndexes, int elemIndexesLength)
     /*
      * Compute stiffnesses of elements in mesh_ and assembly them to this
      */
-    if(mesh_ == NULL){/*Throw an exception*/}
-    if(propSet_ == NULL){/*Throw an exception*/}
+    if(mesh_ == nullptr){/*Throw an exception*/}
+    if(propSet_ == nullptr){/*Throw an exception*/}
     //int numElements = mesh_->numElements();
     sbfElement * elem;
     std::vector<int> indexes;
@@ -594,7 +594,7 @@ void sbfStiffMatrixBlock3x3::compute(int *elemIndexes, int elemIndexesLength)
                     else if(type_ == DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     pBlock = addBlockData(blockData, indexes[ctI], indexes[ctJ]);
-                    if(pBlock == NULL) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
+                    if(pBlock == nullptr) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
                 }
             break;
         }
@@ -618,7 +618,7 @@ void sbfStiffMatrixBlock3x3::computeParallel()
         data[ct].stopElem = ((ct+1)*mesh_->numElements())/sbfNumThreads;
         data[ct].stiffMatrix = this;
         data[ct].threadID = ct;
-        data[ct].elemIndexes = NULL;
+        data[ct].elemIndexes = nullptr;
         event_init(&(data[ct].threadReady));
         createNewThread(&(data[ct].thread), StiffMatrixBlock3x3ComputeThread, &data[ct]);
         event_wait(&(data[ct].threadReady));
@@ -650,8 +650,8 @@ static void StiffMatrixBlock3x3ComputeThread(void * rawData)
 {
     StiffMatrixBlock3x3ComputeThreadData * data = reinterpret_cast<StiffMatrixBlock3x3ComputeThreadData *>(rawData);
 
-    if(data->stiffMatrix->mesh() == NULL){/*Throw an exception*/}
-    if(data->stiffMatrix->propSet() == NULL){/*Throw an exception*/}
+    if(data->stiffMatrix->mesh() == nullptr){/*Throw an exception*/}
+    if(data->stiffMatrix->propSet() == nullptr){/*Throw an exception*/}
     sbfElement * elem;
     std::vector<int> indexes;
     indexes.reserve(20);
@@ -686,7 +686,7 @@ static void StiffMatrixBlock3x3ComputeThread(void * rawData)
                     if(stiffnessPart > sbfNumThreads-1) stiffnessPart = sbfNumThreads-1;
                     event_wait(&signalsUnlock[stiffnessPart]);//Wait for access to row in certain part of stiffness matrix
                     pBlock = data->stiffMatrix->addBlockData(blockData, indexes[ctI], indexes[ctJ]);
-                    if(pBlock == NULL) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " (", indexes[ctI], ", ", indexes[ctJ], ") of element ", ct, ". Can't find block ptr");
+                    if(pBlock == nullptr) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " (", indexes[ctI], ", ", indexes[ctJ], ") of element ", ct, ". Can't find block ptr");
                     event_set(&signalsUnlock[stiffnessPart]);
                 }
             break;
@@ -705,14 +705,14 @@ void sbfStiffMatrixBlock3x3::lockKort(int indI, int kort, double val, double * f
 {
     if(lockType == APPROXIMATE_LOCK_TYPE){
         double * targetBlock = blockPtr(indI, indI);
-        if (targetBlock == NULL) return;
+        if (targetBlock == nullptr) return;
         int shift;
         if(kort == 0) shift = 0;
         else if(kort == 1) shift = 4;
         else shift = 8;
         double great = 1.0e10;
         targetBlock[shift] *= great;
-        if(force != NULL) force[indI*3 + kort] = targetBlock[shift]*val;
+        if(force != nullptr) force[indI*3 + kort] = targetBlock[shift]*val;
     }
     else{
         for(int colCt = shiftInd_[indI]; colCt < shiftInd_[indI+1]; colCt++){
@@ -778,7 +778,7 @@ void sbfStiffMatrixBlock3x3::multiplyByVector(double * vector, double * result)
         tData[ct].stiffMatrix = this;
         tData[ct].startRow = ct*numNodes_/sbfNumThreads;
         tData[ct].stopRow = ((ct+1)*numNodes_)/sbfNumThreads;
-        tData[ct].rowIndexes = NULL;
+        tData[ct].rowIndexes = nullptr;
         tData[ct].rowIndexesLength = 0;
         createNewThread(&handles[ct], makeStiffMatrixBlock3x3Multiplication, &tData[ct]);
     }
@@ -797,7 +797,7 @@ void sbfStiffMatrixBlock3x3::prepareParallelMultiplyByVector(double * vector, do
         threadsData_[ct].stiffMatrix = this;
         threadsData_[ct].startRow = ct*numNodes_/sbfNumThreads;
         threadsData_[ct].stopRow = ((ct+1)*numNodes_)/sbfNumThreads;
-        threadsData_[ct].rowIndexes = NULL;
+        threadsData_[ct].rowIndexes = nullptr;
         threadsData_[ct].rowIndexesLength = 0;
         threadsData_[ct].threadID = ct;
         threadsData_[ct].flagCancel = false;
@@ -875,7 +875,7 @@ static void makeStiffMatrixBlock3x3Multiplication(void *data_)
 
     MatrixType type = tData->stiffMatrix->type();
 
-    if(rowIndexes == NULL){//Version with sequenced rows
+    if(rowIndexes == nullptr){//Version with sequenced rows
         for(ct = startRow; ct < stopRow; ct++){//Loop over rows.
             //Each row can be evaluated separately
             rezPtr = result + 3*ct;
@@ -1029,7 +1029,7 @@ static void makeStiffMatrixBlock3x3MultiplicationLoop(void *data_)
     event_set(& tData->stop);
 
     if(tData->stiffMatrix->type() == FULL_MATRIX){//Code for normal storage of matrix
-        if(rowIndexes == NULL){//Version with sequenced rows
+        if(rowIndexes == nullptr){//Version with sequenced rows
             for(;;){//Ever loop
                 //Wait for start
                 event_wait(& tData->start);
@@ -1149,7 +1149,7 @@ static void makeStiffMatrixBlock3x3MultiplicationLoop(void *data_)
     }//Code for normal storage of matrix
 
     else{//Code for alternative storage of matrix
-        if(rowIndexes == NULL){//Version with sequenced rows
+        if(rowIndexes == nullptr){//Version with sequenced rows
             for(;;){//Ever loop
                 //Wait for start
                 event_wait(& tData->start);

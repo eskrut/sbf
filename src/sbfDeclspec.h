@@ -37,7 +37,7 @@ const int sbfNumThreads = 8;
  typedef EventType event_t;
  static inline void event_init(event_t* event)
  {
-     *event = CreateEvent(NULL, true, false, NULL);
+     *event = CreateEvent(nullptr, true, false, nullptr);
  }
  static inline void event_destroy(event_t* event)
  {

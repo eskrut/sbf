@@ -8,7 +8,7 @@ sbfGroupFilter::sbfGroupFilter()
     mtrF_ = xMaxF_ = xMinF_ = yMaxF_ = yMinF_ = zMaxF_ = zMinF_ = typeF_ = false;
     xMin_ = yMin_ = zMin_ = -std::numeric_limits<float>::max();
     xMax_ = yMax_ = zMax_ = std::numeric_limits<float>::max();
-    mesh_ = NULL;
+    mesh_ = nullptr;
 }
 sbfGroupFilter::~sbfGroupFilter()
 {}
@@ -70,7 +70,7 @@ void sbfGroupFilter::setMesh(sbfMesh *mesh)
 }
 bool sbfGroupFilter::isPass(sbfElement &elem)
 {
-    if(mesh_ == NULL)
+    if(mesh_ == nullptr)
         return false;
     if(mtrF_ && mtr_ == elem.mtr())
         return true;
@@ -103,7 +103,7 @@ bool sbfGroupFilter::isPass(sbfElement &elem)
 }
 bool sbfGroupFilter::isPass(sbfNode &node)
 {
-    if(mesh_ == NULL)
+    if(mesh_ == nullptr)
         return false;
     {
         if(xMaxF_)

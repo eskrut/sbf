@@ -10,7 +10,7 @@
 
 void computeGraph(sbfMesh * mesh, int *** graph);
 void computeGraphAlter(sbfMesh * mesh, int *** graph);
-size_t computeProfileSize(int ** graph, int numNodes, bool * flagOwerFlow = NULL);
+size_t computeProfileSize(int ** graph, int numNodes, bool * flagOwerFlow = nullptr);
 int computeBandwidth(int ** graph, int numNodes);
 void findUnnumberedNeighbors(int ** graph, int * mask, int * tmp, /*I do not know better name*/ int & temp, int * deg, int nodeCt);
 void makeRCM(int ** graph, int numNodes, int startNode, int * newToOld, int *oldToNew);
@@ -362,7 +362,7 @@ sbfElement & sbfMesh::elem(const int seqNumber)
 sbfElement * sbfMesh::elemPtr(const int sequenceNumber)
 {
     if(sequenceNumber >= (int)elems_.size())
-        return NULL;
+        return nullptr;
     return & elems_[sequenceNumber];
 }
 
@@ -897,7 +897,7 @@ void sbfMesh::optimizeNodesNumbering(RenumberOptimizationType type)
     newToOld = new int [numNodes];
     oldToNew = new int [numNodes];
 
-    graph = NULL;
+    graph = nullptr;
     computeGraphAlter(this, &graph);
     size = computeProfileSize(graph, numNodes);
     report("Until number optimization: size = ", size, " bandwidth = ", computeBandwidth(graph, numNodes));

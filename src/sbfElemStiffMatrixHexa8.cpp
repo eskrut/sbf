@@ -22,27 +22,27 @@ double const * intWgh[] = {intWgh1, intWgh2, intWgh3, intWgh4};
 sbfElemStiffMatrixHexa8::sbfElemStiffMatrixHexa8()
 {
     data_ = new double [8*8*9];
-    elem_ = NULL;
+    elem_ = nullptr;
     numIntPoints_ = 2;
-    propSet_ = NULL;
+    propSet_ = nullptr;
 }
 sbfElemStiffMatrixHexa8::sbfElemStiffMatrixHexa8(sbfElement * elem)
 {
     data_ = new double [8*8*9];
     numIntPoints_ = 2;
     setElem(elem);
-    propSet_ = NULL;
+    propSet_ = nullptr;
 }
 sbfElemStiffMatrixHexa8::~sbfElemStiffMatrixHexa8()
 {
-    if(data_ != NULL)
+    if(data_ != nullptr)
         delete [] data_;
 }
 void sbfElemStiffMatrixHexa8::setElem(sbfElement * elem)
 {
     if(elem->type() != ElementType::HEXAHEDRON_LINEAR)
     {
-        elem_ = NULL;
+        elem_ = nullptr;
         return;
     }
     elem_ = elem;
@@ -191,7 +191,7 @@ void sbfElemStiffMatrixHexa8::computeSM()
      * Compute stiffness matrix of element
      */
 
-    if(propSet_ == NULL)
+    if(propSet_ == nullptr)
     {/*Throw an exception*/debugMsg("ERROR!!! properties are not set correctly!!!")}
 
     sbfMaterialProperties *mp = propSet_->material(elem_->mtr() - 1);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -301,7 +301,7 @@ double sbfElemStiffMatrixHexa8::computeMass(double rho)
 {return rho*computeVolume();}
 double sbfElemStiffMatrixHexa8::computeMass()
 {
-    if(propSet_ == NULL)
+    if(propSet_ == nullptr)
     {/*Throw an exception*/debugMsg("ERROR!!! properties are not set correctly!!!")}
 
     sbfMaterialProperties *mp = propSet_->material(elem_->mtr() - 1);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -316,7 +316,7 @@ void sbfElemStiffMatrixHexa8::getBlockDataLoc(double * data, int localIndI, int 
      * local indexing.
      * memory of data is not checked or allocated, it should be done before calling thise method
      */
-    if(localIndI > 7 || localIndJ > 7 || localIndI < 0 || localIndJ < 0 || data == NULL)
+    if(localIndI > 7 || localIndJ > 7 || localIndI < 0 || localIndJ < 0 || data == nullptr)
         return;
     double *pointer = data_+localIndI*3*3*8 + 3*localIndJ;
     data[0] = *pointer++;
@@ -338,7 +338,7 @@ void sbfElemStiffMatrixHexa8::getBlockDataGlob(double * data, int indI, int indJ
      * Row and column indexes of block are evaluated by mapping global indexes indI and indJ.
      * memory of data is not checked or allocated, it should be done before calling thise method
      */
-    if(data == NULL)
+    if(data == nullptr)
         return;
     int localIndI = -1, localIndJ = -1;
     int ctFound = 0;
@@ -358,7 +358,7 @@ void sbfElemStiffMatrixHexa8::addBlockDataLoc(double * data, int localIndI, int 
      * local indexing.
      * memory of data is not checked or allocated, it should be done before calling thise method
      */
-    if(localIndI > 7 || localIndJ > 7 || localIndI < 0 || localIndJ < 0 || data == NULL)
+    if(localIndI > 7 || localIndJ > 7 || localIndI < 0 || localIndJ < 0 || data == nullptr)
         return;
     double *pointer = data_+localIndI*3*3*8 + 3*localIndJ;
     data[0] += *pointer++;
@@ -380,7 +380,7 @@ void sbfElemStiffMatrixHexa8::addBlockDataGlob(double * data, int indI, int indJ
      * Row and column indexes of block are evaluated by mapping global indexes indI and indJ.
      * memory of data is not checked or allocated, it should be done before calling thise method
      */
-    if(data == NULL)
+    if(data == nullptr)
         return;
     int localIndI = -1, localIndJ = -1;
     int ctFound = 0;

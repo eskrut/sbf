@@ -9,9 +9,9 @@ sbfStiffBlock3x3::sbfStiffBlock3x3()
 }
 sbfStiffBlock3x3::sbfStiffBlock3x3(const sbfStiffBlock3x3 & block)
 {
-    if(data_ == NULL)
+    if(data_ == nullptr)
         data_ = new double [length_];
-    if(block.data_ != NULL)
+    if(block.data_ != nullptr)
         for(int ct = 0; ct < length_; ct++)
             data_[ct] = block.data_[ct];
     indI_ = block.indI_;
@@ -20,7 +20,7 @@ sbfStiffBlock3x3::sbfStiffBlock3x3(const sbfStiffBlock3x3 & block)
 }
 sbfStiffBlock3x3::~sbfStiffBlock3x3()
 {
-    if(data_ != NULL)
+    if(data_ != nullptr)
         delete [] data_;
 }
 

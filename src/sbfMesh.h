@@ -199,7 +199,7 @@ private:
 public:
     ArrayType * data(); // Return pointer to data
     ArrayType & data(int nodeIndex, int compIndex); // Return  reference to value of specific component in specific node
-    void null(){if( data_ != NULL) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = 0.0; }
+    void null(){if( data_ != nullptr) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = 0.0; }
     void copyData(ArrayType * data) { if( !data_ ) init(); for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = data[ct];}
     void copyData(/*const */NodesData<ArrayType, numComp> & nodesData) { if(!data_) init(); ArrayType * srcData = nodesData.data(); if(srcData) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = srcData[ct]; }
     //void setNumNodes(int numNodes);
@@ -231,16 +231,16 @@ public:
 
 
 template < class ArrayType, int numComp>
-NodesData<ArrayType, numComp>::NodesData(std::string name, sbfMesh* mesh) : data_(NULL), numNodes_(0) , name_(name), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
+NodesData<ArrayType, numComp>::NodesData(std::string name, sbfMesh* mesh) : data_(nullptr), numNodes_(0) , name_(name), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
 
 template < class ArrayType, int numComp>
-NodesData<ArrayType, numComp>::NodesData(std::string name, int numNodes) : data_(NULL), numNodes_(numNodes) , name_(name), mesh_(NULL), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { init(); }
+NodesData<ArrayType, numComp>::NodesData(std::string name, int numNodes) : data_(nullptr), numNodes_(numNodes) , name_(name), mesh_(nullptr), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { init(); }
 
 template < class ArrayType, int numComp>
-NodesData<ArrayType, numComp>::NodesData(sbfMesh* mesh) : data_(NULL), numNodes_(0) , name_("data"), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
+NodesData<ArrayType, numComp>::NodesData(sbfMesh* mesh) : data_(nullptr), numNodes_(0) , name_("data"), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
 
 template < class ArrayType, int numComp>
-NodesData<ArrayType, numComp>::NodesData(int numNodes) : data_(NULL), numNodes_(numNodes) , name_("data"), mesh_(NULL), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { init(); }
+NodesData<ArrayType, numComp>::NodesData(int numNodes) : data_(nullptr), numNodes_(numNodes) , name_("data"), mesh_(nullptr), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { init(); }
 
 template < class ArrayType, int numComp>
 NodesData<ArrayType, numComp>::~NodesData() { free(); }
@@ -249,7 +249,7 @@ template < class ArrayType, int numComp>
 void NodesData<ArrayType, numComp>::init() { free(); data_ = new ArrayType [numComp*numNodes_]; }
 
 template < class ArrayType, int numComp>
-void NodesData<ArrayType, numComp>::free() { if(data_ != NULL) delete [] data_; }
+void NodesData<ArrayType, numComp>::free() { if(data_ != nullptr) delete [] data_; }
 
 template < class ArrayType, int numComp>
 ArrayType * NodesData<ArrayType, numComp>::data() { return data_; }
@@ -466,12 +466,12 @@ void SolutionBundle<ArrayType, numArrays>::init()
 {
     names_[0]="Temperature";names_[1]="SigmaXX";names_[2]="SigmaYY";names_[3]="SigmaZZ";names_[4]="SigmaXY";names_[5]="SigmaYZ";names_[6]="SigmaXZ";names_[7]="SigmaI";names_[8]="EXX";names_[9]="EYY";
     names_[10]="EZZ";names_[11]="EXY";names_[12]="EYZ";names_[13]="EXZ";names_[14]="EI";names_[15]="EIPL";names_[16]="16";names_[17]="17";names_[18]="18";names_[19]="19";
-    for(int ct = 0; ct < numArrays; ct++) arrays_[ct] = NULL;
+    for(int ct = 0; ct < numArrays; ct++) arrays_[ct] = nullptr;
 }
 template <class ArrayType, int numArrays>
-void SolutionBundle<ArrayType, numArrays>::free() { for(int ct = 0; ct < numArrays; ct++) if(arrays_[ct]) {delete arrays_[ct]; arrays_[ct] = NULL;} }
+void SolutionBundle<ArrayType, numArrays>::free() { for(int ct = 0; ct < numArrays; ct++) if(arrays_[ct]) {delete arrays_[ct]; arrays_[ct] = nullptr;} }
 template <class ArrayType, int numArrays>
-void SolutionBundle<ArrayType, numArrays>::free(int index) { if(arrays_[index]) {delete arrays_[index]; arrays_[index] = NULL;} }
+void SolutionBundle<ArrayType, numArrays>::free(int index) { if(arrays_[index]) {delete arrays_[index]; arrays_[index] = nullptr;} }
 template <class ArrayType, int numArrays>
 void SolutionBundle<ArrayType, numArrays>::allocate() { free(); for(int ct = 0; ct < numArrays; ct++)  arrays_[ct] = new NodesData<ArrayType, 1>(numNodes_); }
 template <class ArrayType, int numArrays>

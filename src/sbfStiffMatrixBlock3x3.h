@@ -54,11 +54,11 @@ private:
     int *indJ_;
     //Array for indexing to certain stiff block row. [numNodes_+1]
     int *shiftInd_;
-    //Indexes of stiffness blocks with alternative storage. != NULL when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
+    //Indexes of stiffness blocks with alternative storage. != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
     int *indJAlter_;
-    //Array for indexing to certain stiff block row with alternative storage. != NULL when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
+    //Array for indexing to certain stiff block row with alternative storage. != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
     int *shiftIndAlter_;
-    //Array of pointers to data corresponded to alternative indexation. != NULL when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
+    //Array of pointers to data corresponded to alternative indexation. != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
     double **ptrDataAlter_;
     //Indicators of blocks initialization. [numBlocks_]
     bool * flagInitialized_;
@@ -90,7 +90,7 @@ public:
     //Returns pointer to stiffness block with indexes indI, indJ. Search in regular storage ONLY
     double * blockPtr(int indI, int indJ);
     //Returns pointer to stiffness block with indexes indI, indJ. Optionally set flag of normal or alternative storage
-    double * data(int indI, int indJ, bool *isDirect = NULL);
+    double * data(int indI, int indJ, bool *isDirect = nullptr);
     //Returns pointer to the start of data block.
     const double * data();
     double * addBlockData(double * data, int indI, int indJ);
@@ -101,7 +101,7 @@ public:
     const int * indDataAlter();
     const int * shiftIndDataAlter();
     //Set indexing arrays
-    void setIndData(int numNodes, int numBlocks, int * indJ, int * shiftInd, int numBlocksAlter = 0, int * indJAlter = NULL, int * shiftIndAlter = NULL);
+    void setIndData(int numNodes, int numBlocks, int * indJ, int * shiftInd, int numBlocksAlter = 0, int * indJAlter = nullptr, int * shiftIndAlter = nullptr);
     void updataAlterPtr();
     int numNodes();
     int numBlocks();
@@ -126,7 +126,7 @@ public:
     //Compute stiffness matrixes of all elements and assembly to this in parallel mode
     void computeParallel();
     void computeParallel(int *elemIndexes, int elemIndexesLength);
-    void lockKort(int indI, int kort, double val = 0.0, double * force = NULL, LockType lockType = EXACT_LOCK_TYPE);
+    void lockKort(int indI, int kort, double val = 0.0, double * force = nullptr, LockType lockType = EXACT_LOCK_TYPE);
 
     //Multiply this matrix by vector and store result (memory should be allocated for result)
     void multiplyByVector(double * vector, double * result);
