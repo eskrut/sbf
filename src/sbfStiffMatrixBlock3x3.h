@@ -46,7 +46,7 @@ private:
     int numNodes_;
     //Number of stiffness blocks in matrix.
     int numBlocks_;
-    //Number of stiffness blocks in alternative storage.
+    //Number of stiffness blocks in alternative storage. To deal with symetry.
     int numBlocksAlter_;
     //Linear storage array for stiffness data by blocks of 9 values. [9*numBlocks_]
     double *data_;
@@ -116,6 +116,7 @@ public:
     std::vector<std::vector<int>> rowsInColumns();
 
     //TODO make methods like:
+    //TODO UPD it may be better to make some class which halps to iterate through non-zero elements in rows and columns
     //void setRefBlock(int indI, int indJ);
     //std::pair<double * blockPtr, int columnInd> nextInRow();
     //std::pair<double * blockPtr, int rowInd> nextInColumn();
