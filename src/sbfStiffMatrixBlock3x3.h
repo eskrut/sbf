@@ -9,6 +9,7 @@
 class sbfStiffBlock3x3;
 class sbfPropertiesSet;
 class sbfStiffMatrixBlock3x3;
+class sbfStiffMatrixBlock3x3Iterator;
 
 struct StiffMatrixBlock3x3MultiplicationData
 {
@@ -38,7 +39,7 @@ public:
     sbfStiffMatrixBlock3x3();
     sbfStiffMatrixBlock3x3(int numBlocks, int numNodes);
     //StiffMatrixBlock3x3(const StiffMatrixBlock3x3 & matrix);
-    virtual ~sbfStiffMatrixBlock3x3();
+    ~sbfStiffMatrixBlock3x3();
 private:
     //Matrix topology type.
     MatrixType type_;
@@ -100,7 +101,7 @@ public:
     double ** ptrDataAlter();
     const int * indDataAlter();
     const int * shiftIndDataAlter();
-    //Set indexing arrays
+    //Set indexing arrays. This will make deep copy.
     void setIndData(int numNodes, int numBlocks, int * indJ, int * shiftInd, int numBlocksAlter = 0, int * indJAlter = nullptr, int * shiftIndAlter = nullptr);
     void updataAlterPtr();
     int numNodes();
@@ -117,6 +118,7 @@ public:
 
     //TODO make methods like:
     //TODO UPD it may be better to make some class which halps to iterate through non-zero elements in rows and columns
+    sbfStiffMatrixBlock3x3Iterator * createIterator();
     //void setRefBlock(int indI, int indJ);
     //std::pair<double * blockPtr, int columnInd> nextInRow();
     //std::pair<double * blockPtr, int rowInd> nextInColumn();

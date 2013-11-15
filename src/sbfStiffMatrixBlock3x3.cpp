@@ -5,6 +5,7 @@
 #include "sbfMesh.h"
 #include "sbfElemStiffMatrixHexa8.h"
 #include "sbfReporter.h"
+#include "sbfStiffMatrixBlock3x3Iterator.h"
 
 /*typedef */struct indexes2{
     int i, j;
@@ -115,19 +116,20 @@ void sbfStiffMatrixBlock3x3::setNumBlocksNodes(int numBlocks, int numNodes, int 
 }
 void sbfStiffMatrixBlock3x3::setIndData(int numNodes, int numBlocks, int * indJ, int * shiftInd, int numBlocksAlter, int * indJAlter, int * shiftIndAlter)
 {
-    clean();
     numBlocks_ = numBlocks;
     numBlocksAlter_ = numBlocksAlter;
     numNodes_ = numNodes;
-    data_ = new double [9*numBlocks_];
-    flagInitialized_ = new bool [numBlocks_];
-    null();
-    indJ_ = indJ;
-    shiftInd_ = shiftInd;
+    allocate();
+    for(int ct = 0; ct < numBlocks_; ct++)
+        indJ_[ct] = indJ[ct];
+    for(int ct = 0; ct < numNodes_+1; ct++)
+        shiftInd_[ct] = shiftInd[ct];
     if(numBlocksAlter_ > 0){
-        indJAlter_ = indJAlter;
-        shiftIndAlter_ = shiftIndAlter;
-        ptrDataAlter_ = new double * [numBlocksAlter_];
+        for(int ct = 0; ct < numBlocksAlter_; ct++)
+            indJAlter_[ct] = indJAlter[ct];
+        for(int ct = 0; ct < numNodes_+1; ct++)
+            shiftIndAlter_[ct] = shiftIndAlter[ct];
+        updataAlterPtr();
     }
 }
 void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemIndexesLength, MatrixType type, bool merge)
@@ -512,6 +514,14 @@ std::vector<std::vector<int> > sbfStiffMatrixBlock3x3::rowsInColumns()
         rowsInCols[indJ_[ct]].push_back(ctRow);
     }
     return rowsInCols;
+}
+
+//! Creates and returns new iterator instance. Client code should perform valid deleting after finishing usage of iterator.
+sbfStiffMatrixBlock3x3Iterator *sbfStiffMatrixBlock3x3::createIterator()
+{
+    //Create new iterator instance.
+    sbfStiffMatrixBlock3x3Iterator * iterator = new sbfStiffMatrixBlock3x3Iterator(this);
+    return iterator;
 }
 
 //TODO merge versions () and (int *elemIndexes, int elemIndexesLength) by using (int *elemIndexes = nullptr, int elemIndexesLength = nullptr)
