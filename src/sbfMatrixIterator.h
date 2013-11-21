@@ -1,0 +1,52 @@
+#ifndef SBFMATRIXITERATOR_H
+#define SBFMATRIXITERATOR_H
+
+#include <utility> //for std::pair
+
+//! @class sbfMatrixIterator
+//! @brief This class should be used as a base polymorphic class to implement iteration mechanism over rows and columns of specific matrixes.
+
+class sbfMatrixIterator
+{
+public:
+    sbfMatrixIterator();
+    virtual ~sbfMatrixIterator();
+
+public:
+    //Pure virtual interfaces. Should be reimplemented in derived classes.
+    //!Setup iterations ower columns data in row rowIndex
+    virtual void setToRow(const int rowIndex) = 0;
+    //!Setup iterations ower rows data in column columnIndex
+    virtual void setToColumn(const int columnIndex) = 0;
+    //!Setup iterations ower columns data in row rowIndex from end to gegin
+    virtual void setToRowInverse(const int rowIndex) = 0;
+    //!Setup iterations ower rows data in column columnIndex from end to gegin
+    virtual void setToColumnInverse(const int columnIndex) = 0;
+    //!Check if there is some data
+    virtual bool haveNext() const = 0;
+    //!Switch to next. If there in no more blocks returns false.
+    virtual bool next() = 0;
+    //!Get pointer to data.
+    //TODO is it necessary to make template or deduce internal pointers type at compile-time?
+    virtual double* data() = 0;
+    //!Check if a current data corresponds to diagonal
+    virtual bool isDiagonal() const = 0;
+    //TODO may be this should be declared in some base class designed to work with block matrixes?
+    //!Check if data should be transposed.
+    virtual bool isInNormal() const = 0;
+
+protected:
+    enum class IterateDirection { RowDirect, RowInvert, ColumnDirect, ColumnInvert };
+    //!Current row in use
+    int curRowIndex_;
+    //!Current column in use
+    int curColumnIndex_;
+    //!Current direction
+    IterateDirection dir_;
+public:
+    int row() const;
+    int column() const;
+    std::pair<int, int> rowColumn() const;
+};
+
+#endif // SBFMATRIXITERATOR_H
