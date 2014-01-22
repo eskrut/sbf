@@ -99,7 +99,7 @@ void sbfReporter::finalizeProgress()
         *out_ << "\r" << progressLine(100) << std::endl;
         *out_ << progressBarTitle_ << " DONE";
         if ( flagTrackExeTime_ ) {
-            *out_ << " in " << timer_.getCount() << " microseconds";
+            *out_ << " in " << timer_.getCount() << " seconds";
         }
         *out_ << std::endl;
         out_->flush();

@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <sstream>
 
-template <class clock_type = std::chrono::high_resolution_clock, class duration_type = std::chrono::microseconds> class sbfTimer
+template <class clock_type = std::chrono::high_resolution_clock, class duration_type = typename clock_type::duration> class sbfTimer
 {
 public:
     sbfTimer();
@@ -53,11 +53,11 @@ std::string sbfTimer<clock_type, duration_type>::timeSpanStr()
 {
     using namespace std::chrono;
     std::stringstream sstr;
-    duration<int> span;
+    duration<double> span;
     if ( isRunning_ )
-        span = duration_cast<duration<int>>(clock_type::now() - start_);
+        span = duration_cast<duration<double>>(clock_type::now() - start_);
     else
-        span = duration_cast<duration<int>>(stop_ - start_);
+        span = duration_cast<duration<double>>(stop_ - start_);
     sstr << std::setw(4) << duration_cast<hours>(span).count() << ":" <<
             std::setw(2) << std::setfill('0') << duration_cast<minutes>(span).count() % 60 << ":" <<
             std::setw(2) << std::setfill('0') << duration_cast<seconds>(span).count() % 60;
