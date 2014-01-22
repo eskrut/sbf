@@ -18,14 +18,13 @@ CONFIG += c++11
 
 INCLUDEPATH += ./../src
 
-CONFIG(debug){
+CONFIG(debug, debug|release){
 LIBS += -lsbf-dev \
-        -L "$$OUT_PWD"/../build-libsbf-debug
+        -L "$$OUT_PWD"/../../build-libsbf-debug
 }
-#CONFIG(release){
-else {
+CONFIG(release, release|debug){
 LIBS += -lsbf \
-        -L "$$OUT_PWD"/../build-libsbf-release
+        -L "$$OUT_PWD"/../../build-libsbf-release
 }
 
 SOURCES += \

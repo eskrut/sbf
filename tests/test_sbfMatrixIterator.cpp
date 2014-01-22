@@ -1,6 +1,7 @@
 #include "test_sbfMatrixIterator.h"
 #include "sbfStiffMatrixBlock3x3Iterator.h"
 #include <memory>
+#include <initializer_list>
 
 void TestMatrixIterator::case01_block3x3()
 {
@@ -104,7 +105,7 @@ void TestMatrixIterator::case01_block3x3()
     stiff->setType(DOWN_TREANGLE_MATRIX);
     shiftJ.push_back(0);
     shiftJAlter.push_back(0);
-    indJ.insert(indJ.end(), {0});
+    indJ.insert(indJ.end(), std::initializer_list<int>{0});
     indJAlter.insert(indJAlter.end(), {1, 3});
     shiftJ.push_back(indJ.size());
     shiftJAlter.push_back(indJAlter.size());
@@ -112,8 +113,8 @@ void TestMatrixIterator::case01_block3x3()
     indJAlter.insert(indJAlter.end(), {});
     shiftJ.push_back(indJ.size());
     shiftJAlter.push_back(indJAlter.size());
-    indJ.insert(indJ.end(), {2});
-    indJAlter.insert(indJAlter.end(), {3});
+    indJ.insert(indJ.end(), std::initializer_list<int>{2});
+    indJAlter.insert(indJAlter.end(), std::initializer_list<int>{3});
     shiftJ.push_back(indJ.size());
     shiftJAlter.push_back(indJAlter.size());
     indJ.insert(indJ.end(), {0, 2, 3});
