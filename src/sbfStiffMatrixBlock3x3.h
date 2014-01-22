@@ -157,7 +157,7 @@ public:
 
     //Create new low triangle matrix with incomplete cholessky factor
     sbfStiffMatrixBlock3x3 * makeIncompleteChol();
-    void solve_L_LT_u_eq_f(double *u, double *f, const std::vector<std::vector<int>> * rowsInColumnsIndexes = nullptr);
+    void solve_L_LT_u_eq_f(double *u, double *f);
 };
 
 #endif // SBFSTIFFMATRIXBLOCK3X3_H

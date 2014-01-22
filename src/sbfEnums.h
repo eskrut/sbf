@@ -34,11 +34,16 @@ enum class BlockType : short {
 };
 
 enum MatrixType : short {
-    NO_DEFINED_MATRIX,
-    FULL_MATRIX,
-    UP_TREANGLE_MATRIX,
-    DOWN_TREANGLE_MATRIX
+    NO_DEFINED_MATRIX = 1,
+    FULL_MATRIX = 2,
+    UP_TREANGLE_MATRIX = 4,
+    DOWN_TREANGLE_MATRIX = 8,
+    INCOMPLETE_CHOL = 16,
+    CHOL_FACTOR = 32
 };
+inline MatrixType operator|(MatrixType first, MatrixType second) {
+    return static_cast<MatrixType>(static_cast<short>(first) | static_cast<short>(second));
+}
 
 enum LockType : short {
     EXACT_LOCK_TYPE,

@@ -6,6 +6,7 @@
 #include "sbfElemStiffMatrixHexa8.h"
 #include "sbfReporter.h"
 #include "sbfStiffMatrixBlock3x3Iterator.h"
+#include <memory>
 
 /*typedef */struct indexes2{
     int i, j;
@@ -1413,7 +1414,7 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
 
     sbfStiffMatrixBlock3x3 * cholFactor = new sbfStiffMatrixBlock3x3();
 
-    cholFactor->setType(DOWN_TREANGLE_MATRIX);
+    cholFactor->setType(DOWN_TREANGLE_MATRIX | INCOMPLETE_CHOL);
     int /*numOriginBlocks, */numOriginNodes;
     int numTargetBlocks, numTargetNodes;
     const int *originIndJ, *originShiftInd;
@@ -1429,17 +1430,18 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
     originShiftInd = this->shiftIndData();
 
     //Use STL to get indexing to low triangle
-    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! it may lead to performance lowering (or not :) ) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! it may lead to performance lowering (or not :) ) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     std::list<indexes2> downIndexes;
     std::list<indexes2> upIndexes;
     for(int ctNode = 0; ctNode < numOriginNodes; ctNode++) for(int ctIndJ = originShiftInd[ctNode]; ctIndJ < originShiftInd[ctNode+1]; ctIndJ++) {
         int indI = ctNode, indJ = originIndJ[ctIndJ];
-        indexes2 ind2;
-        if(indI >= indJ) {ind2.i = indI; ind2.j = indJ;} else {ind2.i = indJ; ind2.j = indI;}
-        downIndexes.push_back(ind2);
+        //Make fake symmetry for iterators normal processing
+        indexes2 indDown;
+        if(indI >= indJ) {indDown.i = indI; indDown.j = indJ;} else {indDown.i = indJ; indDown.j = indI;}
+        downIndexes.push_back(indDown);
         if(indI != indJ){
-            if(indI < indJ) {ind2.i = indI; ind2.j = indJ;} else {ind2.i = indJ; ind2.j = indI;}
-            upIndexes.push_back(ind2);
+            std::swap(indDown.i, indDown.j);
+            upIndexes.push_back(indDown);
         }
     }
     downIndexes.sort();
@@ -1472,13 +1474,18 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
     targetShiftIndAlter[numTargetNodes] = numTargetBlocksAlter;
 
     cholFactor->setIndData(numTargetNodes, numTargetBlocks, targetIndJ, targetShiftInd, numTargetBlocksAlter, targetIndJAlter, targetShiftIndAlter);
-    cholFactor->updataAlterPtr();
+//    cholFactor->updataAlterPtr();//Not needed
     cholFactor->null();
 
     //Serial code of incomplete chol fill
 
-    auto colsInRows = cholFactor->columnsInRows();
-    auto rowsInCols = cholFactor->rowsInColumns();
+    //auto colsInRows = cholFactor->columnsInRows();
+    //auto rowsInCols = cholFactor->rowsInColumns();
+
+    std::unique_ptr<sbfMatrixIterator> iteratorThis(createIterator());
+    std::unique_ptr<sbfMatrixIterator> iteratorChol(cholFactor->createIterator());
+    std::unique_ptr<sbfMatrixIterator> iteratorCholRow0(cholFactor->createIterator());
+    std::unique_ptr<sbfMatrixIterator> iteratorCholRow1(cholFactor->createIterator());
 
     double * blockDiag, * blockCt, * blockCt1, *block;
     double * blockDiagTarget, * blockTarget;
@@ -1486,8 +1493,12 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
     for(int diagCt = 0; diagCt < numTargetNodes; diagCt++){//Loop on block rows
         //Process diagonal block
         if(numTargetNodes > 100 && (diagCt % (numTargetNodes/100) == 0)) report.updateProgress(0, numTargetNodes, diagCt);
-        blockDiag = this->data(diagCt, diagCt, nullptr);//Diagonal block is always at normal storage
-        blockDiagTarget = cholFactor->blockPtr(diagCt, diagCt);//Look only in normal storage
+
+        //blockDiag = this->data(diagCt, diagCt, nullptr);//Diagonal block is always at normal storage
+        //blockDiagTarget = cholFactor->blockPtr(diagCt, diagCt);//Look only in normal storage
+        blockDiag = iteratorThis->diagonal(diagCt);
+        blockDiagTarget = iteratorChol->diagonal(diagCt);
+
         blockDiagTarget[1] = 0;//Nulling above diagonal elements
         blockDiagTarget[2] = 0;
         blockDiagTarget[5] = 0;
@@ -1495,19 +1506,25 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
         sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
 
         //for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
-        for(auto colCt : colsInRows[diagCt]){//Loop on blocks in row
-            if (colCt >= diagCt) break;
+
+        //for(auto colCt : colsInRows[diagCt]){//Loop on blocks in row
+        iteratorChol->setToRow(diagCt);
+        while(iteratorChol->isValid()){
+            if (iteratorChol->column() >= diagCt) break;
             //FIXME This is VERY slow!!!
-            blockCt = cholFactor->blockPtr(diagCt, colCt);
-            if(!blockCt) continue;
+            //blockCt = cholFactor->blockPtr(diagCt, colCt);
+            blockCt = iteratorChol->data();
+            //if(!blockCt) continue;
             sum[0] += blockCt[0]*blockCt[0] + blockCt[1]*blockCt[1] + blockCt[2]*blockCt[2];
             sum[1] += blockCt[3]*blockCt[3] + blockCt[4]*blockCt[4] + blockCt[5]*blockCt[5];
             sum[2] += blockCt[6]*blockCt[6] + blockCt[7]*blockCt[7] + blockCt[8]*blockCt[8];
             sum[3] += blockCt[0]*blockCt[3] + blockCt[1]*blockCt[4] + blockCt[2]*blockCt[5];
             sum[4] += blockCt[0]*blockCt[6] + blockCt[1]*blockCt[7] + blockCt[2]*blockCt[8];
             sum[5] += blockCt[3]*blockCt[6] + blockCt[4]*blockCt[7] + blockCt[5]*blockCt[8];
+            iteratorChol->next();
         }//Loop on blocks in row
         blockDiagTarget[0] = std::sqrt(blockDiag[0] - sum[0]);
+        //FIXME Why there are comparisions to zero???
         blockDiagTarget[3] = blockDiag[3] != 0.0 ? (blockDiag[3] - sum[3]) / blockDiagTarget[0] : 0.0;
         blockDiagTarget[6] = blockDiag[6] != 0.0 ? (blockDiag[6] - sum[4]) / blockDiagTarget[0] : 0.0;
         sum[1] += blockDiagTarget[3]*blockDiagTarget[3];
@@ -1519,24 +1536,58 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
         blockDiagTarget[8] = std::sqrt(blockDiag[8] - sum[2]);
         //Process diagonal block - END
 
-        //Process blocks under diagonal
+        //Process blocks under current diagonal
 
         double rowSum[9];// 00 01 02 10 11 12 20 21 22
         double blockData[9];//
-        for(int rowCt = diagCt + 1; rowCt < numTargetNodes; rowCt++){//Loop on blocks under current diagonal block
-            blockTarget = cholFactor->blockPtr(rowCt, diagCt);//Look only in normal storage
-            if(!blockTarget) continue;
-            block = this->data(rowCt, diagCt, &isDirect);//May be at alternative storage
+
+        //for(int rowCt = diagCt + 1; rowCt < numTargetNodes; rowCt++){//Loop on blocks under current diagonal block
+        iteratorChol->setToColumn(diagCt);
+        iteratorThis->setToColumn(diagCt);
+        while(iteratorChol->isValid()){
+            int rowCt = iteratorChol->row();
+            if(rowCt <= diagCt){
+                iteratorChol->next();
+                iteratorThis->next();
+                continue; //Skip abowe rows
+            }
+
+//            blockTarget = cholFactor->blockPtr(rowCt, diagCt);//Look only in normal storage
+//            if(!blockTarget) continue;
+            blockTarget = iteratorChol->data();
+
+            //block = this->data(rowCt, diagCt, &isDirect);//May be at alternative storage
+            block = iteratorThis->data(&isDirect);
+
             if(isDirect) for(int ct = 0; ct < 9; ct++) blockData[ct] = block[ct];
             else for(int ctI = 0; ctI < 3; ctI++) for(int ctJ = 0; ctJ < 3; ctJ++) blockData[ctI*3+ctJ] = block[ctJ*3+ctI];
             rowSum[0] = rowSum[1] = rowSum[2] = rowSum[3] = rowSum[4] = rowSum[5] = rowSum[6] = rowSum[7] = rowSum[8] = 0.0;
+
             //for(int colCt = 0; colCt < diagCt; colCt++){//Loop on blocks in row
-            for(auto colCt : colsInRows[diagCt]){//Loop on blocks in row
-                if (colCt >= diagCt) break;
-                blockCt = cholFactor->blockPtr(rowCt, colCt);
-                if(!blockCt) continue;
-                blockCt1 = cholFactor->blockPtr(diagCt, colCt);
-                if(!blockCt1) continue;
+            //for(auto colCt : colsInRows[diagCt]){//Loop on blocks in row
+            iteratorCholRow0->setToRow(rowCt);
+            iteratorCholRow1->setToRow(diagCt);
+            int col0 = iteratorCholRow0->column();
+            int col1 = iteratorCholRow1->column();
+            while(iteratorCholRow0->isValid() && iteratorCholRow1->isValid()) {
+                if (col0 >= diagCt) break;
+                if (col0 < col1) {
+                    iteratorCholRow0->next();
+                    col0 = iteratorCholRow0->column();
+                    continue;
+                }
+                if (col0 > col1) {
+                    iteratorCholRow1->next();
+                    col1 = iteratorCholRow1->column();
+                    continue;
+                }
+                //OK, found equal columns ID
+//                blockCt = cholFactor->blockPtr(rowCt, colCt);
+//                if(!blockCt) continue;
+//                blockCt1 = cholFactor->blockPtr(diagCt, colCt);
+//                if(!blockCt1) continue;
+                blockCt = iteratorCholRow0->data();
+                blockCt1 = iteratorCholRow1->data();
                 //collect sums
                 rowSum[0] += blockCt[0]*blockCt1[0] + blockCt[1]*blockCt1[1] + blockCt[2]*blockCt1[2];
                 rowSum[1] += blockCt[0]*blockCt1[3] + blockCt[1]*blockCt1[4] + blockCt[2]*blockCt1[5];
@@ -1547,6 +1598,8 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
                 rowSum[6] += blockCt[6]*blockCt1[0] + blockCt[7]*blockCt1[1] + blockCt[8]*blockCt1[2];
                 rowSum[7] += blockCt[6]*blockCt1[3] + blockCt[7]*blockCt1[4] + blockCt[8]*blockCt1[5];
                 rowSum[8] += blockCt[6]*blockCt1[6] + blockCt[7]*blockCt1[7] + blockCt[8]*blockCt1[8];
+                iteratorCholRow0->next();
+                iteratorCholRow1->next();
             }//Loop on blocks in row
             blockTarget[0] = blockData[0] != 0.0 ? (blockData[0] - rowSum[0]) / blockDiagTarget[0] : 0.0;
             blockTarget[3] = blockData[3] != 0.0 ? (blockData[3] - rowSum[3]) / blockDiagTarget[0] : 0.0;
@@ -1563,6 +1616,8 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
             blockTarget[2] = blockData[2] != 0.0 ? (blockData[2] - rowSum[2]) / blockDiagTarget[8] : 0.0;
             blockTarget[5] = blockData[5] != 0.0 ? (blockData[5] - rowSum[5]) / blockDiagTarget[8] : 0.0;
             blockTarget[8] = blockData[8] != 0.0 ? (blockData[8] - rowSum[8]) / blockDiagTarget[8] : 0.0;
+            iteratorChol->next();
+            iteratorThis->next();
         }//Loop on blocks under current diagonal block
 
         //Process blocks under diagonal - END
@@ -1573,13 +1628,17 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
     return cholFactor;
 }
 
-void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f, const std::vector<std::vector<int> > * rowsInColumnsIndexes)
+void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f)
 {
     //Solve L*L^T*u = f
     const int numNodes = numNodes_;
     double sum[3], vecPart[3];
     double * block = data_;
     sum[0] = sum[1] = sum[2] = 0.0;
+    //FIXME It is bad idea to create iterator each time (or not :) )
+    //std::unique_ptr<sbfMatrixIterator> iterPtr(createIterator());
+    //sbfMatrixIterator * iter = iterPtr.get();
+    sbfMatrixIterator * iter = createIterator();
     //L u' = f
     int ctRow = 0;
     int ctColumn = 0;
@@ -1590,6 +1649,7 @@ void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f, const std
         }
         ctColumn = indJ_[ctBlock];
         if( ctRow != ctColumn ){//process non diagonal block
+            //TODO this is not fatal, but still it should be implemented with iterator
             block = blockPtr(ctRow, ctColumn);
             if (!block) continue;
             vecPart[0] = u[ctColumn*3 + 0];
@@ -1613,59 +1673,36 @@ void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f, const std
         block += 9;
     }//Loop on blocks
     //L^T u = u'
-    if ( rowsInColumnsIndexes == nullptr ) {
-        for (int ctRow = numNodes_ - 1; ctRow >= 0; ctRow--) {//Loop on rows
-            sum[0] = sum[1] = sum[2] = 0.0;
-            for (int ctColumn = numNodes - 1; ctColumn > ctRow; ctColumn--){//Loop on non diaonal blocks
-                block = blockPtr(ctColumn, ctRow);//swap row and column ndexes
-                if ( !block ) continue;
-                vecPart[0] = u[ctColumn*3 + 0];
-                vecPart[1] = u[ctColumn*3 + 1];
-                vecPart[2] = u[ctColumn*3 + 2];
-                //transposed indexing to block
-                sum[0] += block[0]*vecPart[0] + block[3]*vecPart[1] + block[6]*vecPart[2];
-                sum[1] += block[1]*vecPart[0] + block[4]*vecPart[1] + block[7]*vecPart[2];
-                sum[2] += block[2]*vecPart[0] + block[5]*vecPart[1] + block[8]*vecPart[2];
-            }//Loop on non diaonal blocks
-            block = blockPtr(ctRow, ctRow);
-            vecPart[2] = (u[ctRow*3 + 2] - sum[2]) / block[8];
-            sum[0] += block[6]*vecPart[2];
-            sum[1] += block[7]*vecPart[2];
-            vecPart[1] = (u[ctRow*3 + 1] - sum[1]) / block[4];
-            sum[0] += block[3]*vecPart[1];
-            vecPart[0] = (u[ctRow*3 + 0] - sum[0]) / block[0];
-            u[ctRow*3 + 0] = vecPart[0];
-            u[ctRow*3 + 1] = vecPart[1];
-            u[ctRow*3 + 2] = vecPart[2];
-        }//Loop on rows
-    }
-    else {
-        for (int ctRow = numNodes_ - 1; ctRow >= 0; ctRow--) {//Loop on rows
-            sum[0] = sum[1] = sum[2] = 0.0;
-//            for (int ctColumn = numNodes - 1; ctColumn > ctRow; ctColumn--){//Loop on non diaonal blocks
-            auto & row = (*rowsInColumnsIndexes)[ctRow];
-            for (auto it = row.rbegin(); it < row.rend()-1; it++){//Loop on non diaonal blocks
-                ctColumn = *it;
-                block = blockPtr(ctColumn, ctRow);//swap row and column ndexes
-                if ( !block ) continue;
-                vecPart[0] = u[ctColumn*3 + 0];
-                vecPart[1] = u[ctColumn*3 + 1];
-                vecPart[2] = u[ctColumn*3 + 2];
-                //transposed indexing to block
-                sum[0] += block[0]*vecPart[0] + block[3]*vecPart[1] + block[6]*vecPart[2];
-                sum[1] += block[1]*vecPart[0] + block[4]*vecPart[1] + block[7]*vecPart[2];
-                sum[2] += block[2]*vecPart[0] + block[5]*vecPart[1] + block[8]*vecPart[2];
-            }//Loop on non diaonal blocks
-            block = blockPtr(ctRow, ctRow);
-            vecPart[2] = (u[ctRow*3 + 2] - sum[2]) / block[8];
-            sum[0] += block[6]*vecPart[2];
-            sum[1] += block[7]*vecPart[2];
-            vecPart[1] = (u[ctRow*3 + 1] - sum[1]) / block[4];
-            sum[0] += block[3]*vecPart[1];
-            vecPart[0] = (u[ctRow*3 + 0] - sum[0]) / block[0];
-            u[ctRow*3 + 0] = vecPart[0];
-            u[ctRow*3 + 1] = vecPart[1];
-            u[ctRow*3 + 2] = vecPart[2];
-        }//Loop on rows
-    }
+    for (int ctRow = numNodes_ - 1; ctRow >= 0; ctRow--) {//Loop on rows
+        sum[0] = sum[1] = sum[2] = 0.0;
+        iter->setToColumnInverse(ctRow);
+        //for (int ctColumn = numNodes - 1; ctColumn > ctRow; ctColumn--){//Loop on non diaonal blocks
+        while(!iter->isDiagonal()) {
+//            block = blockPtr(ctColumn, ctRow);//swap row and column ndexes
+//            if ( !block ) continue;
+            block = iter->data();
+            int ctColumn = iter->column();
+            vecPart[0] = u[ctColumn*3 + 0];
+            vecPart[1] = u[ctColumn*3 + 1];
+            vecPart[2] = u[ctColumn*3 + 2];
+            //transposed indexing to block
+            sum[0] += block[0]*vecPart[0] + block[3]*vecPart[1] + block[6]*vecPart[2];
+            sum[1] += block[1]*vecPart[0] + block[4]*vecPart[1] + block[7]*vecPart[2];
+            sum[2] += block[2]*vecPart[0] + block[5]*vecPart[1] + block[8]*vecPart[2];
+            iter->next();
+        }//Loop on non diaonal blocks
+        //block = blockPtr(ctRow, ctRow);
+        block = iter->diagonal(ctRow);
+        vecPart[2] = (u[ctRow*3 + 2] - sum[2]) / block[8];
+        sum[0] += block[6]*vecPart[2];
+        sum[1] += block[7]*vecPart[2];
+        vecPart[1] = (u[ctRow*3 + 1] - sum[1]) / block[4];
+        sum[0] += block[3]*vecPart[1];
+        vecPart[0] = (u[ctRow*3 + 0] - sum[0]) / block[0];
+        u[ctRow*3 + 0] = vecPart[0];
+        u[ctRow*3 + 1] = vecPart[1];
+        u[ctRow*3 + 2] = vecPart[2];
+    }//Loop on rows
+
+    delete iter;
 }

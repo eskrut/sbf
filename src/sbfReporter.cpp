@@ -64,7 +64,7 @@ std::string sbfReporter::progressLine(int progress)
     if ( progress < 0 ) progress = 0;
     if ( progress > 100 ) progress = 100;
     std::stringstream line;
-    line << '[';
+    line << "[";
     const int numAvail = (progressBarWidth_ - 2 - 1 - 3 - 1);
     const int numDone = numAvail * progress / 100;
     const int numUnDone = numAvail - numDone;
@@ -72,7 +72,7 @@ std::string sbfReporter::progressLine(int progress)
     for (int ct = 0; ct < numUnDone; ct++) line << progressBarEmpty_;
     line << "] ";
     line.width(3);
-    line << progress << '%' << " " << timer_.timeSpanStr();
+    line << progress << "% " << timer_.timeSpanStr();
     //TODO add exec time output if required
     return line.str();
 }

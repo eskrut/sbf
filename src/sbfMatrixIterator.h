@@ -22,18 +22,23 @@ public:
     virtual void setToRowInverse(const int rowIndex) = 0;
     //!Setup iterations ower rows data in column columnIndex from end to gegin
     virtual void setToColumnInverse(const int columnIndex) = 0;
+    //!Check if current state is valid
+    virtual bool isValid() const = 0;
     //!Check if there is some data
     virtual bool haveNext() const = 0;
     //!Switch to next. If there in no more blocks returns false.
     virtual bool next() = 0;
     //!Get pointer to data.
     //TODO is it necessary to make template or deduce internal pointers type at compile-time?
-    virtual double* data() = 0;
+    virtual double* data() const = 0;
+    virtual double* data(bool * isInNormal) const = 0;
     //!Check if a current data corresponds to diagonal
     virtual bool isDiagonal() const = 0;
     //TODO may be this should be declared in some base class designed to work with block matrixes?
     //!Check if data should be transposed.
     virtual bool isInNormal() const = 0;
+    //!Get pointer to diagonal data of row (column) index
+    virtual double * diagonal(const int index) const = 0;
 
 protected:
     enum class IterateDirection { RowDirect, RowInvert, ColumnDirect, ColumnInvert };

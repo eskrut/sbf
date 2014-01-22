@@ -145,6 +145,81 @@ void TestStiffMatrixes::case02_createIncompleteChol(){
     //delete iChol;
 }
 
+void TestStiffMatrixes::case02_createIncompleteChol2(){
+    //Create simple matrix
+    sbfStiffMatrixBlock3x3 * matrix = new sbfStiffMatrixBlock3x3(3, 2);
+    /*
+     *  [   24  0   6   0   0   0   ]
+     *  [   0   8   2   0   0   0   ]
+     *  [   6   2   8   -6  2   0   ]
+     *  [   0   0   -6  24  0   0   ]
+     *  [   0   0   2   0   8   0   ]
+     *  [   0   0   0   0   0   1   ]
+     */
+    matrix->setType(MatrixType::DOWN_TREANGLE_MATRIX);
+    std::vector<int> indJ{0, 0, 1}, shiftInd{0, 1, 3};
+    std::vector<int> indJAlt{1}, shiftIndAlt{0, 1, 1};
+    matrix->setIndData(2, 3, &indJ[0], &shiftInd[0], 1, &indJAlt[0], &shiftIndAlt[0]);
+    matrix->null();
+    double * block = matrix->blockPtr(0, 0);
+    block[0] = 24; block[1] = 0; block[2] = 6;
+    block[3] = 0; block[4] = 8; block[5] = 2;
+    block[6] = 6; block[7] = 2; block[8] = 8;
+    block = matrix->blockPtr(0, 1);
+    block[6] = -6; block[7] = 2;
+    block = matrix->blockPtr(1, 0);
+    block[2] = -6;
+    block[5] = 2;
+    block = matrix->blockPtr(1, 1);
+    block[0] = 24;
+    block[4] = 8;
+    block[8] = 1;
+
+    //std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(matrix->makeIncompleteChol());
+    sbfStiffMatrixBlock3x3 * iChol = matrix->makeIncompleteChol();
+
+    //test
+    bool pass = true;
+    const double eps = 0.0001;
+    block = iChol->blockPtr(0, 0);
+    if ( std::fabs(block[0] - 4.8990) > eps ||
+         std::fabs(block[4] - 2.8284) > eps ||
+         std::fabs(block[6] - 1.2247) > eps || std::fabs(block[7] - 0.7071) > eps || std::fabs(block[8] - 2.4495) > eps)
+        pass = false;
+    if ( !pass )
+        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+    block = iChol->blockPtr(1, 0);
+    if ( std::fabs(block[2] + 2.4495) > eps ||
+         std::fabs(block[5] - 0.8165) > eps )
+        pass = false;
+    if ( !pass )
+        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+    block = iChol->blockPtr(1, 1);
+    if ( std::fabs(block[0] - 4.2426) > eps ||
+         std::fabs(block[3] - 0.0) > eps || std::fabs(block[4] - 2.7080) > eps )
+        pass = false;
+    if ( !pass )
+        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+
+    QVERIFY2(pass, "Fail to compute incomplete Chol");
+
+    auto colsInRows = iChol->columnsInRows();
+    pass = true;
+    if( colsInRows[0] != std::vector<int>({0}) ) pass = false;
+    if( colsInRows[1] != std::vector<int>({0, 1}) ) pass = false;
+    QVERIFY2(pass, "Fail to get column indexes in rows");
+
+    auto rowsInCols = iChol->rowsInColumns();
+    pass = true;
+    if( rowsInCols[0] != std::vector<int>({0, 1}) ) pass = false;
+    if( rowsInCols[1] != std::vector<int>({1}) ) pass = false;
+    QVERIFY2(pass, "Fail to get rows indexes in columns");
+
+    //FIXME not working
+    //delete matrix;
+    //delete iChol;
+}
+
 void TestStiffMatrixes::case03_solveLLTuf()
 {
     //Create simple matrix
@@ -190,18 +265,17 @@ void TestStiffMatrixes::case03_solveLLTuf()
     uTarget.data()[4] = 2.0000e-01;
     uTarget.data()[5] = 0.0;
 
-    std::vector<std::vector<int> > rowsInColumnsIndexes;
-    rowsInColumnsIndexes.resize(2);
-    rowsInColumnsIndexes[0].push_back(0);
-    rowsInColumnsIndexes[0].push_back(1);
-    rowsInColumnsIndexes[1].push_back(1);
-
-    matrix->solve_L_LT_u_eq_f(u.data(), f.data(), &rowsInColumnsIndexes);
+    matrix->solve_L_LT_u_eq_f(u.data(), f.data());
 
     bool pass = true;
     double eps = 1e-8;
     for(int ct = 0; ct < 6; ct++)
         if ( fabs(u.data()[ct] - uTarget.data()[ct]) > eps ) pass = false;
+
+    if(!pass) {
+        qDebug() << u.data()[0] << u.data()[1] << u.data()[2] << u.data()[3] << u.data()[4] << u.data()[5];
+        qDebug() << uTarget.data()[0] << uTarget.data()[1] << uTarget.data()[2] << uTarget.data()[3] << uTarget.data()[4] << uTarget.data()[5];
+    }
 
     QVERIFY2(pass, "Failed to make LLTuf solution");
     //delete matrix;
@@ -209,8 +283,8 @@ void TestStiffMatrixes::case03_solveLLTuf()
 
 void TestStiffMatrixes::case04_CGMwP()
 {
-    float xSide = 100, ySide = 10, zSide = 10;
-    int xPart = 500, yPart = 10, zPart = 10;
+    float xSide = 10, ySide = 10, zSide = 10;
+    int xPart = 50, yPart = 10, zPart = 10;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
@@ -260,14 +334,14 @@ void TestStiffMatrixes::case04_CGMwP()
     std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(stiff->makeIncompleteChol());
     sbfStiffMatrixBlock3x3 * iChol = iCholRes.get();
 
-    qDebug() << "Prepare indexes";
-    std::vector<std::vector<int>> rowsInColumnsIndexes;
-    rowsInColumnsIndexes.resize(mesh->numNodes());
-    for(int ctRow = 0; ctRow < mesh->numNodes(); ctRow++) {
-        for(int ctColumn = 0; ctColumn <= ctRow; ctColumn++)
-            if (iChol->data(ctRow, ctColumn))
-                rowsInColumnsIndexes[ctColumn].push_back(ctRow);
-    }
+//    qDebug() << "Prepare indexes";
+//    std::vector<std::vector<int>> rowsInColumnsIndexes;
+//    rowsInColumnsIndexes.resize(mesh->numNodes());
+//    for(int ctRow = 0; ctRow < mesh->numNodes(); ctRow++) {
+//        for(int ctColumn = 0; ctColumn <= ctRow; ctColumn++)
+//            if (iChol->data(ctRow, ctColumn))
+//                rowsInColumnsIndexes[ctColumn].push_back(ctRow);
+//    }
 
     qDebug() << "Actual start";
     //Conjugate Gradient Method with Preconditioning
@@ -297,7 +371,7 @@ void TestStiffMatrixes::case04_CGMwP()
     r.copyData((force - KU).data());
 
     //Solve L*L^T*z = r
-    iChol->solve_L_LT_u_eq_f(z.data(), r.data(), &rowsInColumnsIndexes);
+    iChol->solve_L_LT_u_eq_f(z.data(), r.data());
     p.copyData(z.data());
 
     double rNorm = 0.0;
@@ -316,7 +390,7 @@ void TestStiffMatrixes::case04_CGMwP()
             r_p1_ptr[ct] = r_ptr[ct] - alpha*Kp_ptr[ct];
         }
         auto timePoint3 = std::chrono::high_resolution_clock::now();
-        iChol->solve_L_LT_u_eq_f(z_p1_ptr, r_p1_ptr, &rowsInColumnsIndexes);
+        iChol->solve_L_LT_u_eq_f(z_p1_ptr, r_p1_ptr);
         auto timePoint4 = std::chrono::high_resolution_clock::now();
         betta = z_p1.scalMul(r_p1)/z.scalMul(r);
         for(int ct = 0; ct < numDOF; ct++) {
@@ -330,7 +404,7 @@ void TestStiffMatrixes::case04_CGMwP()
         numIterations++;
         auto timePoint5 = std::chrono::high_resolution_clock::now();
 
-        if ( numIterations % 1 == 10) {
+        if ( numIterations % 1 == 0) {
             std::cout << "MatMul         :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint2 - timePoint1).count() << std::endl;
             std::cout << "VectOperation  :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint3 - timePoint2).count() << std::endl;
             std::cout << "LLTSolve       :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint4 - timePoint3).count() << std::endl;

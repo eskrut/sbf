@@ -40,6 +40,7 @@ private:
     int shiftAlterLast_;
     bool isInNormal_;
     bool isHaveNext_;
+    bool isValid_;
 
 public:
     //Reimplementation of pure virtual functions of base class
@@ -51,16 +52,21 @@ public:
     virtual void setToRowInverse(const int rowIndex);
     //!Setup iterations ower rows data in column columnIndex from end to gegin
     virtual void setToColumnInverse(const int columnIndex);
+    //!Check if current state is valid
+    virtual bool isValid() const;
     //!Check if there is some data
     virtual bool haveNext() const;
     //!Switch to next. If there in no more blocks returns false.
     virtual bool next();
     //!Get pointer to data.
-    virtual double* data();
+    virtual double* data() const;
+    virtual double* data(bool * isInNormal) const;
     //!Check if a current data corresponds to diagonal
     virtual bool isDiagonal() const;
     //!Check if data should be transposed.
     virtual bool isInNormal() const;
+    //!Get pointer to diagonal data of row (column) index
+    virtual double * diagonal(const int index) const;
 };
 
 #endif // SBFSTIFFMATRIXBLOCK3X3ITERATOR_H

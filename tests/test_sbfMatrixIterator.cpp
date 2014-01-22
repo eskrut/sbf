@@ -42,6 +42,7 @@ void TestMatrixIterator::case01_block3x3()
 
     iterator->setToRow(2);
     QVERIFY2(iterator->isDiagonal() == true, "Failed to interpret diagonal");
+    QVERIFY2(iterator->diagonal(2) == stiff->data()+9*5, "Failed to compute address");
     QVERIFY2(iterator->data() == stiff->data()+9*5, "Failed to compute address");
     QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
     QVERIFY2(iterator->column() == 3, "Failed to evaluate column index");
@@ -137,6 +138,7 @@ void TestMatrixIterator::case01_block3x3()
     iterator->setToRow(2);
     QVERIFY2(iterator->isDiagonal() == true, "Failed to interpret diagonal");
     QVERIFY2(iterator->data() == stiff->data()+9*3, "Failed to compute address");
+    QVERIFY2(iterator->diagonal(2) == stiff->data()+9*3, "Failed to compute address");
     QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
     QVERIFY2(iterator->column() == 3, "Failed to evaluate column index");
     QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
@@ -203,6 +205,7 @@ void TestMatrixIterator::case01_block3x3()
     QVERIFY2(iterator->data() == stiff->data()+9*0, "Failed to initialize row");
     QVERIFY2(iterator->row() == 0, "Failed to initialize row");
     QVERIFY2(iterator->isDiagonal() == true, "Failed to tell diagonal");
+    QVERIFY2(iterator->diagonal(0) == stiff->data()+9*0, "Failed to initialize row");
     QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
 
     //Filling pattern

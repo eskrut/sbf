@@ -4,7 +4,10 @@
 //TODO This all may have poor efficiency
 
 sbfStiffMatrixBlock3x3Iterator::sbfStiffMatrixBlock3x3Iterator(sbfStiffMatrixBlock3x3 *matrix) :
-    matrix_(matrix)
+    matrix_(matrix),
+    isInNormal_(false),
+    isHaveNext_(false),
+    isValid_(false)
 {
     columnsByRowsNormal_ = const_cast<int *>(matrix->indData());
     shiftsRowNormal_ = const_cast<int *>(matrix->shiftIndData());
@@ -37,11 +40,13 @@ void sbfStiffMatrixBlock3x3Iterator::setToRow(const int rowIndex)
             curColumnIndex_ = columnsByRowsNormal_[curShiftNormal_];
             isInNormal_ = true;
             curData_ = base_ + blockSize_*curShiftNormal_;
+            isValid_ = true;
         }
         else {
             curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = false;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
+            isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
     else {//type_ == UP_TREANGLE_MATRIX
@@ -72,11 +77,13 @@ void sbfStiffMatrixBlock3x3Iterator::setToColumn(const int columnIndex)
             curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
             isInNormal_ = false;
             curData_ = base_ + blockSize_*curShiftNormal_;
+            isValid_ = true;
         }
         else {
             curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = true;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
+            isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
     else {//type_ == UP_TREANGLE_MATRIX
@@ -107,6 +114,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToRowInverse(const int rowIndex)
             curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = false;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
+            isValid_ = true;
             //Litle hack to perform next()
             curShiftNormal_++;
         }
@@ -114,6 +122,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToRowInverse(const int rowIndex)
             curColumnIndex_ = columnsByRowsNormal_[curShiftNormal_];
             isInNormal_ = true;
             curData_ = base_ + blockSize_*curShiftNormal_;
+            isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
     else {//type_ == UP_TREANGLE_MATRIX
@@ -144,6 +153,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToColumnInverse(const int columnIndex)
             curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = true;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
+            isValid_ = true;
             //Litle hack to perform next()
             curShiftNormal_++;
         }
@@ -151,11 +161,17 @@ void sbfStiffMatrixBlock3x3Iterator::setToColumnInverse(const int columnIndex)
             curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
             isInNormal_ = false;
             curData_ = base_ + blockSize_*curShiftNormal_;
+            isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error("Not implemented yet :(");
     }//type_ == UP_TREANGLE_MATRIX
+}
+
+bool sbfStiffMatrixBlock3x3Iterator::isValid() const
+{
+    return isValid_;
 }
 
 bool sbfStiffMatrixBlock3x3Iterator::haveNext() const
@@ -165,8 +181,11 @@ bool sbfStiffMatrixBlock3x3Iterator::haveNext() const
 
 bool sbfStiffMatrixBlock3x3Iterator::next()
 {
-    if (!isHaveNext_) return false;
-    bool exist = true;
+    if (!isHaveNext_){
+        isValid_ = false;
+        return false;
+    }
+    isValid_ = true;
     if ( type_ != UP_TREANGLE_MATRIX ) {
         switch (dir_) {
         case IterateDirection::RowDirect:
@@ -188,7 +207,7 @@ bool sbfStiffMatrixBlock3x3Iterator::next()
             else {
                 curData_ = nullptr;
                 isHaveNext_ = false;
-                exist = false;
+                isValid_ = false;
             }
             break;
         case IterateDirection::ColumnDirect:
@@ -210,7 +229,7 @@ bool sbfStiffMatrixBlock3x3Iterator::next()
             else {
                 curData_ = nullptr;
                 isHaveNext_ = false;
-                exist = false;
+                isValid_ = false;
             }
             break;
         case IterateDirection::RowInvert:
@@ -228,7 +247,7 @@ bool sbfStiffMatrixBlock3x3Iterator::next()
             else {
                 curData_ = nullptr;
                 isHaveNext_ = false;
-                exist = false;
+                isValid_ = false;
             }
             break;
         case IterateDirection::ColumnInvert:
@@ -246,7 +265,7 @@ bool sbfStiffMatrixBlock3x3Iterator::next()
             else {
                 curData_ = nullptr;
                 isHaveNext_ = false;
-                exist = false;
+                isValid_ = false;
             }
             break;
         default:
@@ -254,11 +273,17 @@ bool sbfStiffMatrixBlock3x3Iterator::next()
             break;
         }
     }//type_ != UP_TREANGLE_MATRIX
-    return exist;
+    return isValid_;
 }
 
-double * sbfStiffMatrixBlock3x3Iterator::sbfStiffMatrixBlock3x3Iterator::data()
+double * sbfStiffMatrixBlock3x3Iterator::sbfStiffMatrixBlock3x3Iterator::data() const
 {
+    return curData_;
+}
+
+double *sbfStiffMatrixBlock3x3Iterator::data(bool *isInNormal) const
+{
+    *isInNormal = isInNormal_;
     return curData_;
 }
 
@@ -271,4 +296,25 @@ bool sbfStiffMatrixBlock3x3Iterator::isDiagonal() const
 bool sbfStiffMatrixBlock3x3Iterator::isInNormal() const
 {
     return isInNormal_;
+}
+
+double *sbfStiffMatrixBlock3x3Iterator::diagonal(const int index) const
+{
+    //Diagonal should be always be in normal storage
+    int shiftStop = shiftsRowNormal_[index+1];
+    shiftStop--;
+    if(columnsByRowsNormal_[shiftStop] == index)
+        //Wow! I find it at once!!! I gess it is low triangle matrix.
+        return base_ + blockSize_*(shiftStop);
+    int shiftStart = shiftsRowNormal_[index];
+    if(columnsByRowsNormal_[shiftStart] == index)
+        //Cool it's first element. Mmmm.. Upper diagonal? Strange...
+        return base_ + blockSize_*shiftStart;
+    //Well, I'll go through all blocks :( And I do not like it!
+    for(int ct = shiftStart + 1; ct < shiftStop; ct++)
+        if(columnsByRowsNormal_[ct] == index)
+            //Gosh, I'm almost lost a hope!
+            return base_ + blockSize_*ct;
+    //It is not possible!!! I'm unhappy! So many work and what?! Thiere is no diagonal element! Take your NULL and do not bring me such a bad data!
+    return nullptr;
 }

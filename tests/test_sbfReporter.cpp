@@ -18,3 +18,9 @@ void TestSbfReporter::case01_simpleReport()
 //    QThread::sleep(2);
     report.finalizeProgress();
 }
+
+void TestSbfReporter::case02_simpleReport2()
+{
+    report.createNewProgress("Test progress");
+    report.finalizeProgress();
+}

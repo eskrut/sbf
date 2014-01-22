@@ -9,6 +9,7 @@ class TestSbfReporter : public QObject
 
 private Q_SLOTS:
     void case01_simpleReport();
+    void case02_simpleReport2();
 };
 
 #endif // TEST_SBFREPORTER_H
