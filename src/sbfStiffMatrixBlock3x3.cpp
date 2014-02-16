@@ -140,7 +140,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
      * Calculation only for elements in elemIndexes[elemIndexesLength]
      * If merge == false equal indexes pares will not be removed from index list.
      */
-    if(type == NO_DEFINED_MATRIX)
+    if(type & NO_DEFINED_MATRIX)
         type_ = FULL_MATRIX;
     else
         type_ = type;
@@ -214,7 +214,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
     int indLength = 0; for(int ct = 0; ct < numNodes; indLength += indBandLength[ct++]);
 
     //Store to internal variables
-    if(type_ == FULL_MATRIX){
+    if(type_ & FULL_MATRIX){
         setNumBlocksNodes(indLength, numNodes);
         int count = 0;
         int ct = 0;
@@ -228,7 +228,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
             shiftInd_[count++] = ct;
         }//Loop over rows
     }//FULL_MATRIX
-    else if(type_ == UP_TREANGLE_MATRIX || type_ == DOWN_TREANGLE_MATRIX){
+    else if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){
         int * indBandLengthNorm;
         int ** indBandIndNorm;
         int * indBandLengthAlter;
@@ -244,7 +244,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
         }
 
         int numBlocksNorm = 0, numBlocksAlter = 0;
-        if(type_ == UP_TREANGLE_MATRIX)
+        if(type_ & UP_TREANGLE_MATRIX)
             for(int ctNodes = 0; ctNodes < numNodes; ctNodes++){//Loop over rows
                 int length = indBandLength[ctNodes], * band = indBandInd[ctNodes];
                 for(int ctColumn = 0; ctColumn < length; ctColumn++){//Loop over indexes in row
@@ -269,7 +269,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(int *elemIndexes, int elemInd
         int ctAlter = 0;
         shiftInd_[countNorm++] = ctNorm;
         shiftIndAlter_[countAlter++] = ctAlter;
-        if(type_ == UP_TREANGLE_MATRIX)
+        if(type_ & UP_TREANGLE_MATRIX)
             for(int ctNodes = 0; ctNodes < numNodes; ctNodes++){//Loop over rows
                 int length = indBandLength[ctNodes], * band = indBandInd[ctNodes];
                 for(int ctColumn = 0; ctColumn < length; ctColumn++){//Loop over indexes in row
@@ -326,7 +326,7 @@ void sbfStiffMatrixBlock3x3::updateIndexesFromMesh(MatrixType type, bool merge)
 }
 void sbfStiffMatrixBlock3x3::updataAlterPtr()
 {
-    if((type_ == UP_TREANGLE_MATRIX || type_ == DOWN_TREANGLE_MATRIX) && numBlocksAlter_ > 0){
+    if((type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX) && numBlocksAlter_ > 0){
         int count = 0;
         for(int ctIndI = 0; ctIndI < numNodes_; ctIndI++){
             for(int shift = shiftIndAlter_[ctIndI]; shift < shiftIndAlter_[ctIndI+1]; shift++)
@@ -555,8 +555,8 @@ void sbfStiffMatrixBlock3x3::compute()
             indexes = elem->indexes();
             for(int ctI = 0; ctI < 8; ctI++)
                 for(int ctJ = 0; ctJ < 8; ctJ++){
-                    if(type_ == UP_TREANGLE_MATRIX && indexes[ctI] > indexes[ctJ]) continue;
-                    else if(type_ == DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
+                    if(type_ & UP_TREANGLE_MATRIX && indexes[ctI] > indexes[ctJ]) continue;
+                    else if(type_ & DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     pBlock = addBlockData(blockData, indexes[ctI], indexes[ctJ]);
                     if(pBlock == nullptr) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
@@ -601,8 +601,8 @@ void sbfStiffMatrixBlock3x3::compute(int *elemIndexes, int elemIndexesLength)
             indexes = elem->indexes();
             for(int ctI = 0; ctI < 8; ctI++)
                 for(int ctJ = 0; ctJ < 8; ctJ++){
-                    if(type_ == UP_TREANGLE_MATRIX && indexes[ctI] > indexes[ctJ]) continue;
-                    else if(type_ == DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
+                    if(type_ & UP_TREANGLE_MATRIX && indexes[ctI] > indexes[ctJ]) continue;
+                    else if(type_ & DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     pBlock = addBlockData(blockData, indexes[ctI], indexes[ctJ]);
                     if(pBlock == nullptr) report.error("Error while processing local indexes ", ctI, ", ", ctJ, " of element ", ct, ". Can't find appropriate block in stiffness matrix");
@@ -690,8 +690,8 @@ static void StiffMatrixBlock3x3ComputeThread(void * rawData)
             indexes = elem->indexes();
             for(int ctI = 0; ctI < 8; ctI++)
                 for(int ctJ = 0; ctJ < 8; ctJ++){
-                    if(data->stiffMatrix->type() == UP_TREANGLE_MATRIX && indexes[ctI] > indexes[ctJ]) continue;
-                    else if(data->stiffMatrix->type() == DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
+                    if(data->stiffMatrix->type() & UP_TREANGLE_MATRIX && indexes[ctI] > indexes[ctJ]) continue;
+                    else if(data->stiffMatrix->type() & DOWN_TREANGLE_MATRIX && indexes[ctI] < indexes[ctJ]) continue;
                     stiffHexa8->getBlockDataLoc(blockData, ctI, ctJ);//Store current block from element stiffness matrix to temporary array
                     stiffnessPart = indexes[ctI]/coeff;
                     if(stiffnessPart > sbfNumThreads-1) stiffnessPart = sbfNumThreads-1;
@@ -915,7 +915,7 @@ static void makeStiffMatrixBlock3x3Multiplication(void *data_)
                 shiftBase++;
             }//Loop over blocks in row
 
-            if(type == UP_TREANGLE_MATRIX || type == DOWN_TREANGLE_MATRIX){
+            if(type & UP_TREANGLE_MATRIX || type & DOWN_TREANGLE_MATRIX){
                 //Process blocks with alternative storage
                 blockBandLength = shiftIndAlter[ct+1]-shiftIndAlter[ct];
                 shiftBase = indAlter + shiftIndAlter[ct];//Pointer to index of current vector part
@@ -980,7 +980,7 @@ static void makeStiffMatrixBlock3x3Multiplication(void *data_)
                 shiftBase++;
             }//Loop over blocks in row
 
-            if(type == UP_TREANGLE_MATRIX || type == DOWN_TREANGLE_MATRIX){
+            if(type & UP_TREANGLE_MATRIX || type & DOWN_TREANGLE_MATRIX){
                 //Process blocks with alternative storage
                 blockBandLength = shiftIndAlter[curRow+1]-shiftIndAlter[curRow];
                 shiftBase = indAlter + shiftIndAlter[curRow];//Pointer to index of current vector part
@@ -1039,7 +1039,7 @@ static void makeStiffMatrixBlock3x3MultiplicationLoop(void *data_)
     //Signal stop
     event_set(& tData->stop);
 
-    if(tData->stiffMatrix->type() == FULL_MATRIX){//Code for normal storage of matrix
+    if(tData->stiffMatrix->type() & FULL_MATRIX){//Code for normal storage of matrix
         if(rowIndexes == nullptr){//Version with sequenced rows
             for(;;){//Ever loop
                 //Wait for start
@@ -1326,13 +1326,13 @@ void sbfStiffMatrixBlock3x3::write(std::ofstream &out)
     out.write((char *)&numNodes_, sizeof(numNodes_));
     out.write((char *)&numBlocks_, sizeof(numBlocks_));
 
-    if(type_ == UP_TREANGLE_MATRIX || type_ == DOWN_TREANGLE_MATRIX)
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
         out.write((char *)&numBlocksAlter_, sizeof(numBlocksAlter_));
 
     out.write((char *)indJ_, 2*numBlocks_*sizeof(indJ_[0]));
     out.write((char *)shiftInd_, (numNodes_+1)*sizeof(shiftInd_[0]));
     out.write((char *)data_, numBlocks_*9*sizeof(data_[0]));
-    if(type_ == UP_TREANGLE_MATRIX || type_ == DOWN_TREANGLE_MATRIX){//Alternate information
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){//Alternate information
         out.write((char *)indJAlter_, 2*numBlocksAlter_*sizeof(indJAlter_[0]));
         out.write((char *)shiftIndAlter_, (numNodes_+1)*sizeof(shiftIndAlter_[0]));
         std::vector<int> shiftPtrDataAlter;
@@ -1348,18 +1348,18 @@ void sbfStiffMatrixBlock3x3::read(std::ifstream &in)
     in.read((char *)&numNodes_, sizeof(numNodes_));
     in.read((char *)&numBlocks_, sizeof(numBlocks_));
 
-    if(type_ == UP_TREANGLE_MATRIX || type_ == DOWN_TREANGLE_MATRIX)
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
         in.read((char *)&numBlocksAlter_, sizeof(numBlocksAlter_));
 
-    if(type_ == FULL_MATRIX)
+    if(type_ & FULL_MATRIX)
         setNumBlocksNodes(numBlocks_, numNodes_);
-    if(type_ == UP_TREANGLE_MATRIX || type_ == DOWN_TREANGLE_MATRIX)
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
         setNumBlocksNodes(numBlocks_, numNodes_, numBlocksAlter_);
 
     in.read((char *)indJ_, 2*numBlocks_*sizeof(indJ_[0]));
     in.read((char *)shiftInd_, (numNodes_+1)*sizeof(shiftInd_[0]));
     in.read((char *)data_, numBlocks_*9*sizeof(data_[0]));
-    if(type_ == UP_TREANGLE_MATRIX || type_ == DOWN_TREANGLE_MATRIX){//Alternate information
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){//Alternate information
         in.read((char *)indJAlter_, 2*numBlocksAlter_*sizeof(indJAlter_[0]));
         in.read((char *)shiftIndAlter_, (numNodes_+1)*sizeof(shiftIndAlter_[0]));
         std::vector<int> shiftPtrDataAlter;
@@ -1555,6 +1555,7 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
 //            blockTarget = cholFactor->blockPtr(rowCt, diagCt);//Look only in normal storage
 //            if(!blockTarget) continue;
             blockTarget = iteratorChol->data();
+            if(!blockTarget) continue;
 
             //block = this->data(rowCt, diagCt, &isDirect);//May be at alternative storage
             block = iteratorThis->data(&isDirect);
@@ -1601,6 +1602,7 @@ sbfStiffMatrixBlock3x3 * sbfStiffMatrixBlock3x3::makeIncompleteChol(/*double thr
                 iteratorCholRow0->next();
                 iteratorCholRow1->next();
             }//Loop on blocks in row
+            //BUG crashes here - blockTarget is invalid
             blockTarget[0] = blockData[0] != 0.0 ? (blockData[0] - rowSum[0]) / blockDiagTarget[0] : 0.0;
             blockTarget[3] = blockData[3] != 0.0 ? (blockData[3] - rowSum[3]) / blockDiagTarget[0] : 0.0;
             blockTarget[6] = blockData[6] != 0.0 ? (blockData[6] - rowSum[6]) / blockDiagTarget[0] : 0.0;

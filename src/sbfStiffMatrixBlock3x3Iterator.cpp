@@ -5,6 +5,7 @@
 
 sbfStiffMatrixBlock3x3Iterator::sbfStiffMatrixBlock3x3Iterator(sbfStiffMatrixBlock3x3 *matrix) :
     matrix_(matrix),
+    type_(matrix->type()),
     isInNormal_(false),
     isHaveNext_(false),
     isValid_(false)
@@ -35,7 +36,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToRow(const int rowIndex)
     else
         isHaveNext_ = true;
 
-    if ( type_ != UP_TREANGLE_MATRIX ) {
+    if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( curShiftNormal_ != shiftNormalLast_ ) {
             curColumnIndex_ = columnsByRowsNormal_[curShiftNormal_];
             isInNormal_ = true;
@@ -72,7 +73,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToColumn(const int columnIndex)
     else
         isHaveNext_ = true;
 
-    if ( type_ != UP_TREANGLE_MATRIX ) {
+    if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( curShiftNormal_ != shiftNormalLast_ ) {
             curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
             isInNormal_ = false;
@@ -109,7 +110,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToRowInverse(const int rowIndex)
     else
         isHaveNext_ = true;
 
-    if ( type_ != UP_TREANGLE_MATRIX ) {
+    if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( --curShiftAlter_ > shiftAlterLast_ ) {
             curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = false;
@@ -148,7 +149,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToColumnInverse(const int columnIndex)
     else
         isHaveNext_ = true;
 
-    if ( type_ != UP_TREANGLE_MATRIX ) {
+    if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( --curShiftAlter_ > shiftAlterLast_ ) {
             curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = true;
@@ -186,7 +187,7 @@ bool sbfStiffMatrixBlock3x3Iterator::next()
         return false;
     }
     isValid_ = true;
-    if ( type_ != UP_TREANGLE_MATRIX ) {
+    if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         switch (dir_) {
         case IterateDirection::RowDirect:
             if ( isInNormal_ && ++curShiftNormal_ != shiftNormalLast_) {

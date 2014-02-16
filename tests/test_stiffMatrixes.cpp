@@ -165,8 +165,6 @@ void TestStiffMatrixes::case02_createIncompleteChol2(){
     block[0] = 24; block[1] = 0; block[2] = 6;
     block[3] = 0; block[4] = 8; block[5] = 2;
     block[6] = 6; block[7] = 2; block[8] = 8;
-    block = matrix->blockPtr(0, 1);
-    block[6] = -6; block[7] = 2;
     block = matrix->blockPtr(1, 0);
     block[2] = -6;
     block[5] = 2;
@@ -250,7 +248,7 @@ void TestStiffMatrixes::case03_solveLLTuf()
     block[3] = 3; block[4] = 10;
     block[6] = 1; block[7] = 1; block[8] = 10;
 
-    NodesData<> u(2), f(2), uTarget(2);
+    NodesData<> u(2), f(2), uTarget(2), f_test(2);
     f.data()[0] = 10;
     f.data()[1] = 20;
     f.data()[2] = 10;
@@ -258,14 +256,16 @@ void TestStiffMatrixes::case03_solveLLTuf()
     f.data()[4] = 23;
     f.data()[5] = 6.9;
 
-    uTarget.data()[0] = 7.7000e-02;
+    uTarget.data()[0] = 1.0;
     uTarget.data()[1] = 1.9000e-01;
     uTarget.data()[2] = 1.0000e-01;
-    uTarget.data()[3] = 2.0000e-02;
+    uTarget.data()[3] = 1.0;
     uTarget.data()[4] = 2.0000e-01;
     uTarget.data()[5] = 0.0;
 
     matrix->solve_L_LT_u_eq_f(u.data(), f.data());
+
+    matrix->multiplyByVector(u.data(), f_test.data());
 
     bool pass = true;
     double eps = 1e-8;
@@ -365,7 +365,7 @@ void TestStiffMatrixes::case04_CGMwP()
     double alpha, betta;
 
     //initial step
-    disp.copyData(force.data());
+//    disp.copyData(force.data());
 //    iChol->solve_L_LT_u_eq_f(disp.data(), force.data());
     stiff->multiplyByVector(disp.data(), KU.data());
     r.copyData((force - KU).data());
@@ -404,7 +404,7 @@ void TestStiffMatrixes::case04_CGMwP()
         numIterations++;
         auto timePoint5 = std::chrono::high_resolution_clock::now();
 
-        if ( numIterations % 1 == 0) {
+        if ( numIterations % 1000 == 0) {
             std::cout << "MatMul         :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint2 - timePoint1).count() << std::endl;
             std::cout << "VectOperation  :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint3 - timePoint2).count() << std::endl;
             std::cout << "LLTSolve       :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint4 - timePoint3).count() << std::endl;

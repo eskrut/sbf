@@ -14,8 +14,16 @@ void TestMatrixIterator::case01_block3x3()
 //    [0 0 1 1]
 //    [1 0 1 1]
     std::vector<int> indJ, shiftJ, indJAlter, shiftJAlter;
+    auto fillFun = [=](double * dataPtr, double val){
+        for(int ct = 0; ct < 9; ct++) dataPtr[ct] = val;
+    };
 
     //Full matrix
+    //Filling pattern
+//    [1 2 0 3 ]
+//    [4 5 0 0 ]
+//    [0 0 6 7 ]
+//    [8 0 9 10]
     indJ.clear(); shiftJ.clear(); indJAlter.clear(); shiftJAlter.clear();
     stiff->setType(FULL_MATRIX);
     shiftJ.push_back(0);
@@ -28,17 +36,30 @@ void TestMatrixIterator::case01_block3x3()
     indJ.insert(indJ.end(), {0, 2, 3});
     shiftJ.push_back(indJ.size());
     stiff->setIndData(4, indJ.size(), indJ.data(), shiftJ.data());
+    fillFun(stiff->data(0, 0), 1);
+    fillFun(stiff->data(0, 1), 2);
+    fillFun(stiff->data(0, 3), 3);
+    fillFun(stiff->data(1, 0), 4);
+    fillFun(stiff->data(1, 1), 5);
+    fillFun(stiff->data(2, 2), 6);
+    fillFun(stiff->data(2, 3), 7);
+    fillFun(stiff->data(3, 0), 8);
+    fillFun(stiff->data(3, 2), 9);
+    fillFun(stiff->data(3, 3), 10);
 
     iterator.reset(stiff->createIterator());
     iterator->setToRow(0);
     QVERIFY2(iterator->data() == stiff->data(), "Failed to initialize row");
     QVERIFY2(iterator->column() == 0, "Failed to initialize row");
+    QVERIFY2(*iterator->data() == 1, "Failed to get right value");
     QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
     QVERIFY2(iterator->haveNext() == true, "Failed to tell 'there are more blocks'");
     QVERIFY2(iterator->data() == stiff->data()+9*1, "Failed to compute address");
+    QVERIFY2(*iterator->data() == 2, "Failed to get right value");
     QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
     QVERIFY2(iterator->haveNext() == false, "Failed to tell 'there are more blocks'");
     QVERIFY2(iterator->data() == stiff->data()+9*2, "Failed to compute address");
+    QVERIFY2(*iterator->data() == 3, "Failed to get right value");
     QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
 
     iterator->setToRow(2);

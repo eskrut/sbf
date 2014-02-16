@@ -10,7 +10,6 @@ public:
     sbfStiffMatrixBlock3x3Iterator(sbfStiffMatrixBlock3x3 * matrix);
 private:
     sbfStiffMatrixBlock3x3 * matrix_;
-private:
     //!Base matrix topology type.
     MatrixType type_;
 
@@ -18,7 +17,7 @@ private:
     double * base_;
 
     //!Block size
-    static const int blockSize_{9};
+    static const int blockSize_ = 9;
 
     //Indexes to access columns in rows. Diagonal elements are always in normal storage.
     //!Shifts to certain row in array for normal storage. Length is [numNodes + 1].
