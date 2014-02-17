@@ -20,11 +20,11 @@ INCLUDEPATH += ./../src
 
 CONFIG(debug, debug|release){
 LIBS += -lsbf-dev \
-        -L "$$OUT_PWD"/../../build-libsbf-debug
+        -L "$$OUT_PWD"/../libsbf-debug
 }
 CONFIG(release, release|debug){
 LIBS += -lsbf \
-        -L "$$OUT_PWD"/../../build-libsbf-release
+        -L "$$OUT_PWD"/../libsbf-release
 }
 
 SOURCES += \

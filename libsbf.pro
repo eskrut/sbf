@@ -71,7 +71,8 @@ HEADERS += \
     src/sbfReporter.h \
     src/sbfTimer.h \
     src/sbfMatrixIterator.h \
-    src/sbfStiffMatrixBlock3x3Iterator.h
+    src/sbfStiffMatrixBlock3x3Iterator.h \
+    src/sbfMeshBuilders.h
 
 unix:!symbian {
     maemo5 {

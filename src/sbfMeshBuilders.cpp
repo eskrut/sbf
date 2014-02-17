@@ -72,3 +72,32 @@ sbfMesh * sbfMesh::makeBlock(float xSide, float ySide, float zSide, int xPart, i
         crdZ.push_back(step*ct);
     return sbfMesh::makeBlock(crdX, crdY, crdZ, type);
 }
+
+sbfMesh * sbfMesh::makeCylinderPart(float rInner, float rOuter, float phiStart, float phiStop, float zStart, float zStop, int rPart, int phiPart, int zPart, ElementType type)
+{
+    sbfMesh * cylinder = sbfMesh::makeBlock(rOuter-rInner, phiStop-phiStart, zStop-zStart, rPart, phiPart, zPart, type);
+    cylinder->translate(rInner, phiStart, zStart);
+    //Perform coordinate system transformation
+    cylinder->applyToAllNodes([](sbfNode &node){
+        auto r = node.x();
+        auto phi = node.y();
+        node.setX(r*std::cos(phi));
+        node.setY(r*std::sin(phi));
+    });
+
+    return cylinder;
+}
+
+sbfMesh *sbfMesh::makeCylinderPart(std::vector<float> &radiuses, std::vector<float> &angles, std::vector<float> &zCrds, ElementType type)
+{
+    sbfMesh * cylinder = sbfMesh::makeBlock(radiuses, angles, zCrds, type);
+    //Perform coordinate system transformation
+    cylinder->applyToAllNodes([](sbfNode &node){
+        auto r = node.x();
+        auto phi = node.y();
+        node.setX(r*std::cos(phi));
+        node.setY(r*std::sin(phi));
+    });
+
+    return cylinder;
+}

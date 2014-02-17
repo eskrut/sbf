@@ -170,3 +170,9 @@ void TestSbfMesh::case05_merge()
     int numMerged = mesh1->mergeNodes();
     QVERIFY2(numMerged == (numParts+1)*(numParts+1), QString("Fail to merge nodes. Expected %1, got %2").arg((numParts+1)*(numParts+1)).arg(numMerged).toStdString().c_str());
 }
+
+void TestSbfMesh::case06_buildCyl()
+{
+//    sbfMesh::makeCylinderPart(1, 2, 0, M_PI_2, 0, 5, 4, 15, 10)->writeMeshToFiles();
+    sbfMesh::makeCylinderPart(std::vector<float>() = {1, 2, 3}, std::vector<float>() = {0, 1*M_PI/8, 2*M_PI/8, 3*M_PI/8, 4*M_PI/8}, std::vector<float>() = {0, 10})->writeMeshToFiles();
+}
