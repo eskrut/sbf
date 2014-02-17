@@ -9,13 +9,8 @@ void TestSbfReporter::case01_simpleReport()
 
     report.createNewProgress("Test progress");
     report.updateProgress(0, 2, 0);
-//    QThread::sleep(2);
-    report.updateProgress(20);
-//    QThread::sleep(2);
     report.updateProgress(50);
-//    QThread::sleep(2);
-    report.updateProgress(80);
-//    QThread::sleep(2);
+    QThread::msleep(250);
     report.finalizeProgress();
 }
 

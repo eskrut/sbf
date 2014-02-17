@@ -1683,7 +1683,7 @@ void sbfStiffMatrixBlock3x3::solve_L_LT_u_eq_f(double * u, double * f)
 //            block = blockPtr(ctColumn, ctRow);//swap row and column ndexes
 //            if ( !block ) continue;
             block = iter->data();
-            int ctColumn = iter->column();
+            int ctColumn = iter->row();
             vecPart[0] = u[ctColumn*3 + 0];
             vecPart[1] = u[ctColumn*3 + 1];
             vecPart[2] = u[ctColumn*3 + 2];

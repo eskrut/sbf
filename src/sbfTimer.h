@@ -16,6 +16,7 @@ private:
 public:
     void start();
     void stop();
+    template <class target_duration = std::chrono::seconds>
     int getCount();
     std::string timeSpanStr();
 };
@@ -41,11 +42,12 @@ void sbfTimer<clock_type, duration_type>::stop()
 }
 
 template <class clock_type, class duration_type>
+template <class target_duration>
 int sbfTimer<clock_type, duration_type>::getCount()
 {
     if ( isRunning_ )
-        return (clock_type::now() - start_).count();
-    return (stop_ - start_).count();
+        return std::chrono::duration_cast<target_duration>(clock_type::now() - start_).count();
+    return std::chrono::duration_cast<target_duration>(stop_ - start_).count();
 }
 
 template <class clock_type, class duration_type>
@@ -60,7 +62,8 @@ std::string sbfTimer<clock_type, duration_type>::timeSpanStr()
         span = duration_cast<duration<double>>(stop_ - start_);
     sstr << std::setw(4) << duration_cast<hours>(span).count() << ":" <<
             std::setw(2) << std::setfill('0') << duration_cast<minutes>(span).count() % 60 << ":" <<
-            std::setw(2) << std::setfill('0') << duration_cast<seconds>(span).count() % 60;
+            std::setw(2) << std::setfill('0') << duration_cast<seconds>(span).count() % 60 << "." <<
+            std::setw(6) << std::setfill('0') << duration_cast<microseconds>(span).count() % 1000000;
     return sstr.str();
 }
 

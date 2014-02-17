@@ -94,6 +94,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToColumn(const int columnIndex)
 
 void sbfStiffMatrixBlock3x3Iterator::setToRowInverse(const int rowIndex)
 {
+    //Since matrix have symmetry, this will actually iterate over row
     curRowIndex_ = rowIndex;
     dir_ = IterateDirection::RowInvert;
     curShiftNormal_ = shiftsRowNormal_[curRowIndex_ + 1] - 1;
@@ -111,7 +112,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToRowInverse(const int rowIndex)
         isHaveNext_ = true;
 
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
-        if ( --curShiftAlter_ > shiftAlterLast_ ) {
+        if ( --curShiftAlter_ >= shiftAlterLast_ ) {
             curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = false;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
@@ -133,6 +134,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToRowInverse(const int rowIndex)
 
 void sbfStiffMatrixBlock3x3Iterator::setToColumnInverse(const int columnIndex)
 {
+    //Since matrix have symmetry, this will actually iterate over row
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnInvert;
     curShiftNormal_ = shiftsRowNormal_[curColumnIndex_ + 1] - 1;
@@ -150,7 +152,7 @@ void sbfStiffMatrixBlock3x3Iterator::setToColumnInverse(const int columnIndex)
         isHaveNext_ = true;
 
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
-        if ( --curShiftAlter_ > shiftAlterLast_ ) {
+        if ( --curShiftAlter_ >= shiftAlterLast_ ) {
             curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
             isInNormal_ = true;
             curData_ = blocksByRowsAlter_[curShiftAlter_];

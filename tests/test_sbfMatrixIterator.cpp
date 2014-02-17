@@ -21,9 +21,9 @@ void TestMatrixIterator::case01_block3x3()
     //Full matrix
     //Filling pattern
 //    [1 2 0 3 ]
-//    [4 5 0 0 ]
-//    [0 0 6 7 ]
-//    [8 0 9 10]
+//    [2 4 0 0 ]
+//    [0 0 5 6 ]
+//    [3 0 6 7 ]
     indJ.clear(); shiftJ.clear(); indJAlter.clear(); shiftJAlter.clear();
     stiff->setType(FULL_MATRIX);
     shiftJ.push_back(0);
@@ -39,13 +39,13 @@ void TestMatrixIterator::case01_block3x3()
     fillFun(stiff->data(0, 0), 1);
     fillFun(stiff->data(0, 1), 2);
     fillFun(stiff->data(0, 3), 3);
-    fillFun(stiff->data(1, 0), 4);
-    fillFun(stiff->data(1, 1), 5);
-    fillFun(stiff->data(2, 2), 6);
-    fillFun(stiff->data(2, 3), 7);
-    fillFun(stiff->data(3, 0), 8);
-    fillFun(stiff->data(3, 2), 9);
-    fillFun(stiff->data(3, 3), 10);
+    fillFun(stiff->data(1, 0), 2);
+    fillFun(stiff->data(1, 1), 4);
+    fillFun(stiff->data(2, 2), 4);
+    fillFun(stiff->data(2, 3), 6);
+    fillFun(stiff->data(3, 0), 3);
+    fillFun(stiff->data(3, 2), 6);
+    fillFun(stiff->data(3, 3), 7);
 
     iterator.reset(stiff->createIterator());
     iterator->setToRow(0);
@@ -104,6 +104,7 @@ void TestMatrixIterator::case01_block3x3()
     QVERIFY2(iterator->data() == stiff->data()+9*9, "Failed to initialize row");
     QVERIFY2(iterator->row() == 3, "Failed to initialize row");
     QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
+    QVERIFY2(iterator->isDiagonal() == true, "Failed to interpret diagonal");
     QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
     QVERIFY2(iterator->row() == 2, "Failed to evaluate column index");
     QVERIFY2(iterator->data() == stiff->data()+9*8, "Failed to initialize row");
@@ -115,13 +116,27 @@ void TestMatrixIterator::case01_block3x3()
     QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
     QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
 
+    iterator->setToColumnInverse(0);
+    QVERIFY2(*iterator->data() == 3, "Failed to get right value");
+    QVERIFY2(iterator->next() == true, "Failed to tell 'there are more blocks'");
+    QVERIFY2(*iterator->data() == 2, "Failed to get right value");
+    QVERIFY2(iterator->next() == true, "Failed to tell 'there are more blocks'");
+    QVERIFY2(*iterator->data() == 1, "Failed to get right value");
+    QVERIFY2(iterator->isDiagonal() == true, "Failed to interpret diagonal");
+    QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+    //Full matrix
     //Filling pattern
-//    [1 1 0 1]
-//    [1 1 0 0]
-//    [0 0 1 1]
-//    [1 0 1 1]
+//    [1 2 0 3 ]
+//    [2 4 0 0 ]
+//    [0 0 5 6 ]
+//    [3 0 6 7 ]
 
-    //Down treangle matrix
+    //Down treangle matrix   
+    //Filling pattern
+//    [1 2 0 5 ]
+//    [2 3 0 0 ]
+//    [0 0 4 6 ]
+//    [5 0 6 7 ]
     indJ.clear(); shiftJ.clear(); indJAlter.clear(); shiftJAlter.clear();
     stiff->setType(DOWN_TREANGLE_MATRIX);
     shiftJ.push_back(0);
@@ -143,6 +158,13 @@ void TestMatrixIterator::case01_block3x3()
     shiftJ.push_back(indJ.size());
     shiftJAlter.push_back(indJAlter.size());
     stiff->setIndData(4, indJ.size(), indJ.data(), shiftJ.data(), indJAlter.size(), indJAlter.data(), shiftJAlter.data());
+    fillFun(stiff->data(0, 0), 1);
+    fillFun(stiff->data(1, 0), 2);
+    fillFun(stiff->data(1, 1), 3);
+    fillFun(stiff->data(2, 2), 4);
+    fillFun(stiff->data(3, 0), 5);
+    fillFun(stiff->data(3, 2), 6);
+    fillFun(stiff->data(3, 3), 7);
 
     iterator.reset(stiff->createIterator());
     iterator->setToRow(0);
@@ -216,23 +238,27 @@ void TestMatrixIterator::case01_block3x3()
     iterator->setToColumnInverse(0);
     QVERIFY2(iterator->haveNext() == true, "Failed to tell 'there are more blocks'");
     QVERIFY2(iterator->data() == stiff->data()+9*4, "Failed to initialize row");
+    QVERIFY2(*iterator->data() == 5, "Failed to get right value");
     QVERIFY2(iterator->row() == 3, "Failed to initialize row");
     QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
     QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
     QVERIFY2(iterator->row() == 1, "Failed to evaluate column index");
     QVERIFY2(iterator->data() == stiff->data()+9*1, "Failed to initialize row");
+    QVERIFY2(*iterator->data() == 2, "Failed to get right value");
     QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
     QVERIFY2(iterator->haveNext() == true, "Failed to tell 'no more blocks'");
     QVERIFY2(iterator->next() == true, "Failed to tell 'no more blocks'");
     QVERIFY2(iterator->data() == stiff->data()+9*0, "Failed to initialize row");
+    QVERIFY2(*iterator->data() == 1, "Failed to get right value");
     QVERIFY2(iterator->row() == 0, "Failed to initialize row");
     QVERIFY2(iterator->isDiagonal() == true, "Failed to tell diagonal");
     QVERIFY2(iterator->diagonal(0) == stiff->data()+9*0, "Failed to initialize row");
     QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
 
+    //Down treangle matrix
     //Filling pattern
-//    [1 1 0 1]
-//    [1 1 0 0]
-//    [0 0 1 1]
-//    [1 0 1 1]
+//    [1 2 0 5 ]
+//    [2 3 0 0 ]
+//    [0 0 4 6 ]
+//    [5 0 6 7 ]
 }

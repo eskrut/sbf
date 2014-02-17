@@ -20,8 +20,8 @@ int main() {
     testObjects << new TestSbfMesh();
     testObjects << new TestMatrixIterator();
     testObjects << new TestStiffMatrixes();
-//    testObjects << new TestSbfWorker();
-//    testObjects << new TestSbfParallelTask();
+    testObjects << new TestSbfWorker();
+    testObjects << new TestSbfParallelTask();
 
     int status = 0;
     for ( auto obj : testObjects )

@@ -234,18 +234,22 @@ void TestStiffMatrixes::case03_solveLLTuf()
      */
     matrix->setType(MatrixType::DOWN_TREANGLE_MATRIX);
     std::vector<int> indJ{0, 0, 1}, shiftInd{0, 1, 3};
-    matrix->setIndData(2, 3, &indJ[0], &shiftInd[0]);
+    //Iterator expects symmetry matrix to process columns
+    std::vector<int> indJAlter{1}, shiftIndAlter{0, 1, 1};
+    matrix->setIndData(2, 3, indJ.data(), shiftInd.data(), indJAlter.size(), indJAlter.data(), shiftIndAlter.data());
     matrix->null();
     double * block = matrix->blockPtr(0, 0);
-    block[0] = 10;
+    //Iterator expects symmetry matrix to process columns
+    block[0] = 10; /*block[1] = 1;*/
     block[3] = 1; block[4] = 10;
     block[8] = 10;
     block = matrix->blockPtr(1, 0);
     block[0] = 2;
     block[6] = 1; block[7] = 1; block[8] = 1;
     block = matrix->blockPtr(1, 1);
-    block[0] = 20;
-    block[3] = 3; block[4] = 10;
+    //Iterator expects symmetry matrix to process columns
+    block[0] = 20; /*block[1] = 3; block[2] = 1;*/
+    block[3] = 3; block[4] = 10; /*block[5] = 1;*/
     block[6] = 1; block[7] = 1; block[8] = 10;
 
     NodesData<> u(2), f(2), uTarget(2), f_test(2);
@@ -256,16 +260,16 @@ void TestStiffMatrixes::case03_solveLLTuf()
     f.data()[4] = 23;
     f.data()[5] = 6.9;
 
-    uTarget.data()[0] = 1.0;
+    uTarget.data()[0] = 0.077;
     uTarget.data()[1] = 1.9000e-01;
     uTarget.data()[2] = 1.0000e-01;
-    uTarget.data()[3] = 1.0;
+    uTarget.data()[3] = 2.0000e-02;
     uTarget.data()[4] = 2.0000e-01;
     uTarget.data()[5] = 0.0;
 
     matrix->solve_L_LT_u_eq_f(u.data(), f.data());
 
-    matrix->multiplyByVector(u.data(), f_test.data());
+//    matrix->multiplyByVector(u.data(), f_test.data());
 
     bool pass = true;
     double eps = 1e-8;
@@ -283,8 +287,10 @@ void TestStiffMatrixes::case03_solveLLTuf()
 
 void TestStiffMatrixes::case04_CGMwP()
 {
-    float xSide = 10, ySide = 10, zSide = 10;
-    int xPart = 50, yPart = 10, zPart = 10;
+    sbfTimer<> timer;
+    timer.start();
+    float xSide = 100, ySide = 10, zSide = 10;
+    int xPart = 100, yPart = 50, zPart = 50;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
@@ -366,7 +372,7 @@ void TestStiffMatrixes::case04_CGMwP()
 
     //initial step
 //    disp.copyData(force.data());
-//    iChol->solve_L_LT_u_eq_f(disp.data(), force.data());
+    iChol->solve_L_LT_u_eq_f(disp.data(), force.data());
     stiff->multiplyByVector(disp.data(), KU.data());
     r.copyData((force - KU).data());
 
@@ -404,7 +410,7 @@ void TestStiffMatrixes::case04_CGMwP()
         numIterations++;
         auto timePoint5 = std::chrono::high_resolution_clock::now();
 
-        if ( numIterations % 1000 == 0) {
+        if ( numIterations % 100 == 0) {
             std::cout << "MatMul         :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint2 - timePoint1).count() << std::endl;
             std::cout << "VectOperation  :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint3 - timePoint2).count() << std::endl;
             std::cout << "LLTSolve       :" << std::chrono::duration_cast<std::chrono::nanoseconds>(timePoint4 - timePoint3).count() << std::endl;
@@ -419,7 +425,13 @@ void TestStiffMatrixes::case04_CGMwP()
     double E = propSet.material(0)->propertyTable("elastic module")->curValue();
     double dL = xSide*1.0/E/ySide/zSide;
 
-    qDebug() << numIterations << averDisp << dL;
+    qDebug() << numIterations << averDisp << dL << std::fabs(averDisp - dL)/dL;
 
-    QVERIFY2(std::fabs(averDisp - dL)/dL < 0.001, "Fail to make simple tensile solution");
+    if ( std::fabs(averDisp - dL)/dL > 0.001 ) {
+        qDebug() << QString("Expected displacement of loaded side is %1, got %2, error %3").arg(dL).arg(averDisp).arg(std::fabs(averDisp - dL)/dL);
+        QVERIFY2(false, "Fail to make simple tensile solution");
+    }
+
+    timer.stop();
+    report("CGMwP test done in ", timer.timeSpanStr());
 }

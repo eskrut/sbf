@@ -94,12 +94,12 @@ void sbfReporter::updateProgress(int min, int max, int cur)
 void sbfReporter::finalizeProgress()
 {
     if ( isOnProgress_ ) {
-        if ( flagTrackExeTime_ )
-            timer_.getCount();
+//        if ( flagTrackExeTime_ )
+//            timer_.getCount();
         *out_ << "\r" << progressLine(100) << std::endl;
         *out_ << progressBarTitle_ << " DONE";
         if ( flagTrackExeTime_ ) {
-            *out_ << " in " << timer_.getCount() << " seconds";
+            *out_ << " in " << timer_.getCount<std::chrono::seconds>() << " seconds";
         }
         *out_ << std::endl;
         out_->flush();
