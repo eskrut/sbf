@@ -7,6 +7,15 @@
 class sbfPropertiesSet;
 class sbfElement;
 
+/*
+ *    7-------6
+ *   /|      /|     Z
+ *  4-------5 |     |   Y
+ *  | |     | |     |  /
+ *  | 3- - -|-2     | /
+ *  |/      |/      |/
+ *  0-------1       0-------- X
+*/
 
 class DECLSPEC sbfElemStiffMatrixHexa8
 {

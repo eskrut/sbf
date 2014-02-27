@@ -71,6 +71,45 @@ void TestStiffMatrixes::case01_patchTest01()
     QVERIFY2(pass, "Fail to produce zero inner forces");
 }
 
+void TestStiffMatrixes::case01_mapHexa01()
+{
+    /*
+     *    7-------6
+     *   /|      /|     Z
+     *  4-------5 |     |   Y
+     *  | |     | |     |  /
+     *  | 3- - -|-2     | /
+     *  |/      |/      |/
+     *  0-------1       0-------- X
+    */
+
+    /* Msp to the triangle
+     *    7-6
+     *   /| | \         Z
+     *  4-------5       |   Y
+     *  | | |   |       |  /
+     *  | 3-2   |       | /
+     *  |/    \ |       |/
+     *  0-------1       0-------- X
+    */
+
+    std::unique_ptr<sbfMesh> meshSmartPtr(new sbfMesh());
+    sbfMesh *m = meshSmartPtr.get();
+    for(auto z : {0, 1}) {
+        m->addNode(0, 0, z, false);
+        m->addNode(1, 0, z, false);
+        m->addNode(0, 1, z, false);
+        m->addNode(0, 1, z, false); // Yes, this is duplicate. By the way it's nodes map test
+    }
+    m->addElement(sbfElement(ElementType::HEXAHEDRON_LINEAR, {0, 1, 2, 3, 4, 5, 6, 7}));
+    sbfElemStiffMatrixHexa8 elStif(m->elemPtr(0));
+    auto vol = elStif.computeVolume();
+    auto eps = 1e-6;
+    QVERIFY2(std::fabs(vol - 0.5) < eps, "Fail to get normal volume");
+    //Surprisengly, but it pass!!! May be we should not need tetra and prisme elem matrixes.
+    //Stell we should make more strict tests.
+}
+
 void TestStiffMatrixes::case02_createIncompleteChol(){
     //Create simple matrix
     sbfStiffMatrixBlock3x3 * matrix = new sbfStiffMatrixBlock3x3(4, 2);
