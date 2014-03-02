@@ -1,0 +1,43 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 13.04.0 ] */
+
+/* [wxMaxima: input   start ] */
+/* Prepare base functions */
+G(b, b_i) := block([], if b_i = 0 then (1 - b^2) else (1+b*b_i)/2);
+g(r_i, s_i, t_i) := G(r, r_i)*G(s, s_i)*G(t, t_i);
+B_i(h_i) := matrix([
+[diff(h_i, r), 0, 0],
+[0, diff(h_i, s), 0],
+[0, 0, diff(h_i, t)],
+[diff(h_i, s), diff(h_i, r), 0],
+[0, diff(h_i, t), diff(h_i, s)],
+[diff(h_i, t), 0, diff(h_i, r)]
+]);
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+/* Define form functions */
+h_0 : g(-1, -1, -1) - (g(0, -1, -1) + g(-1, 0, -1) + g(-1, -1, 0))/2;
+h_1 : g(1, -1, -1) - (g(0, -1, -1) + g(1, 0, -1) + g(1, -1, 0))/2;
+h_2 : g(1, 1, -1) - (g(1, 0, -1) + g(0, 1, -1) + g(1, 1, 0))/2;
+h_3 : g(-1, 1, -1) - (g(0, 1, -1) + g(-1, 0, -1) + g(-1, 1, 0))/2;
+h_4 : g(-1, -1, 1) - (g(0, -1, 1) + g(-1, 0, 1) + g(-1, -1, 0))/2;
+h_5 : g(1, -1, 1) - (g(0, -1, 1) + g(1, 0, 1) + g(1, -1, 0))/2;
+h_6 : g(1, 1, 1) - (g(1, 0, 1) + g(0, 1, 1) + g(1, 1, 0))/2;
+h_7 : g(-1, 1, 1) - (g(0, 1, 1) + g(-1, 0, 1) + g(-1, 1, 0))/2;
+h_8 : g(0, -1, -1);
+h_9 : g(1, 0, -1);
+h_10 : g(0, 1, -1);
+h_11 : g(-1, 0, -1);
+h_12 : g(-1, -1, 0);
+h_13 : g(1, -1, 0);
+h_14 : g(1, 1, 0);
+h_15 : g(-1, 1, 0);
+h_16 : g(0, -1, 1);
+h_17 : g(1, 0, 1);
+h_18 : g(0, 1, 1);
+h_19 : g(-1, 0, 1);
+/* [wxMaxima: input   end   ] */
+
+/* Maxima can't load/batch files which end with a comment! */
+"Created with wxMaxima"$
