@@ -82,3 +82,6 @@ unix:!symbian {
     }
     INSTALLS += target
 }
+
+OTHER_FILES += \
+    CMakeLists.txt

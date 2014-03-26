@@ -1,0 +1,6 @@
+get_filename_component(SBF_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(SBF_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
+
+include("${SBF_CMAKE_DIR}/sbfTargets.cmake")
+
+set(SBF_LIBRARIES sbf)
