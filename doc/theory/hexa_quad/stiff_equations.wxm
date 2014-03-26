@@ -5,38 +5,186 @@
 /* Prepare base functions */
 G(b, b_i) := block([], if b_i = 0 then (1 - b^2) else (1+b*b_i)/2);
 g(r_i, s_i, t_i) := G(r, r_i)*G(s, s_i)*G(t, t_i);
-B_i(h_i) := matrix([
+/*B_i(h_i) := matrix(
 [diff(h_i, r), 0, 0],
 [0, diff(h_i, s), 0],
 [0, 0, diff(h_i, t)],
 [diff(h_i, s), diff(h_i, r), 0],
 [0, diff(h_i, t), diff(h_i, s)],
 [diff(h_i, t), 0, diff(h_i, r)]
-]);
+);*/
+C : E*(1-mu)/(1+mu)/(1-2*mu)*matrix(
+[1, mu/(1-mu), mu/(1-mu), 0, 0, 0],
+[mu/(1-mu), 1, mu/(1-mu), 0, 0, 0],
+[mu/(1-mu), mu/(1-mu), 1, 0, 0, 0],
+[0, 0, 0, (1-2*mu)/(2*(1-mu)), 0, 0],
+[0, 0, 0, 0, (1-2*mu)/(2*(1-mu)), 0],
+[0, 0, 0, 0, 0, (1-2*mu)/(2*(1-mu))]
+);
 /* [wxMaxima: input   end   ] */
 
 /* [wxMaxima: input   start ] */
 /* Define form functions */
-h_0 : g(-1, -1, -1) - (g(0, -1, -1) + g(-1, 0, -1) + g(-1, -1, 0))/2;
-h_1 : g(1, -1, -1) - (g(0, -1, -1) + g(1, 0, -1) + g(1, -1, 0))/2;
-h_2 : g(1, 1, -1) - (g(1, 0, -1) + g(0, 1, -1) + g(1, 1, 0))/2;
-h_3 : g(-1, 1, -1) - (g(0, 1, -1) + g(-1, 0, -1) + g(-1, 1, 0))/2;
-h_4 : g(-1, -1, 1) - (g(0, -1, 1) + g(-1, 0, 1) + g(-1, -1, 0))/2;
-h_5 : g(1, -1, 1) - (g(0, -1, 1) + g(1, 0, 1) + g(1, -1, 0))/2;
-h_6 : g(1, 1, 1) - (g(1, 0, 1) + g(0, 1, 1) + g(1, 1, 0))/2;
-h_7 : g(-1, 1, 1) - (g(0, 1, 1) + g(-1, 0, 1) + g(-1, 1, 0))/2;
-h_8 : g(0, -1, -1);
-h_9 : g(1, 0, -1);
-h_10 : g(0, 1, -1);
-h_11 : g(-1, 0, -1);
-h_12 : g(-1, -1, 0);
-h_13 : g(1, -1, 0);
-h_14 : g(1, 1, 0);
-h_15 : g(-1, 1, 0);
-h_16 : g(0, -1, 1);
-h_17 : g(1, 0, 1);
-h_18 : g(0, 1, 1);
-h_19 : g(-1, 0, 1);
+/*
+ *      7------18-------6
+ *     /|              /|
+ *    19              17|
+ *   /  |            /  |
+ *  4-------16------5   |
+ *  |   |           |   |
+ *  |   15          |   14  ^ Z
+ *  |   |           |   |   |
+ *  |               |   |   |
+ *  12  |           13  |   |    / Y
+ *  |   3 - - -10 - |- -2   |   /
+ *  |  /            |  /    |  /
+ *  | 11            | 9     | /
+ *  |/              |/      |/
+ *  0-------8-------1       0-----------> X
+*/
+h_0 : g(-1, -1, -1) - (g(0, -1, -1) + g(-1, 0, -1) + g(-1, -1, 0))/2$
+h_1 : g(1, -1, -1) - (g(0, -1, -1) + g(1, 0, -1) + g(1, -1, 0))/2$
+h_2 : g(1, 1, -1) - (g(1, 0, -1) + g(0, 1, -1) + g(1, 1, 0))/2$
+h_3 : g(-1, 1, -1) - (g(0, 1, -1) + g(-1, 0, -1) + g(-1, 1, 0))/2$
+h_4 : g(-1, -1, 1) - (g(0, -1, 1) + g(-1, 0, 1) + g(-1, -1, 0))/2$
+h_5 : g(1, -1, 1) - (g(0, -1, 1) + g(1, 0, 1) + g(1, -1, 0))/2$
+h_6 : g(1, 1, 1) - (g(1, 0, 1) + g(0, 1, 1) + g(1, 1, 0))/2$
+h_7 : g(-1, 1, 1) - (g(0, 1, 1) + g(-1, 0, 1) + g(-1, 1, 0))/2$
+h_8 : g(0, -1, -1)$
+h_9 : g(1, 0, -1)$
+h_10 : g(0, 1, -1)$
+h_11 : g(-1, 0, -1)$
+h_12 : g(-1, -1, 0)$
+h_13 : g(1, -1, 0)$
+h_14 : g(1, 1, 0)$
+h_15 : g(-1, 1, 0)$
+h_16 : g(0, -1, 1)$
+h_17 : g(1, 0, 1)$
+h_18 : g(0, 1, 1)$
+h_19 : g(-1, 0, 1)$
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+/* Construct B matrix */
+/* B : addcol(
+B_i(h_0),
+B_i(h_1),
+B_i(h_2),
+B_i(h_3),
+B_i(h_4),
+B_i(h_5),
+B_i(h_6),
+B_i(h_7),
+B_i(h_8),
+B_i(h_9),
+B_i(h_10),
+B_i(h_11),
+B_i(h_12),
+B_i(h_13),
+B_i(h_14),
+B_i(h_15),
+B_i(h_16),
+B_i(h_17),
+B_i(h_18),
+B_i(h_19)
+)$ */
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+/* Construct J matrix */
+X : transpose(matrix([x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19]))$
+Y : transpose(matrix([y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, y16, y17, y18, y19]))$
+Z : transpose(matrix([z0, z1, z2, z3, z4, z5, z6, z7, z8, z9, z10, z11, z12, z13, z14, z15, z16, z17, z18, z19]))$
+H : transpose(matrix([h_0, h_1, h_2, h_3, h_4, h_5, h_6, h_7, h_8, h_9, h_10, h_11, h_12, h_13, h_14, h_15, h_16, h_17, h_18, h_19]))$
+J : matrix(
+[diff(H, r).X, diff(H, r).Y, diff(H, r).Z],
+[diff(H, s).X, diff(H, s).Y, diff(H, s).Z],
+[diff(H, t).X, diff(H, t).Y, diff(H, t).Z]
+)$
+detJ : determinant(J)$
+invJ : invert(J)$
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+dh_dx(h) := invJ.transpose(matrix([diff(h, r), diff(h, s), diff(h, t)]));
+Bi(h) := matrix(
+[dh_dx(h)[1], 0, 0],
+[0, dh_dx(h)[2], 0],
+[0, 0, dh_dx(h)[3]],
+[dh_dx(h)[2], dh_dx(h)[1], 0],
+[0, dh_dx(h)[3], dh_dx(h)[2]],
+[dh_dx(h)[3], 0, dh_dx(h)[1]]
+);
+B : addcol(
+Bi(h_0),
+Bi(h_1),
+Bi(h_2),
+Bi(h_3),
+Bi(h_4),
+Bi(h_5),
+Bi(h_6),
+Bi(h_7),
+Bi(h_8),
+Bi(h_9),
+Bi(h_10),
+Bi(h_11),
+Bi(h_12),
+Bi(h_13),
+Bi(h_14),
+Bi(h_15),
+Bi(h_16),
+Bi(h_17),
+Bi(h_18),
+Bi(h_19)
+)$
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+coefs : matrix(
+[-7.745966692414833771e-01, 0.0, 7.745966692414833771e-01],
+[5.555555555555555556e-01, 8.888888888888888889e-01, 5.555555555555555556e-01]
+);
+K : diagmatrix(60, 0)$
+vol : 0$
+/*
+for rCt:1 while rCt<=3 do
+for sCt:1 while sCt<=3 do
+for tCt:1 while tCt<=3 do
+(
+vol : vol + coefs[2][rCt]*coefs[2][sCt]*coefs[2][tCt]*at(detJ, [r = coefs[1][rCt], s = coefs[1][sCt], t = coefs[1][tCt]]),
+Bl : at(B, [r = coefs[1][rCt], s = coefs[1][sCt], t = coefs[1][tCt]]),
+detJl : at(detJ, [r = coefs[1][rCt], s = coefs[1][sCt], t = coefs[1][tCt]]),
+K : K + coefs[2][rCt]*coefs[2][sCt]*coefs[2][tCt]*transpose(Bl).C.Bl*detJl
+)$ */
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+/* test */
+a: 1; b: 1; c: 1;
+x0: 0$ y0: 0$ z0: 0$
+x1: a$ y1: 0$ z1: 0$
+x2: a$ y2: b$ z2: 0$
+x3: 0$ y3: b$ z3: 0$
+x4: 0$ y4: 0$ z4: c$
+x5: a$ y5: 0$ z5: c$
+x6: a$ y6: b$ z6: c$
+x7: 0$ y7: b$ z7: c$
+x8: a/2$ y8: 0$ z8: 0$
+x9: a$ y9: b/2$ z9: 0$
+x10: a/2$ y10: b$ z10: 0$
+x11: 0$ y11: b/2$ z11: 0$
+x12: 0$ y12: 0$ z12: c/2$
+x13: a$ y13: 0$ z13: c/2$
+x14: a$ y14: b$ z14: c/2$
+x15: 0$ y15: b$ z15: c/2$
+x16: a/2$ y16: 0$ z16: c$
+x17: a$ y17: b/2$ z17: c$
+x18: a/2$ y18: b$ z18: c$
+x19: 0$ y19: b/2$ z19: c$
+/* [wxMaxima: input   end   ] */
+
+/* [wxMaxima: input   start ] */
+B;
 /* [wxMaxima: input   end   ] */
 
 /* Maxima can't load/batch files which end with a comment! */
