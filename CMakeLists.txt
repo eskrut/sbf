@@ -6,6 +6,8 @@ set(SBF_MINOR_VERSION 3)
 set(SBF_PATCH_VERSION 5)
 set(SBF_VERSION ${SBF_MAJOR_VERSION}.${SBF_MINOR_VERSION}.${SBF_PATCH_VERSION})
 
+set(CMAKE_DEBUG_POSTFIX "-dev" CACHE STRING "Postfix for debug configuration")
+
 set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
 
@@ -38,6 +40,7 @@ if(UNIX)
     list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -Wall" ${CMAKE_CXX_FLAGS})
 endif()
 
+
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
 
 add_library(${PROJECT_NAME} SHARED ${sources} ${headers} config.h.in)
@@ -60,11 +63,11 @@ export(PACKAGE sbf)
 file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
    "${INSTALL_INCLUDE_DIR}")
 
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}" "${PROJECT_BINARY_DIR}")
+set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}")
 configure_file(sbfConfig.cmake.in
   "${PROJECT_BINARY_DIR}/sbfConfig.cmake" @ONLY)
 
-set(CONF_INCLUDE_DIRS "\${SBF_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+set(CONF_INCLUDE_DIRS "\${SBF_CMAKE_DIR}/${REL_INCLUDE_DIR}/sbf")
 configure_file(sbfConfig.cmake.in
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/sbfConfig.cmake" @ONLY)
 
