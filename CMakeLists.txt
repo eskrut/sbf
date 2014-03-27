@@ -37,7 +37,7 @@ source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})
 
 if(UNIX)
-    list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -Wall" ${CMAKE_CXX_FLAGS})
+    list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -Wall -pthread" ${CMAKE_CXX_FLAGS})
 endif()
 
 
