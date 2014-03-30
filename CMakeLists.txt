@@ -6,7 +6,7 @@ set(SBF_MINOR_VERSION 3)
 set(SBF_PATCH_VERSION 5)
 set(SBF_VERSION ${SBF_MAJOR_VERSION}.${SBF_MINOR_VERSION}.${SBF_PATCH_VERSION})
 
-set(CMAKE_DEBUG_POSTFIX "-dev" CACHE STRING "Postfix for debug configuration")
+#set(CMAKE_DEBUG_POSTFIX "-dev" CACHE STRING "Postfix for debug configuration")
 
 set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
@@ -18,6 +18,12 @@ else()
 endif()
 
 set(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH "Installation directory for CMake files")
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
+endif()
 
 # Make relative paths absolute (needed later on)
 foreach(p LIB BIN INCLUDE CMAKE)
@@ -63,12 +69,18 @@ export(PACKAGE sbf)
 file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
    "${INSTALL_INCLUDE_DIR}")
 
+#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+#  set(CONFIG_IN "sbfConfig.cmake.debug.in")
+#else()
+  set(CONFIG_IN "sbfConfig.cmake.in")
+#endif()
+
 set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src" "${PROJECT_BINARY_DIR}")
-configure_file(sbfConfig.cmake.in
+configure_file(${CONFIG_IN}
   "${PROJECT_BINARY_DIR}/sbfConfig.cmake" @ONLY)
 
 set(CONF_INCLUDE_DIRS "\${SBF_CMAKE_DIR}/${REL_INCLUDE_DIR}/sbf")
-configure_file(sbfConfig.cmake.in
+configure_file(${CONFIG_IN}
   "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/sbfConfig.cmake" @ONLY)
 
 configure_file(sbfConfigVersion.cmake.in
