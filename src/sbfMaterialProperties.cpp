@@ -42,3 +42,24 @@ sbfMaterialProperties sbfMaterialProperties::makeMPropertiesSteel()
 
     return mProperties;
 }
+
+sbfMaterialProperties sbfMaterialProperties::makeMPropertiesRubber()
+{
+    sbfMaterialProperties mProperties;
+    sbfPropertyTable eTable("elastic module");
+    eTable.addNodeValue(24.0f, 10.0f);
+    eTable.setCurParam(24.0f);
+    mProperties.addTable(eTable);
+
+    sbfPropertyTable nuTable("puasson ratio");
+    nuTable.addNodeValue(24.0f, 0.49f);
+    nuTable.setCurParam(24.0f);
+    mProperties.addTable(nuTable);
+
+    sbfPropertyTable densTable("density");
+    densTable.addNodeValue(24.0f, 1200.0f);
+    densTable.setCurParam(24.0f);
+    mProperties.addTable(densTable);
+
+    return mProperties;
+}

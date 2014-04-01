@@ -294,9 +294,9 @@ int NodesData<ArrayType, numComp>::writeToFile(const char * name, int step, cons
     else{
         StorageType * storageData = new StorageType [numNodes_*numComp];
         if(type_ == ByNodes)
-            for(int ct = 0; ct < numNodes_*numComp; ct++) storageData[ct] = static_cast<StorageType>(data_[ct]);
-        else if(type_ == ByKort)
             for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) storageData[ct*numNodes_+ct1] = static_cast<StorageType>(data_[ct1*numComp+ct]);
+        else if(type_ == ByKort)
+            for(int ct = 0; ct < numNodes_*numComp; ct++) storageData[ct] = static_cast<StorageType>(data_[ct]);
         out.write((const char *)storageData, sizeof(StorageType)*numNodes_*numComp);
         delete [] storageData;
     }
@@ -335,15 +335,16 @@ int NodesData<ArrayType, numComp>::readFromFile(const char * name, int step, con
         StorageType * storageData = new StorageType [numNodes_*numComp];
         in.read((char *)storageData, sizeof(StorageType)*numNodes_*numComp);
         if(type_ == ByNodes)
-            for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = static_cast<ArrayType>(storageData[ct]);
-        else if(type_ == ByKort)
             for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) data_[ct1*numComp+ct] = static_cast<ArrayType>(storageData[ct*numNodes_+ct1]);
+        else if(type_ == ByKort)
+            for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = static_cast<ArrayType>(storageData[ct]);
         delete [] storageData;
     }
     in.close();
     stepToProceed_++;
     return 0;
 }
+//FIXME duplicated code
 template < class ArrayType, int numComp>
 template <class StorageType>
 int NodesData<ArrayType, numComp>::writeToFile()
@@ -366,9 +367,9 @@ int NodesData<ArrayType, numComp>::writeToFile()
     else{
         StorageType * storageData = new StorageType [numNodes_*numComp];
         if(type_ == ByNodes)
-            for(int ct = 0; ct < numNodes_*numComp; ct++) storageData[ct] = static_cast<StorageType>(data_[ct]);
-        else if(type_ == ByKort)
             for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) storageData[ct*numNodes_+ct1] = static_cast<StorageType>(data_[ct1*numComp+ct]);
+        else if(type_ == ByKort)
+            for(int ct = 0; ct < numNodes_*numComp; ct++) storageData[ct] = static_cast<StorageType>(data_[ct]);
         out.write((const char *)storageData, sizeof(StorageType)*numNodes_*numComp);
         delete [] storageData;
     }
@@ -376,6 +377,7 @@ int NodesData<ArrayType, numComp>::writeToFile()
     stepToProceed_++;
     return 0;
 }
+//FIXME duplicated code
 template < class ArrayType, int numComp>
 template <class StorageType>
 int NodesData<ArrayType, numComp>::readFromFile()
@@ -403,9 +405,9 @@ int NodesData<ArrayType, numComp>::readFromFile()
         StorageType * storageData = new StorageType [numNodes_*numComp];
         in.read((char *)storageData, sizeof(StorageType)*numNodes_*numComp);
         if(type_ == ByNodes)
-            for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = static_cast<ArrayType>(storageData[ct]);
-        else if(type_ == ByKort)
             for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) data_[ct1*numComp+ct] = static_cast<ArrayType>(storageData[ct*numNodes_+ct1]);
+        else if(type_ == ByKort)
+            for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = static_cast<ArrayType>(storageData[ct]);
         delete [] storageData;
     }
     in.close();

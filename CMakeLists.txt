@@ -93,3 +93,10 @@ install(FILES
 
 install(EXPORT sbfTargets DESTINATION
   "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+
+option(BUILD_TESTS "Build tests" ON)
+
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
+

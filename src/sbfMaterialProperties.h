@@ -19,6 +19,7 @@ public:
     void addTable(sbfPropertyTable &table);
 
     static sbfMaterialProperties makeMPropertiesSteel();
+    static sbfMaterialProperties makeMPropertiesRubber();
 };
 
 #endif // SBFMATERIALPROPERTIES_H
