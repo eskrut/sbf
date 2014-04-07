@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <chrono>
+#include "sbfStiffMatrixBlock3x3Iterator.h"
 
 void TestStiffMatrixes::case01_patchTest01()
 {
@@ -22,7 +23,7 @@ void TestStiffMatrixes::case01_patchTest01()
 
     stiff->compute();
 
-    NodesData<> forces(mesh), displacements(mesh);
+    NodesData<> forces(mesh), displacements(mesh), forces2(mesh);
 
     displacements.null();
     DefaultWorkDataType ampX = 0.01, ampY = 0.001, ampZ = 0.005;
@@ -53,7 +54,7 @@ void TestStiffMatrixes::case01_patchTest01()
                     std::fabs(forces.data(ct, 1)) > eps ||
                     std::fabs(forces.data(ct, 2)) > eps
                 )
-           ) { pass = false; break; }
+           ) { qDebug() << QString("Sholud be zero: %1 %2 %3 (eps=%4)").arg(forces.data(ct, 0)).arg(forces.data(ct, 1)).arg(forces.data(ct, 2)).arg(eps); pass = false; break; }
         if ( // outer nodes
                 (
                     ( node.x() == 0 || node.x() == xSide ) ||
@@ -69,6 +70,29 @@ void TestStiffMatrixes::case01_patchTest01()
     }
 
     QVERIFY2(pass, "Fail to produce zero inner forces");
+
+    forces2.null();
+    pass = true;
+    std::unique_ptr<sbfMatrixIterator> iteratorPtr(stiff->createIterator());
+    sbfMatrixIterator *iterator = iteratorPtr.get();
+    for(int nodeCt = 0; nodeCt < mesh->numNodes(); nodeCt++) {
+        iterator->setToRow(nodeCt);
+        double *tmp = forces2.data() + nodeCt*3;
+        while(iterator->isValid()) {
+            int columnID = iterator->column();
+            double *vectPart = displacements.data() + columnID*3;
+            double *block = iterator->data();
+            for(int rowCt = 0; rowCt < 3; ++rowCt)
+                for(int colCt = 0; colCt < 3; ++colCt)
+                    tmp[rowCt] += block[rowCt*3+colCt]*vectPart[colCt];
+            iterator->next();
+        }
+        for(int ct = 0; ct < 3; ++ct)
+            if ( std::fabs(forces.data(nodeCt, ct) - forces2.data(nodeCt, ct)) > eps )
+            { qDebug() << QString("Sholud be equal: %1 %2 (eps=%3)").arg(forces.data(nodeCt, ct)).arg(forces2.data(nodeCt, ct)).arg(eps); pass = false; break; }
+    }
+
+    QVERIFY2(pass, "Fail to produce zero inner forces (2-nd approach)");
 }
 
 void TestStiffMatrixes::case01_mapHexa01()
