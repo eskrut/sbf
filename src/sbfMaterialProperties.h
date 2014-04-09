@@ -19,6 +19,9 @@ public:
     void addTable(sbfPropertyTable &table);
 
     static sbfMaterialProperties makeMPropertiesSteel();
+    static sbfMaterialProperties makeMPropertiesGold();
+    static sbfMaterialProperties makeMPropertiesSilver();
+    static sbfMaterialProperties makeMPropertiesBronze();
     static sbfMaterialProperties makeMPropertiesRubber();
 };
 
