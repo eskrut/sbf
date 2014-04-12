@@ -146,6 +146,8 @@ public:
 
     void read(std::ifstream &in);
     void write(std::ofstream &out);
+    bool read(const char * name);
+    bool write(const char * name);
 
     void printTopology(const char * name);
     void printTopology2(const char * name, int plotRate = 1);

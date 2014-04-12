@@ -1342,6 +1342,25 @@ void sbfStiffMatrixBlock3x3::write(std::ofstream &out)
         out.write((char *)&(shiftPtrDataAlter[0]), numBlocksAlter_*sizeof(shiftPtrDataAlter[0]));
     }//Alternate information
 }
+
+bool sbfStiffMatrixBlock3x3::read(const char *name)
+{
+    std::ifstream in(name, std::ios::binary);
+    if( !in.good() ) return false;
+    this->read(in);
+    in.close();
+    return true;
+}
+
+bool sbfStiffMatrixBlock3x3::write(const char *name)
+{
+    std::ofstream out(name, std::ios::binary);
+    if( !out.good() ) return false;
+    this->write(out);
+    out.close();
+    return true;
+}
+
 void sbfStiffMatrixBlock3x3::read(std::ifstream &in)
 {
     in.read((char *)&type_, sizeof(type_));
