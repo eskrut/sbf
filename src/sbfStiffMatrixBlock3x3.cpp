@@ -1329,11 +1329,11 @@ void sbfStiffMatrixBlock3x3::write(std::ofstream &out)
     if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
         out.write((char *)&numBlocksAlter_, sizeof(numBlocksAlter_));
 
-    out.write((char *)indJ_, 2*numBlocks_*sizeof(indJ_[0]));
+    out.write((char *)indJ_, numBlocks_*sizeof(indJ_[0]));
     out.write((char *)shiftInd_, (numNodes_+1)*sizeof(shiftInd_[0]));
     out.write((char *)data_, numBlocks_*9*sizeof(data_[0]));
     if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){//Alternate information
-        out.write((char *)indJAlter_, 2*numBlocksAlter_*sizeof(indJAlter_[0]));
+        out.write((char *)indJAlter_, numBlocksAlter_*sizeof(indJAlter_[0]));
         out.write((char *)shiftIndAlter_, (numNodes_+1)*sizeof(shiftIndAlter_[0]));
         std::vector<int> shiftPtrDataAlter;
         shiftPtrDataAlter.resize(numBlocksAlter_);
@@ -1375,11 +1375,11 @@ void sbfStiffMatrixBlock3x3::read(std::ifstream &in)
     if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
         setNumBlocksNodes(numBlocks_, numNodes_, numBlocksAlter_);
 
-    in.read((char *)indJ_, 2*numBlocks_*sizeof(indJ_[0]));
+    in.read((char *)indJ_, numBlocks_*sizeof(indJ_[0]));
     in.read((char *)shiftInd_, (numNodes_+1)*sizeof(shiftInd_[0]));
     in.read((char *)data_, numBlocks_*9*sizeof(data_[0]));
     if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){//Alternate information
-        in.read((char *)indJAlter_, 2*numBlocksAlter_*sizeof(indJAlter_[0]));
+        in.read((char *)indJAlter_, numBlocksAlter_*sizeof(indJAlter_[0]));
         in.read((char *)shiftIndAlter_, (numNodes_+1)*sizeof(shiftIndAlter_[0]));
         std::vector<int> shiftPtrDataAlter;
         shiftPtrDataAlter.resize(numBlocksAlter_);
