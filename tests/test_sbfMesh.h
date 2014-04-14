@@ -15,6 +15,7 @@ private Q_SLOTS:
     void case03_addNodesElems();
     void case04_geomTransformations();
     void case05_merge();
+    void case05_merge_01();
     void case06_buildCyl();
 };
 

@@ -550,6 +550,7 @@ int sbfMesh::nodeAt(float x, float y, float z, float tol) const
 int sbfMesh::mergeNodes(float tol)
 {
     //TODO seems to be working, make it parallel (if possible)
+    //BUG crashes on complex meshes
     std::vector<int> newInd, oldInd, shiftInd;
     std::vector<int> toDelete;
     std::vector<int> sortX, newSortX;

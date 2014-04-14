@@ -171,6 +171,32 @@ void TestSbfMesh::case05_merge()
     QVERIFY2(numMerged == (numParts+1)*(numParts+1), QString("Fail to merge nodes. Expected %1, got %2").arg((numParts+1)*(numParts+1)).arg(numMerged).toStdString().c_str());
 }
 
+void TestSbfMesh::case05_merge_01()
+{
+    int dim = 1, num = 10;
+    std::unique_ptr<sbfMesh> m1(sbfMesh::makeBlock(dim, dim, dim, num, num, num));
+    std::unique_ptr<sbfMesh> m2(sbfMesh::makeBlock(2*dim, 2*dim, 2*dim, 2*num, 2*num, 2*num));
+    std::unique_ptr<sbfMesh> m_add(new sbfMesh);
+    m_add->addMesh(m1.get(), false, false);
+    m1->translate(dim, 0, 0);
+    m_add->addMesh(m1.get(), false, false);
+    m1->translate(0, dim, 0);
+    m_add->addMesh(m1.get(), false, false);
+    m1->translate(-dim, 0, 0);
+    m_add->addMesh(m1.get(), false, false);
+    m1->translate(0, -dim, dim);
+    m_add->addMesh(m1.get(), false, false);
+    m1->translate(dim, 0, 0);
+    m_add->addMesh(m1.get(), false, false);
+    m1->translate(0, dim, 0);
+    m_add->addMesh(m1.get(), false, false);
+    m1->translate(-dim, 0, 0);
+    m_add->addMesh(m1.get(), false, false);
+    m_add->mergeNodes(0.001);
+
+    QVERIFY2( m2->numNodes() == m_add->numNodes(), QString("Failed to merge nodes %1 %2").arg(m2->numNodes()).arg(m_add->numNodes()).toStdString().c_str() );
+}
+
 void TestSbfMesh::case06_buildCyl()
 {
 //    sbfMesh::makeCylinderPart(1, 2, 0, M_PI_2, 0, 5, 4, 15, 10)->writeMeshToFiles();
