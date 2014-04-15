@@ -20,12 +20,12 @@ sbfElement::sbfElement(const ElementType type, const std::vector<int> & indexes)
     setNodes(indexes);
 }
 
-sbfElement::sbfElement(const ElementType type, const std::initializer_list<int> &indexes) :
-    sbfElement()
-{
-    type_ = type;
-    setNodes(indexes);
-}
+//sbfElement::sbfElement(const ElementType type, const std::initializer_list<int> &indexes) :
+//    sbfElement()
+//{
+//    type_ = type;
+//    setNodes(indexes);
+//}
 sbfElement::~sbfElement()
 {
     ind_.clear();
@@ -73,12 +73,12 @@ void sbfElement::setNodes(const int nodesNumber, const int * const firstNodeIndP
     ind_.clear();
     ind_.insert(ind_.begin(), firstNodeIndPtr, firstNodeIndPtr + nodesNumber);
 }
-void sbfElement::setNodes(const std::initializer_list<int> &indexes)
-{
-    //TODO check nodesNumber and type compability
-    ind_.clear();
-    ind_.insert(ind_.begin(), indexes);
-}
+//void sbfElement::setNodes(const std::initializer_list<int> &indexes)
+//{
+//    //TODO check nodesNumber and type compability
+//    ind_.clear();
+//    ind_.insert(ind_.begin(), indexes);
+//}
 void sbfElement::setMtr(const int material)
 {
     mtr_ = material;

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <limits>
-#include <initializer_list>
+//#include <initializer_list>
 
 #include "sbfEnums.h"
 #include "sbfDeclspec.h"
@@ -19,7 +19,7 @@ public:
     sbfElement(const int numNodes);
     //Construct sbfElement by type and node indexes
     sbfElement(const ElementType type, const std::vector<int> & indexes);
-    sbfElement(const ElementType type, const std::initializer_list<int> & indexes);
+//    sbfElement(const ElementType type, const std::initializer_list<int> & indexes);
     ~sbfElement();
 
 private:
@@ -38,7 +38,7 @@ public:
     void setNodes(const int nodesNumber, int first, ...);
     void setNodes(const std::vector<int> & indexes);
     void setNodes(const int nodesNumber, const int * const firstNodeIndPtr);
-    void setNodes(const std::initializer_list<int> & indexes);
+//    void setNodes(const std::initializer_list<int> & indexes);
     void setMtr(const int material = 1);
     void setType(const ElementType & type);
     //Set/get pointer to mesh, associated with this element
