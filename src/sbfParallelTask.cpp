@@ -1,7 +1,7 @@
 #include "sbfParallelTask.h"
 
 
-sbfParallelTask::sbfParallelTask(std::function<void (sbfWorkerAttributes *)> workFunc, sbfWorkerAttributes **attrs, int numThreads, sbfParallelTask::StartPolicy startPolicy) :
+sbfParallelTask::sbfParallelTask(funcNameSpace::function<void (sbfWorkerAttributes *)> workFunc, sbfWorkerAttributes **attrs, int numThreads, sbfParallelTask::StartPolicy startPolicy) :
     workFunc_(workFunc),
     numThreads_(numThreads),
     isThreadsStarted_(false),
@@ -15,7 +15,7 @@ sbfParallelTask::sbfParallelTask(std::function<void (sbfWorkerAttributes *)> wor
     }
 }
 
-sbfParallelTask::sbfParallelTask(std::function<void (sbfWorkerAttributes *)> workFunc, std::vector<sbfWorkerAttributes *> attrs, sbfParallelTask::StartPolicy startPolicy) :
+sbfParallelTask::sbfParallelTask(funcNameSpace::function<void (sbfWorkerAttributes *)> workFunc, std::vector<sbfWorkerAttributes *> attrs, sbfParallelTask::StartPolicy startPolicy) :
     workFunc_(workFunc),
     attrs_(attrs),
     numThreads_(attrs.size()),
@@ -33,12 +33,12 @@ sbfParallelTask::~sbfParallelTask()
 {
 }
 
-std::function<void (sbfWorkerAttributes *)> sbfParallelTask::workFunc() const
+funcNameSpace::function<void (sbfWorkerAttributes *)> sbfParallelTask::workFunc() const
 {
     return workFunc_;
 }
 
-void sbfParallelTask::setWorkFunc(const std::function<void (sbfWorkerAttributes *)> &workFunc)
+void sbfParallelTask::setWorkFunc(const funcNameSpace::function<void (sbfWorkerAttributes *)> &workFunc)
 {
     workFunc_ = workFunc;
 }
@@ -66,7 +66,7 @@ int sbfParallelTask::numThreads() const
 void sbfParallelTask::startThreads()
 {
     if (!isThreadsStarted_) {
-        using WrapParamType = std::pair<std::function<void (sbfWorkerAttributes *)>, sbfWorkerAttributes *>;
+        using WrapParamType = std::pair<funcNameSpace::function<void (sbfWorkerAttributes *)>, sbfWorkerAttributes *>;
         auto wraper = [](void * param){
             WrapParamType * wrapParam = reinterpret_cast<WrapParamType*>(param);
             wrapParam->first(wrapParam->second);

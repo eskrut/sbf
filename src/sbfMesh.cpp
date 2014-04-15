@@ -929,12 +929,12 @@ void sbfMesh::optimizeNodesNumbering(RenumberOptimizationType type)
     delete [] oldToNew;
 }
 
-void sbfMesh::applyToAllNodes(std::function<void (sbfNode &)> lambda)
+void sbfMesh::applyToAllNodes(funcNameSpace::function<void (sbfNode &)> lambda)
 {
     for(auto & node : nodes_) lambda(node);
 }
 
-void sbfMesh::applyToAllElements(std::function<void (sbfElement &)> lambda)
+void sbfMesh::applyToAllElements(funcNameSpace::function<void (sbfElement &)> lambda)
 {
     for(auto & elem : elems_) lambda(elem);
 }

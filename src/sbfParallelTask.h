@@ -1,22 +1,24 @@
 #ifndef SBFPARALLELTASK_H
 #define SBFPARALLELTASK_H
 
-#include <functional>
+#include <boost/function.hpp>
 #include <memory>
 #include "sbfDeclspec.h"
 #include "sbfWorker.h"
 #include <vector>
+
+namespace funcNameSpace = boost;
 
 class sbfParallelTask
 {
 public:
     enum class StartPolicy {StartImmediately, DelayedStart};
 public:
-    sbfParallelTask(std::function<void (sbfWorkerAttributes *)> workFunc, sbfWorkerAttributes ** attrs, int numThreads = sbfNumThreads, StartPolicy startPolicy = StartPolicy::StartImmediately);
-    sbfParallelTask(std::function<void (sbfWorkerAttributes *)> workFunc, std::vector<sbfWorkerAttributes *> attrs, StartPolicy startPolicy = StartPolicy::StartImmediately);
+    sbfParallelTask(funcNameSpace::function<void (sbfWorkerAttributes *)> workFunc, sbfWorkerAttributes ** attrs, int numThreads = sbfNumThreads, StartPolicy startPolicy = StartPolicy::StartImmediately);
+    sbfParallelTask(funcNameSpace::function<void (sbfWorkerAttributes *)> workFunc, std::vector<sbfWorkerAttributes *> attrs, StartPolicy startPolicy = StartPolicy::StartImmediately);
     ~sbfParallelTask();
-    std::function<void (sbfWorkerAttributes *)> workFunc() const;
-    void setWorkFunc(const std::function<void (sbfWorkerAttributes *)> &workFunc);
+    funcNameSpace::function<void (sbfWorkerAttributes *)> workFunc() const;
+    void setWorkFunc(const funcNameSpace::function<void (sbfWorkerAttributes *)> &workFunc);
 //    EventType *start() const;
 //    EventType *stop() const;
 //    ThreadType *threads() const;
@@ -27,7 +29,7 @@ public:
     void waitStop();
 
 private:
-    std::function<void (sbfWorkerAttributes *)> workFunc_;
+    funcNameSpace::function<void (sbfWorkerAttributes *)> workFunc_;
 //    EventType * start_;
 //    EventType * stop_;
     std::vector<ThreadType*> threads_;

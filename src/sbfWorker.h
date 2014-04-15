@@ -1,8 +1,10 @@
 #ifndef SBFWORKER_H
 #define SBFWORKER_H
 
-#include <functional>
+#include <boost/function.hpp>
 #include "sbfDeclspec.h"
+
+namespace funcNameSpace = boost;
 
 enum class WorkerPolitics : short {
 
@@ -14,7 +16,7 @@ public:
     sbfWorkerAttributes();
     virtual ~sbfWorkerAttributes();
 protected:
-    std::function<void (sbfWorkerAttributes *)> workFunction_;
+    funcNameSpace::function<void (sbfWorkerAttributes *)> workFunction_;
     ThreadType * thread_;
     EventType * start_;
     EventType * stop_;
@@ -22,8 +24,8 @@ protected:
 public:
     EventType * start() { return start_; }
     EventType * stop() { return stop_; }
-    std::function<void (sbfWorkerAttributes *)> workFunction() const;
-    void setWorkFunction(const std::function<void (sbfWorkerAttributes *)> &workFunction);
+    funcNameSpace::function<void (sbfWorkerAttributes *)> workFunction() const;
+    void setWorkFunction(const funcNameSpace::function<void (sbfWorkerAttributes *)> &workFunction);
     int ID() const;
     void setID(int ID);
 };

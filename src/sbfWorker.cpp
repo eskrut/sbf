@@ -1,6 +1,6 @@
 #include "sbfWorker.h"
 sbfWorkerAttributes::sbfWorkerAttributes() :
-    workFunction_(nullptr),
+//    workFunction_(nullptr),
     thread_(nullptr),
     start_(nullptr),
     stop_(nullptr),
@@ -30,12 +30,12 @@ void sbfWorkerAttributes::setID(int ID)
 }
 
 
-std::function<void (sbfWorkerAttributes *)> sbfWorkerAttributes::workFunction() const
+funcNameSpace::function<void (sbfWorkerAttributes *)> sbfWorkerAttributes::workFunction() const
 {
     return workFunction_;
 }
 
-void sbfWorkerAttributes::setWorkFunction(const std::function<void (sbfWorkerAttributes *)> &workFunction)
+void sbfWorkerAttributes::setWorkFunction(const funcNameSpace::function<void (sbfWorkerAttributes *)> &workFunction)
 {
     workFunction_ = workFunction;
 }

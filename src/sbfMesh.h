@@ -11,9 +11,11 @@
 #include <typeinfo>
 #include <iomanip>
 #include <limits>
-#include <functional>
+#include <boost/function.hpp>
 
 #include "sbfReporter.h"
+
+namespace funcNameSpace = boost;
 
 class sbfNode;
 class sbfElement;
@@ -125,8 +127,8 @@ public:
     void reserveElementsNumber(const int newElementNumber);
     void optimizeNodesNumbering(RenumberOptimizationType type = RenumberOptimizationType::SIMPLE);//Make nodes numbering optimization
 
-    void applyToAllNodes(std::function<void (sbfNode &)> lambda);
-    void applyToAllElements(std::function<void (sbfElement &)> lambda);
+    void applyToAllNodes(funcNameSpace::function<void (sbfNode &)> lambda);
+    void applyToAllElements(funcNameSpace::function<void (sbfElement &)> lambda);
 
     void addDVData(NodesData<double, 3> * data) {nodesDVDataList_.push_back(data);}
     NodesData<double, 3> * dVData(const int seqNumber) {return nodesDVDataList_[seqNumber];}
