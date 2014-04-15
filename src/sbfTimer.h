@@ -1,22 +1,24 @@
 #ifndef SBFTIMER_H
 #define SBFTIMER_H
 
-#include <chrono>
+#include <boost/chrono.hpp>
 #include <iomanip>
 #include <sstream>
 
-template <class clock_type = std::chrono::high_resolution_clock, class duration_type = typename clock_type::duration> class sbfTimer
+namespace chrono=boost::chrono;
+
+template <class clock_type = chrono::high_resolution_clock, class duration_type = typename clock_type::duration> class sbfTimer
 {
 public:
     sbfTimer();
 private:
-    std::chrono::time_point<clock_type, duration_type> start_;
-    std::chrono::time_point<clock_type, duration_type> stop_;
+    chrono::time_point<clock_type, duration_type> start_;
+    chrono::time_point<clock_type, duration_type> stop_;
     bool isRunning_;
 public:
     void start();
     void stop();
-    template <class target_duration = std::chrono::seconds>
+    template <class target_duration = chrono::seconds>
     int getCount();
     std::string timeSpanStr();
 };
@@ -46,14 +48,14 @@ template <class target_duration>
 int sbfTimer<clock_type, duration_type>::getCount()
 {
     if ( isRunning_ )
-        return std::chrono::duration_cast<target_duration>(clock_type::now() - start_).count();
-    return std::chrono::duration_cast<target_duration>(stop_ - start_).count();
+        return chrono::duration_cast<target_duration>(clock_type::now() - start_).count();
+    return chrono::duration_cast<target_duration>(stop_ - start_).count();
 }
 
 template <class clock_type, class duration_type>
 std::string sbfTimer<clock_type, duration_type>::timeSpanStr()
 {
-    using namespace std::chrono;
+    using namespace chrono;
     std::stringstream sstr;
     duration<double> span;
     if ( isRunning_ )

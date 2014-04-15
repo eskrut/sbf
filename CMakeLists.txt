@@ -43,7 +43,7 @@ source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})
 
 if(UNIX)
-    list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -Wpedantic  -pthread" ${CMAKE_CXX_FLAGS})
+    list(APPEND CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra " ${CMAKE_CXX_FLAGS})
 endif()
 
 
@@ -94,9 +94,12 @@ install(FILES
 install(EXPORT sbfTargets DESTINATION
   "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
-option(BUILD_TESTS "Build tests" ON)
+option(BUILD_TESTS "Build tests" OFF)
 
 if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+find_package(Boost COMPONENTS chrono thread REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
