@@ -45,10 +45,10 @@ sbfStiffMatrixBlock3x3::sbfStiffMatrixBlock3x3()
 {
     init();
 }
-sbfStiffMatrixBlock3x3::sbfStiffMatrixBlock3x3(int numBlocks, int numNodes)
+sbfStiffMatrixBlock3x3::sbfStiffMatrixBlock3x3(int numBlocks, int numNodes, int numBlocksAlter)
 {
     init();
-    setNumBlocksNodes(numBlocks, numNodes);
+    setNumBlocksNodes(numBlocks, numNodes, numBlocksAlter);
 }
 //StiffMatrixBlock3x3::StiffMatrixBlock3x3(const StiffMatrixBlock3x3 & matrix)
 //{}
@@ -443,6 +443,8 @@ int sbfStiffMatrixBlock3x3::numNodes()
 {return numNodes_;}
 int sbfStiffMatrixBlock3x3::numBlocks()
 {return numBlocks_;}
+int sbfStiffMatrixBlock3x3::numBlocksAlter()
+{return numBlocksAlter_;}
 void sbfStiffMatrixBlock3x3::setType(MatrixType type)
 {type_=type;}
 MatrixType sbfStiffMatrixBlock3x3::type()
