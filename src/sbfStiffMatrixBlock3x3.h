@@ -37,7 +37,7 @@ class DECLSPEC sbfStiffMatrixBlock3x3
     // will be uneffitient
 public:
     sbfStiffMatrixBlock3x3();
-    sbfStiffMatrixBlock3x3(int numBlocks, int numNodes);
+    sbfStiffMatrixBlock3x3(int numBlocks, int numNodes, int numBlocksAlter = 0);
     //StiffMatrixBlock3x3(const StiffMatrixBlock3x3 & matrix);
     ~sbfStiffMatrixBlock3x3();
 private:
@@ -106,6 +106,7 @@ public:
     void updataAlterPtr();
     int numNodes();
     int numBlocks();
+    int numBlocksAlter();
     void setType(MatrixType type);
     MatrixType type();
     //Nulling entire matrix or specific block
