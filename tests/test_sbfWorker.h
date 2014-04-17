@@ -10,6 +10,7 @@ class TestSbfWorker : public QObject
     Q_OBJECT
 private Q_SLOTS:
     void case00_dummy();
+    void case01_dummy();
 
 };
 

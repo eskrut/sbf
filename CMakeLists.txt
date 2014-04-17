@@ -94,9 +94,13 @@ install(FILES
 install(EXPORT sbfTargets DESTINATION
   "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
-option(BUILD_TESTS "Build tests" ON)
+set(USE_STD_THREADS ON CACHE BOOL "Use c++11 threads instead of posix or win32" FORCE)
+#mark_as_advanced(USE_STD_THREADS)
+if(USE_STD_THREADS)
+    add_definitions(-DTHREAD_MODEL_STD)
+endif()
 
+option(BUILD_TESTS "Build tests" ON)
 if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
-
