@@ -539,6 +539,9 @@ void TestStiffMatrixes::case04_CGMwP()
         QVERIFY2(false, "Fail to make simple tensile solution");
     }
 
+    mesh->writeMeshToFiles();
+    SolutionBundle<double, 20> solBundle("deformStress", mesh->numNodes());
+
     timer.stop();
     report("CGMwP test done in ", timer.timeSpanStr());
 }
