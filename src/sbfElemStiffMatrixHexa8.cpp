@@ -6,6 +6,7 @@
 #include "sbfMaterialProperties.h"
 #include "sbfPropertiesSet.h"
 #include "sbfReporter.h"
+#include <stdexcept>
 
 const double intCrd1[] = {0.0};
 const double intWgh1[] = {2.0};
@@ -297,6 +298,55 @@ double sbfElemStiffMatrixHexa8::computeVolume()
     }//Loop in r dir
     return vol;
 }
+
+void sbfElemStiffMatrixHexa8::computeDefStress(const double *displ, double *deform, double *stress)
+{
+    double locCrd[8][3] = {{-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
+                           {-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1}};
+    double E, mu, c_mul, c1, c2, c3;
+    double *workDeform;
+    if ( deform ) workDeform = deform;
+    else workDeform = new double [8*6];
+    for(int ct = 0; ct < 8*6; ct++) workDeform[ct] = 0;
+    for(int nodeCt = 0; nodeCt < 8; nodeCt++) { //Loop over nodes
+        computeH(locCrd[nodeCt][0], locCrd[nodeCt][1], locCrd[nodeCt][2]);
+        computeDHDN(locCrd[nodeCt][0], locCrd[nodeCt][1], locCrd[nodeCt][2]);
+        computeJ();
+        computeDHDG();
+        for(int ct = 0; ct < 8; ct++) { //Loop on rows of nodeCt-th block of matrix B
+            workDeform[nodeCt*6 + 0] += DHDG_[ct*3+0]*displ[3*ct+0];
+            workDeform[nodeCt*6 + 1] += DHDG_[ct*3+1]*displ[3*ct+1];
+            workDeform[nodeCt*6 + 2] += DHDG_[ct*3+2]*displ[3*ct+2];
+            workDeform[nodeCt*6 + 3] += DHDG_[ct*3+1]*displ[3*ct+0] + DHDG_[ct*3+0]*displ[3*ct+1];
+            workDeform[nodeCt*6 + 4] += DHDG_[ct*3+2]*displ[3*ct+1] + DHDG_[ct*3+1]*displ[3*ct+2];
+            workDeform[nodeCt*6 + 5] += DHDG_[ct*3+2]*displ[3*ct+0] + DHDG_[ct*3+0]*displ[3*ct+2];
+        } //Loop on rows of nodeCt-th block of matrix B
+    }//Loop over nodes
+    if ( stress ) {
+        for(int ct = 0; ct < 8*6; ct++) stress[ct] = 0;
+        if(propSet_ == nullptr)
+            throw std::runtime_error("Material properties not set");
+
+        sbfMaterialProperties *mp = propSet_->material(elem_->mtr() - 1);
+        E = mp->propertyTable("elastic module")->curValue();
+        mu = mp->propertyTable("puasson ratio")->curValue();
+        c_mul = E/((1+mu)*(1-2*mu));//Additional multiplicator
+        c1 = (1-mu)*c_mul;
+        c2 = mu*c_mul;
+        c3 = ((1-2.*mu)/2.)*c_mul;
+
+        for(int nodeCt = 0; nodeCt < 8; nodeCt++) { //Loop over nodes
+            stress[nodeCt*6 + 0] = workDeform[nodeCt*6 + 0]*c1 + workDeform[nodeCt*6 + 1]*c2 + workDeform[nodeCt*6 + 2]*c2;
+            stress[nodeCt*6 + 1] = workDeform[nodeCt*6 + 0]*c2 + workDeform[nodeCt*6 + 1]*c1 + workDeform[nodeCt*6 + 2]*c2;
+            stress[nodeCt*6 + 2] = workDeform[nodeCt*6 + 0]*c2 + workDeform[nodeCt*6 + 1]*c2 + workDeform[nodeCt*6 + 2]*c1;
+            stress[nodeCt*6 + 3] = workDeform[nodeCt*6 + 3]*c3;
+            stress[nodeCt*6 + 4] = workDeform[nodeCt*6 + 4]*c3;
+            stress[nodeCt*6 + 5] = workDeform[nodeCt*6 + 5]*c3;
+        }//Loop over nodes
+    }
+    if ( !deform ) delete [] workDeform;
+}
+
 double sbfElemStiffMatrixHexa8::computeMass(double rho)
 {return rho*computeVolume();}
 double sbfElemStiffMatrixHexa8::computeMass()

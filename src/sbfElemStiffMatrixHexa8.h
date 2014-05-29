@@ -77,6 +77,14 @@ public:
     //Compute element volume
     double computeVolume();
 
+    /**
+    @brief Compute deformation and stresses
+    @param displ Element nodal displacements [3*8]
+    @param deform Vector to store element nodal deformations (if not nullptr) [6*8]
+    @param stress Vector to store element nodal stresses (if not nullptr) [6*8]
+    **/
+    void computeDefStress(const double *displ, double *deform = nullptr, double *stress = nullptr);
+
     //Store stiffness block 3*3 of local indexes localIndI & localIndJ into data as linear array (no check or allocation of memory).
     void getBlockDataLoc(double * data, int localIndI, int localIndJ);
     //Store stiffness block 3*3 of global indexes indI & indJ into data as linear array (no check or allocation of memory).

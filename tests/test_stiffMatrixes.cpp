@@ -134,6 +134,50 @@ void TestStiffMatrixes::case01_mapHexa01()
     //Stell we should make more strict tests.
 }
 
+void TestStiffMatrixes::case01_diformStressHexa01()
+{
+    /*
+     *    7-------6
+     *   /|      /|     Z
+     *  4-------5 |     |   Y
+     *  | |     | |     |  /
+     *  | 3- - -|-2     | /
+     *  |/      |/      |/
+     *  0-------1       0-------- X
+    */
+    auto eps = 1e-10;
+    std::unique_ptr<sbfMesh> meshSmartPtr(new sbfMesh());
+    sbfMesh *m = meshSmartPtr.get();
+    for(auto z : {0, 1}) {
+        m->addNode(0, 0, z, false);
+        m->addNode(1, 0, z, false);
+        m->addNode(1, 1, z, false);
+        m->addNode(0, 1, z, false);
+    }
+    m->addElement(sbfElement(ElementType::HEXAHEDRON_LINEAR, {0, 1, 2, 3, 4, 5, 6, 7}));
+    sbfElemStiffMatrixHexa8 elStif(m->elemPtr(0));
+    NodesData<double, 3> u(m);
+    NodesData<double, 6> def(m), stress(m);
+    u.null();
+    for(auto ct : {4, 5, 6, 7}) u.data(ct, 2) = 1;
+    elStif.computeDefStress(u.data(), def.data(), nullptr);
+    for(int ct = 0; ct < 8; ct++) {
+        QVERIFY2(std::fabs(def.data(ct, 0) - 0.0) < eps, "Fail to compute deformation");
+        QVERIFY2(std::fabs(def.data(ct, 1) - 0.0) < eps, "Fail to compute deformation");
+        QVERIFY2(std::fabs(def.data(ct, 2) - 1.0) < eps, "Fail to compute deformation");
+        QVERIFY2(std::fabs(def.data(ct, 3) - 0.0) < eps, "Fail to compute deformation");
+        QVERIFY2(std::fabs(def.data(ct, 4) - 0.0) < eps, "Fail to compute deformation");
+        QVERIFY2(std::fabs(def.data(ct, 5) - 0.0) < eps, "Fail to compute deformation");
+    }
+
+    sbfPropertiesSet propSet;
+    propSet.addMaterial(sbfMaterialProperties::makeMPropertiesSteel());
+
+    m->elem(0).setMtr(1);
+    elStif.setPropSet(&propSet);
+    elStif.computeDefStress(u.data(), nullptr, stress.data());
+}
+
 void TestStiffMatrixes::case02_createIncompleteChol(){
     //Create simple matrix
     sbfStiffMatrixBlock3x3 * matrix = new sbfStiffMatrixBlock3x3(4, 2);
