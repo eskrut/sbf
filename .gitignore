@@ -3,3 +3,4 @@
 *ebug*
 build*
 *.pro.user*
+CMakeLists.txt.user*
