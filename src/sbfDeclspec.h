@@ -29,7 +29,7 @@
 //#define SBF_NUM_THREADS 8
 const int sbfNumThreads = 8;
 
-#ifdef THREAD_MODEL_WIN32
+#if defined(THREAD_MODEL_WIN32)
  #include <windows.h>
  typedef HANDLE ThreadType;
  typedef HANDLE EventType;
@@ -67,6 +67,74 @@ const int sbfNumThreads = 8;
  {
      TerminateThread(thread, 0);
  }
+#elif defined(THREAD_MODEL_STD)
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+typedef struct {
+    std::mutex lock;
+    std::condition_variable event;
+    bool state;
+    bool autoResetFlag;
+} event_t;
+typedef std::thread ThreadType;
+typedef event_t EventType;
+typedef std::recursive_mutex CritSecType;
+
+static inline void event_init(event_t* event, bool initState = false, bool autoReset = true)
+{
+    event->state = initState;
+    event->autoResetFlag = autoReset;
+}
+static inline void event_destroy(event_t* )
+{
+}
+static inline void event_set(event_t* event)
+{
+    std::unique_lock<std::mutex> lck(event->lock);
+    if( event->state == false ) {
+        event->state = true;
+        event->event.notify_one();
+    }
+}
+static inline void event_reset(event_t* event)
+{
+    std::unique_lock<std::mutex> lck(event->lock);
+    if( event->state == true )
+        event->state = false;
+}
+static inline void event_wait(event_t* event, bool autoReset = true)
+{
+    std::unique_lock<std::mutex> lck(event->lock);
+    while( event->state == false)
+        event->event.wait(lck);
+    if(autoReset)
+        event->state=false;
+}
+static inline void multiplyEvent_wait(event_t* eventArray, int numEvents, bool autoReset = true)
+{
+    for(int ct = 0; ct < numEvents; ct++)
+        event_wait(&(eventArray[ct]), autoReset);
+}
+
+static inline void createNewThread(ThreadType * thread, void (*threadFunction)(void *), void *threadData)
+{
+    *thread = std::thread(threadFunction, threadData);
+}
+static inline void waitThreadDone(ThreadType &thread)
+{
+    thread.join();
+}
+static inline void cancelThread(ThreadType &)
+{
+    //std::thread do not provide such option
+}
+
+static inline void critSecInit(CritSecType *) { /*Do nothing*/ }
+static inline void critSecBegin(CritSecType * critSec) { critSec->lock(); }
+static inline void critSecEnd(CritSecType * critSec) { critSec->unlock(); }
+static inline void critSecDestroy(CritSecType *) { /*Do nothing*/ }
+
 #else// THREAD_MODEL_POSIX
  #include <pthread.h>
  //#include <signal.h>

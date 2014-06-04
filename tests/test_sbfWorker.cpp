@@ -1,5 +1,6 @@
 #include "test_sbfWorker.h"
 #include <memory>
+#include <sbfReporter.h>
 
 void TestSbfWorker::case00_dummy()
 {
@@ -30,4 +31,34 @@ void TestSbfWorker::case00_dummy()
     work.execOnce();
 
     QVERIFY2(attr->sum == vecLength, "Error in non-threaded execution of worker function");
+}
+class AbstractTreadAttrs{
+public:
+    AbstractTreadAttrs() {
+        start_ = new EventType;
+        event_init(start_);
+        stop_ = new EventType;
+        event_init(stop_);
+    }
+
+public:
+    EventType *start_;
+    EventType *stop_;
+};
+void TestSbfWorker::case01_dummy()
+{
+    class Task : public AbstractTreadAttrs {
+    public:
+        void operator()() {
+            event_wait(start_);
+            report("test");
+            event_set(stop_);
+        }
+    };
+
+    Task a;
+    std::thread t(a);
+    event_set(a.start_);
+    event_wait(a.stop_);
+    t.join();
 }
