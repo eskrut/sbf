@@ -34,7 +34,7 @@ public:
 
     virtual void compute(int startID, int stopID) = 0;
 
-    virtual sbfMatrixIterator *createIterator() const = 0;
+    virtual sbfMatrixIterator *createIterator() /*const*/ = 0;
 
     virtual void read(std::ifstream &in) {}
     virtual void write(std::ofstream &out) const {}

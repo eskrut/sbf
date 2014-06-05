@@ -2,6 +2,7 @@
 #include "sbfElement.h"
 #include <vector>
 #include <set>
+#include <assert.h>
 
 sbfStiffMatrixBlock6x6::sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type) :
     sbfStiffMatrix(mesh, propSet, type)
@@ -78,13 +79,59 @@ void sbfStiffMatrixBlock6x6::updateIndexesFromMesh(int *begin, int *end)
         for(auto node1 : nodeIDs) for(auto node2 : nodeIDs) indexes[node1].insert(node2);
     }
     int indLength = 0;
-    for(auto & row : indexes) indLength += row.size();
+    for(auto &row : indexes) indLength += row.size();
 
     if( type_ & MatrixType::FULL_MATRIX) {
-
+        setNumBlocksNodes(indLength, numNodes_, 0);
+        int count = 0;
+        int ct = 0;
+        shiftInd_[count++] = ct;
+        for(auto &row : indexes) {
+            for(auto nodeID : row)
+                indJ_[ct++] = nodeID;
+            shiftInd_[count++] = ct;
+        }
     }//MatrixType::FULL_MATRIX
     else if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){
-
+        int numBeforeDiagonal = 0, numAfterDiagonal = 0;
+        int size = static_cast<int>(indexes.size());
+        for(int ct = 0; ct < size; ++ct) {
+            auto &row = indexes[ct];
+            for(auto &id : row) {
+                if (id < ct) ++numBeforeDiagonal;
+                else if (id > ct) ++numAfterDiagonal;
+            }
+        }
+        //TODO is it true?
+        assert(numBeforeDiagonal == numAfterDiagonal);
+        assert(numBeforeDiagonal == (indLength-numNodes_)/2);
+        if (type_ & UP_TREANGLE_MATRIX) numBlocksAlter_ = numBeforeDiagonal;
+        else numBlocksAlter_ = numAfterDiagonal;
+        numBlocks_ = indLength - numBlocksAlter_;
+        setNumBlocksNodes(numBlocks_, numNodes_, numBlocksAlter_);
+        int countNorm = 0;
+        int ctNorm = 0;
+        int countAlter = 0;
+        int ctAlter = 0;
+        shiftInd_[countNorm++] = ctNorm;
+        shiftIndAlter_[countAlter++] = ctAlter;
+        size = static_cast<int>(indexes.size());
+        for(int ct = 0; ct < size; ++ct) {
+            auto &row = indexes[ct];
+            for(auto nodeID : row) {
+                if (type_ & UP_TREANGLE_MATRIX) {
+                    if (nodeID >= ct) indJ_[ctNorm++] = nodeID;
+                    else {indJAlter_[ctAlter] = nodeID; ptrDataAlter_[ctAlter] = nullptr; ctAlter++;}
+                }
+                else {
+                    if (nodeID <= ct) indJ_[ctNorm++] = nodeID;
+                    else {indJAlter_[ctAlter] = nodeID; ptrDataAlter_[ctAlter] = nullptr; ctAlter++;}
+                }
+            }
+            shiftInd_[countNorm++] = ctNorm;
+            shiftIndAlter_[countAlter++] = ctAlter;
+        }
+        updataAlterPtr();
     }//type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX
     else
         throw std::runtime_error("Not supported matrix type");
@@ -109,9 +156,35 @@ void sbfStiffMatrixBlock6x6::null()
     for(int ct = 0; ct < length; ct++) data_[ct] = 0.0;
 }
 
-sbfMatrixIterator *sbfStiffMatrixBlock6x6::createIterator() const
+void sbfStiffMatrixBlock6x6::updataAlterPtr()
 {
+    if((type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX) && numBlocksAlter_ > 0){
+        int count = 0;
+        for(int ctIndI = 0; ctIndI < numNodes_; ctIndI++){
+            for(int shift = shiftIndAlter_[ctIndI]; shift < shiftIndAlter_[ctIndI+1]; shift++)
+                ptrDataAlter_[count++] = blockPtr(indJAlter_[shift], ctIndI);
+        }
+    }
+}
 
+double *sbfStiffMatrixBlock6x6::blockPtr(int indI, int indJ)
+{
+    //Search in regular storage ONLY
+    int shift = shiftInd_[indI];
+    double *base = data_ + shift*blockSize_;
+    int searchLength = shiftInd_[indI+1] - shift;
+    for(int ct = 0; ct < searchLength; ct++){//Search through row indI for column indJ
+        if(indJ_[shift+ct] == indJ)
+            return base;
+        base += blockSize_;
+    }
+
+    return nullptr;
+}
+
+sbfMatrixIterator *sbfStiffMatrixBlock6x6::createIterator() /*const*/
+{
+    return new sbfStiffMatrixBlock6x6Iterator(this);
 }
 
 void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)

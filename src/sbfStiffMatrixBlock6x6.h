@@ -1,10 +1,14 @@
 #ifndef SBFSTIFFMATRIXBLOCK6X6_H
 #define SBFSTIFFMATRIXBLOCK6X6_H
 
+class sbfStiffMatrixBlock6x6;
+
 #include "sbfStiffMatrix.h"
+#include "sbfStiffMatrixBlock6x6Iterator.h"
 
 class sbfStiffMatrixBlock6x6 : public sbfStiffMatrix
 {
+    friend class sbfStiffMatrixBlock6x6Iterator;
 public:
     explicit sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type = MatrixType::UP_TREANGLE_MATRIX);
     ~sbfStiffMatrixBlock6x6();
@@ -48,10 +52,14 @@ private:
     void updateIndexesFromMesh();
     //Set all blocks to null
     void null();
+    //Updates pointers in alter storage
+    void updataAlterPtr();
+    //Returns pointer to stiffness block with indexes indI, indJ. Search in regular storage ONLY
+    double * blockPtr(int indI, int indJ);
 
 public:
     MatrixStoreType storeType() const { return MatrixStoreType::COMPACT; }
-    sbfMatrixIterator *createIterator() const;
+    sbfMatrixIterator *createIterator() /*const*/;
     void compute(int startID, int stopID);
 };
 
