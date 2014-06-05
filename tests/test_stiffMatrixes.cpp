@@ -353,7 +353,8 @@ void TestStiffMatrixes::case04_CGMwP()
     sbfTimer<> timer;
     timer.start();
     float xSide = 100, ySide = 10, zSide = 10;
-    int xPart = 100, yPart = 50, zPart = 50;
+    float targetError = 1e-2;
+    int xPart = 10, yPart = 5, zPart = 5;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
@@ -490,11 +491,21 @@ void TestStiffMatrixes::case04_CGMwP()
 
     qDebug() << numIterations << averDisp << dL << std::fabs(averDisp - dL)/dL;
 
-    if ( std::fabs(averDisp - dL)/dL > 0.001 ) {
+    if ( std::fabs(averDisp - dL)/dL > targetError ) {
         qDebug() << QString("Expected displacement of loaded side is %1, got %2, error %3").arg(dL).arg(averDisp).arg(std::fabs(averDisp - dL)/dL);
         QVERIFY2(false, "Fail to make simple tensile solution");
     }
 
     timer.stop();
     report("CGMwP test done in ", timer.timeSpanStr());
+}
+
+#include "sbfStiffMatrixBlock6x6.h"
+
+void TestStiffMatrixes::case10_block6x6()
+{
+    std::unique_ptr<sbfStiffMatrixBlock6x6> stiffPtr(new sbfStiffMatrixBlock6x6(nullptr, nullptr));
+    sbfStiffMatrixBlock6x6 *stiff = stiffPtr.get();
+
+    QVERIFY2(stiff->storeType() == MatrixStoreType::COMPACT, "Fail to get compact store type");
 }
