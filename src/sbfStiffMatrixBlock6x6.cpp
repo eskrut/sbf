@@ -4,6 +4,8 @@
 #include <set>
 #include <assert.h>
 
+#include "sbfElemStiffMatrixBeam6Dof.h"
+
 sbfStiffMatrixBlock6x6::sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type) :
     sbfStiffMatrix(mesh, propSet, type)
 {
@@ -189,5 +191,11 @@ sbfMatrixIterator *sbfStiffMatrixBlock6x6::createIterator() /*const*/
 
 void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)
 {
+    if( !propSet_ ) throw std::runtime_error("nullptr in propSet");
+    sbfElement *elem = nullptr;
+    sbfElemStiffMatrixBeam6Dof *stiffBeam6Dof = new sbfElemStiffMatrixBeam6Dof(elem, propSet_);
+    for(int ctElem = startID; ctElem < stopID; ++ctElem) {//Loop over elements
 
+
+    }//Loop over elements
 }
