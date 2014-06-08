@@ -40,3 +40,8 @@ bool sbfStiffMatrix::write(const char *name) const
     return true;
 }
 
+void sbfStiffMatrix::computeSequantially()
+{
+    compute(0, mesh_->numElements());
+}
+

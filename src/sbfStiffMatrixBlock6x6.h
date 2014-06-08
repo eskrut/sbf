@@ -10,7 +10,7 @@ class sbfStiffMatrixBlock6x6 : public sbfStiffMatrix
 {
     friend class sbfStiffMatrixBlock6x6Iterator;
 public:
-    explicit sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type = MatrixType::UP_TREANGLE_MATRIX);
+    explicit sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type = MatrixType::FULL_MATRIX);
     ~sbfStiffMatrixBlock6x6();
 
 private:

@@ -81,4 +81,9 @@ template <class TypeToSort, class AssociatedType> void quickAssociatedSort(TypeT
         quickAssociatedSort<TypeToSort, AssociatedType>(arrayToSort, associatedArray, i, right, dir);
 }
 
+#include <memory>
+#define CreateSmartAndRawPtr(Type, object, name) \
+    std::unique_ptr< Type > name ## Ptr (object); \
+    Type * name = (name ## Ptr).get();
+
 #endif // SBFADDITIONS_H

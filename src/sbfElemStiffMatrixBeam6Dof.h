@@ -10,14 +10,12 @@ public:
 private:
     static const int numNodes_ = 2;
     static const int numDOF_ = 6;
+    static const int blockSize_ = numDOF_*numDOF_;
     void init();
     void clean();
-    void computeH(double r);
-    void computeDHDN(double r);
-    void computeDHDG();
-    void computeJ();
 public:
     void computeSM();
+    RowColData rowColData();
 };
 
 #endif // SBFELEMSTIFFMATRIXBEAM6DOF_H

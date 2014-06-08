@@ -501,11 +501,45 @@ void TestStiffMatrixes::case04_CGMwP()
 }
 
 #include "sbfStiffMatrixBlock6x6.h"
+#include "sbfAdditions.h"
 
 void TestStiffMatrixes::case10_block6x6()
 {
-    std::unique_ptr<sbfStiffMatrixBlock6x6> stiffPtr(new sbfStiffMatrixBlock6x6(nullptr, nullptr));
-    sbfStiffMatrixBlock6x6 *stiff = stiffPtr.get();
+    sbfMaterialProperties material = sbfMaterialProperties::makeMPropertiesSteel();
+    sbfPropertyTable aTable("area");
+    aTable.addNodeValue(24.0f, 1.0f);
+    aTable.setCurParam(24.0f);
+    material.addTable(aTable);
+    sbfPropertyTable gTable("shear module");
+    gTable.addNodeValue(24.0f, 80000.0f);
+    gTable.setCurParam(24.0f);
+    material.addTable(gTable);
+    sbfPropertyTable ixTable("Ix");
+    ixTable.addNodeValue(24.0f, 1.0f);
+    ixTable.setCurParam(24.0f);
+    material.addTable(ixTable);
+    sbfPropertyTable iyTable("Iy");
+    iyTable.addNodeValue(24.0f, 1.0f);
+    iyTable.setCurParam(24.0f);
+    material.addTable(iyTable);
+    sbfPropertyTable izTable("Iz");
+    izTable.addNodeValue(24.0f, 1.0f);
+    izTable.setCurParam(24.0f);
+    material.addTable(izTable);
+    auto propSet = new sbfPropertiesSet();
+    propSet->addMaterial(material);
+
+    CreateSmartAndRawPtr(sbfMesh, new sbfMesh, mesh);
+    mesh->addNode(0, 0, 0);
+    mesh->addNode(1, 0, 0);
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 1}));
+    mesh->applyToAllElements([](sbfElement &elem){elem.setMtr(1);});
+
+    CreateSmartAndRawPtr(sbfStiffMatrixBlock6x6, new sbfStiffMatrixBlock6x6(mesh, propSet), stiff);
 
     QVERIFY2(stiff->storeType() == MatrixStoreType::COMPACT, "Fail to get compact store type");
+
+    stiff->computeSequantially();
+    CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+
 }

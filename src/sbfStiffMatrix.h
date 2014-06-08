@@ -29,6 +29,7 @@ public:
     bool write(const char * name) const;
     MatrixType type() const { return type_; }
     virtual MatrixStoreType storeType() const { return MatrixStoreType::NO_DEFINED_STORE_TYPE; }
+    void computeSequantially();
 
     //Virtual functions that should be implemented in derived class
 

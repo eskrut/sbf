@@ -9,6 +9,7 @@
 sbfStiffMatrixBlock6x6::sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type) :
     sbfStiffMatrix(mesh, propSet, type)
 {
+    init();
     if ( !mesh_ ) throw std::runtime_error("nullptr in mesh");
     updateIndexesFromMesh();
 }
@@ -193,9 +194,31 @@ void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)
 {
     if( !propSet_ ) throw std::runtime_error("nullptr in propSet");
     sbfElement *elem = nullptr;
-    sbfElemStiffMatrixBeam6Dof *stiffBeam6Dof = new sbfElemStiffMatrixBeam6Dof(elem, propSet_);
+    sbfElemStiffMatrix *elemStiff = nullptr;
+    std::map<ElementType, sbfElemStiffMatrix*> mapStiff;
+    mapStiff[ElementType::BEAM_LINEAR_6DOF] = new sbfElemStiffMatrixBeam6Dof(elem, propSet_);
+    std::unique_ptr<sbfMatrixIterator> iteratorPtr(createIterator());
+    sbfMatrixIterator *iterator = iteratorPtr.get();
     for(int ctElem = startID; ctElem < stopID; ++ctElem) {//Loop over elements
-
-
+        elem = mesh_->elemPtr(ctElem);
+        assert(mapStiff.count(elem->type()) == 1);
+        elemStiff = mapStiff[elem->type()];
+        elemStiff->setElem(elem);
+        elemStiff->computeSM();
+        auto listIDData = elemStiff->rowColData();
+        iterator->setToColumn(listIDData.front().first.first);
+        for(auto idData : listIDData) {
+            double *data = nullptr;
+            if( idData.first.first != iterator->row())
+                iterator->setToRow(idData.first.first);
+            while(iterator->isValid())
+                if(iterator->column() == idData.first.second && iterator->isInNormal()) {
+                    data = const_cast<double *>(iterator->data());
+                    break;
+                }
+                else iterator->next();
+            if ( !data ) throw std::runtime_error("Can't find target block in global stiffness matrix");
+            for(int ct = 0; ct < blockSize_; ++ct) data[ct] += idData.second[ct];
+        }
     }//Loop over elements
 }

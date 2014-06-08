@@ -3,6 +3,7 @@
 
 #include "sbfDeclspec.h"
 #include "sbfEnums.h"
+#include <list>
 
 class sbfPropertiesSet;
 class sbfElement;
@@ -62,9 +63,13 @@ private:
     //! @brief Compute Jacobian, its determinant and inverse at natural coordinates (r, s, t).
     virtual void computeJ() {}
 public:
+    void setElem(sbfElement *elem);
+    sbfElement *elem() const { return elem_; }
     //! @brief This function shoudl be implemented in subclasses to compute elemente stiffness matrix
     virtual void computeSM() = 0;
     double *data() const { return data_; }
+    using RowColData = std::list<std::pair<std::pair<int/*rowID*/, int/*columnID*/>, const double */*data*/>>;
+    virtual RowColData rowColData() = 0;
 };
 
 #endif // SBFELEMSTIFFMATRIX_H
