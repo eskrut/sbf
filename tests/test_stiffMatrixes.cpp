@@ -352,8 +352,8 @@ void TestStiffMatrixes::case04_CGMwP()
 {
     sbfTimer<> timer;
     timer.start();
-    float xSide = 100, ySide = 10, zSide = 10;
-    int xPart = 100, yPart = 50, zPart = 50;
+    float xSide = 100, ySide = 1, zSide = 1;
+    int xPart = 15, yPart = 4, zPart = 4;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
