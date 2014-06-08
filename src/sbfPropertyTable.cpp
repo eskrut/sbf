@@ -1,17 +1,22 @@
 #include "sbfPropertyTable.h"
 #include <limits>
+
 sbfPropertyTable::sbfPropertyTable()
 {
     name_ = "not set";
     table_.reserve(10);
 }
+
 sbfPropertyTable::sbfPropertyTable(const std::string & name)
 {
     name_ = name;
     table_.reserve(10);
 }
+
 sbfPropertyTable::~sbfPropertyTable()
-{table_.clear();}
+{
+    table_.clear();
+}
 
 void sbfPropertyTable::addNodeValue(float param, float value)
 {
@@ -50,9 +55,17 @@ float sbfPropertyTable::value(float param)
 }
 
 void sbfPropertyTable::setCurParam(const float param)
-{curParam_ = param; curValue_ = value(curParam_);}
-float sbfPropertyTable::curValue()
-{return curValue_;}
+{
+    curParam_ = param;
+    curValue_ = value(curParam_);
+}
 
-const std::string & sbfPropertyTable::name()
-{return name_;}
+float sbfPropertyTable::curValue() const
+{
+    return curValue_;
+}
+
+const std::string & sbfPropertyTable::name() const
+{
+    return name_;
+}

@@ -12,17 +12,17 @@ public:
     ~sbfMaterialProperties();
 private:
     std::string name_;
-    std::map<std::string, sbfPropertyTable> tables_;
+    std::map<std::string, sbfPropertyTable*> tables_;
 public:
-    sbfPropertyTable * propertyTable(const std::string & name);
-    void addTable(const std::string & name);
-    void addTable(sbfPropertyTable &table);
+    sbfPropertyTable *propertyTable(const std::string & name);
+    void addTable(const std::string &name);
+    void addTable(sbfPropertyTable *table);
 
-    static sbfMaterialProperties makeMPropertiesSteel();
-    static sbfMaterialProperties makeMPropertiesGold();
-    static sbfMaterialProperties makeMPropertiesSilver();
-    static sbfMaterialProperties makeMPropertiesBronze();
-    static sbfMaterialProperties makeMPropertiesRubber();
+    static sbfMaterialProperties *makeMPropertiesSteel();
+    static sbfMaterialProperties *makeMPropertiesGold();
+    static sbfMaterialProperties *makeMPropertiesSilver();
+    static sbfMaterialProperties *makeMPropertiesBronze();
+    static sbfMaterialProperties *makeMPropertiesRubber();
 };
 
 #endif // SBFMATERIALPROPERTIES_H
