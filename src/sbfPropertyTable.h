@@ -22,8 +22,8 @@ public:
     float value(const float param);
     void addNodeValue(const float param, const float value);
     void setCurParam(const float param);
-    float curValue();
-    const std::string & name();
+    float curValue() const;
+    const std::string &name() const;
 };
 
 #endif // SBFPROPERTYTABLE_H

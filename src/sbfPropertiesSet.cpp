@@ -1,11 +1,18 @@
 #include "sbfPropertiesSet.h"
 
-sbfMaterialProperties *sbfPropertiesSet::material(const int seqNumber)
+sbfPropertiesSet::~sbfPropertiesSet()
 {
-    return &materials_[seqNumber];
+    for(auto m : materials_)
+        delete m;
+    materials_.clear();
 }
 
-void sbfPropertiesSet::addMaterial(sbfMaterialProperties material)
+sbfMaterialProperties *sbfPropertiesSet::material(const int seqNumber) const
+{
+    return materials_[seqNumber];
+}
+
+void sbfPropertiesSet::addMaterial(sbfMaterialProperties *material)
 {
     materials_.push_back(material);
 }
