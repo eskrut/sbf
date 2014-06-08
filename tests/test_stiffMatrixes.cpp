@@ -505,27 +505,27 @@ void TestStiffMatrixes::case04_CGMwP()
 
 void TestStiffMatrixes::case10_block6x6()
 {
-    sbfMaterialProperties material = sbfMaterialProperties::makeMPropertiesSteel();
-    sbfPropertyTable aTable("area");
-    aTable.addNodeValue(24.0f, 1.0f);
-    aTable.setCurParam(24.0f);
-    material.addTable(aTable);
-    sbfPropertyTable gTable("shear module");
-    gTable.addNodeValue(24.0f, 80000.0f);
-    gTable.setCurParam(24.0f);
-    material.addTable(gTable);
-    sbfPropertyTable ixTable("Ix");
-    ixTable.addNodeValue(24.0f, 1.0f);
-    ixTable.setCurParam(24.0f);
-    material.addTable(ixTable);
-    sbfPropertyTable iyTable("Iy");
-    iyTable.addNodeValue(24.0f, 1.0f);
-    iyTable.setCurParam(24.0f);
-    material.addTable(iyTable);
-    sbfPropertyTable izTable("Iz");
-    izTable.addNodeValue(24.0f, 1.0f);
-    izTable.setCurParam(24.0f);
-    material.addTable(izTable);
+    auto material = sbfMaterialProperties::makeMPropertiesSteel();
+    auto aTable = new sbfPropertyTable("area");
+    aTable->addNodeValue(24.0f, 1.0f);
+    aTable->setCurParam(24.0f);
+    material->addTable(aTable);
+    auto gTable = new sbfPropertyTable("shear module");
+    gTable->addNodeValue(24.0f, 80000.0f);
+    gTable->setCurParam(24.0f);
+    material->addTable(gTable);
+    auto ixTable = new sbfPropertyTable("Ix");
+    ixTable->addNodeValue(24.0f, 1.0f);
+    ixTable->setCurParam(24.0f);
+    material->addTable(ixTable);
+    auto iyTable = new sbfPropertyTable("Iy");
+    iyTable->addNodeValue(24.0f, 1.0f);
+    iyTable->setCurParam(24.0f);
+    material->addTable(iyTable);
+    auto izTable = new sbfPropertyTable("Iz");
+    izTable->addNodeValue(24.0f, 1.0f);
+    izTable->setCurParam(24.0f);
+    material->addTable(izTable);
     auto propSet = new sbfPropertiesSet();
     propSet->addMaterial(material);
 
