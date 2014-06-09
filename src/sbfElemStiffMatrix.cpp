@@ -21,8 +21,8 @@ void sbfElemStiffMatrix::setElem(sbfElement *elem)
     {
         ind_[ct] = indexes[ct];
         node = mesh->node(indexes[ct]);
-        crd_[ct] = node.x();
-        crd_[ct+8] = node.y();
-        crd_[ct+8*2] = node.z();
+        crd_[3*ct] = node.x();
+        crd_[3*ct+1] = node.y();
+        crd_[3*ct+2] = node.z();
     }
 }

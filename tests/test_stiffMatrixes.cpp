@@ -531,7 +531,7 @@ void TestStiffMatrixes::case10_block6x6()
 
     CreateSmartAndRawPtr(sbfMesh, new sbfMesh, mesh);
     mesh->addNode(0, 0, 0);
-    mesh->addNode(1, 0, 0);
+    mesh->addNode(1, 1, 1);
     mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 1}));
     mesh->applyToAllElements([](sbfElement &elem){elem.setMtr(1);});
 
@@ -542,4 +542,47 @@ void TestStiffMatrixes::case10_block6x6()
     stiff->computeSequantially();
     CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
 
+    NodesData<double, 6> d(mesh), f(mesh);
+    auto mul = [](sbfStiffMatrixBlock6x6 *stiff, NodesData<double, 6> &d, NodesData<double, 6> &f){
+        f.null();
+        CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+        for(int ctNode = 0; ctNode < stiff->mesh()->numNodes(); ++ctNode) {
+            iterator->setToRow(ctNode);
+            while(iterator->isValid()) {
+                double *data = iterator->data();
+                double *dataF = f.data()+6*ctNode;
+                int columnID = iterator->column();
+                for(int ct1 = 0; ct1 < 6; ++ct1)
+                    for(int ct2 = 0; ct2 < 6; ++ct2)
+                        dataF[ct1] += data[ct1*6+ct2]*d.data()[6*columnID+ct2];
+                iterator->next();
+            }
+        }
+    };
+
+    for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 3; ct1++) d.data(ct, ct1) = 5.0/(ct1+1);
+    mul(stiff, d, f);
+    bool pass = true;
+    double eps = 1e-7;
+    for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 6; ct1++)
+        if( std::fabs(f.data(ct, ct1)) > eps ) pass = false;
+    QVERIFY2(pass, "Cant pass patch test");
+
+    mesh->node(0).setX(std::sqrt(1.0/3));
+    mesh->node(0).setY(std::sqrt(1.0/3));
+    mesh->node(0).setZ(std::sqrt(1.0/3));
+    mesh->node(1).setX(0);
+    mesh->node(1).setY(0);
+    mesh->node(1).setZ(0);
+    stiff->computeSequantially();
+    d.null();
+    d.data(1, 0) = std::sqrt(1.0/3);
+    d.data(1, 1) = std::sqrt(1.0/3);
+    d.data(1, 2) = std::sqrt(1.0/3);
+    mul(stiff, d, f);
+    pass = false;
+    if(!pass) {
+        for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 6; ct1++) qDebug() << d.data(ct, ct1) << f.data(ct, ct1);
+    }
+    QVERIFY2(pass, "Cant pass simple loading test");
 }

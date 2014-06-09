@@ -119,6 +119,65 @@ void sbfElemStiffMatrixBeam6Dof::computeSM()
     d11[shift]=  EIz4_L;
 
     //Rotate matrix
+
+    double cosA = (crd_[3] - crd_[0])/L;
+    if(cosA == 1.0) return;
+    double rot[3] = {0, -(crd_[5] - crd_[2]), crd_[4] - crd_[1]};
+    double norm = std::sqrt( std::pow(rot[1], 2.0) + std::pow(rot[2], 2.0) );
+    rot[1] /= norm; rot[2] /= norm;
+    double angle = -std::fabs(std::acos(cosA));
+
+    double cs = std::cos(angle);
+    double sn = std::sin(angle);
+
+    double t[3][3], dirx = rot[0], diry = rot[1], dirz = rot[2];
+
+    t[0][0] = cs + dirx*dirx*(1.0f - cs);
+    t[0][1] = dirx*diry*(1.0f - cs) - dirz*sn;
+    t[0][2] = dirx*dirz*(1.0f - cs) + diry*sn;
+
+    t[1][0] = dirx*diry*(1.0f - cs) + dirz*sn;
+    t[1][1] = cs + diry*diry*(1.0f - cs);
+    t[1][2] = diry*dirz*(1.0f - cs) - dirx*sn;
+
+    t[2][0] = dirx*dirz*(1.0f - cs) - diry*sn;
+    t[2][1] = diry*dirz*(1.0f - cs) + dirx*sn;
+    t[2][2] = cs + dirz*dirz*(1.0f - cs);
+
+    using SubBlocks = double [4][9];
+    SubBlocks subBlocks;
+    auto getSubBlocks = [](double *block, SubBlocks &subBlocks){
+        for(int ct0 = 0; ct0 < 2; ++ct0)
+            for (int ct1 = 0; ct1 < 2; ++ct1)
+                for (int ct = 0; ct < 9; ++ct)
+                    subBlocks[ct0*2 + ct1][ct] = block[ct0*6*3 + ct1*3 + (ct/3)*6 + ct%3];
+    };
+    auto setBlock = [](double *block, SubBlocks &subBlocks){
+        for(int ct0 = 0; ct0 < 2; ++ct0)
+            for (int ct1 = 0; ct1 < 2; ++ct1)
+                for (int ct = 0; ct < 9; ++ct)
+                    block[ct0*6*3 + ct1*3 + (ct/3)*6 + ct%3] = subBlocks[ct0*2 + ct1][ct];
+    };
+    for (int ctBlocks = 0; ctBlocks < 4; ++ctBlocks) {
+        double *block = data_ + blockSize_*ctBlocks;
+        getSubBlocks(block, subBlocks);
+        for (int subCt = 0; subCt < 4; ++subCt) {
+            double *sub = subBlocks[subCt];
+            double temp[9]; for (int ct = 0; ct < 9; ++ct) temp[ct] = 0.0;
+
+            for(int ct0 = 0; ct0 < 3; ++ct0)
+                for (int ct1 = 0; ct1 < 3; ++ct1)
+                    for (int ct2 = 0; ct2 < 3; ++ct2)
+                        temp[ct0*3+ct1] += t[ct2][ct0]*sub[ct2*3+ct1];
+
+            for (int ct = 0; ct < 9; ++ct) sub[ct] = 0.0;
+            for(int ct0 = 0; ct0 < 3; ++ct0)
+                for (int ct1 = 0; ct1 < 3; ++ct1)
+                    for (int ct2 = 0; ct2 < 3; ++ct2)
+                        sub[ct0*3+ct1] += temp[ct0*3+ct2]*t[ct2][ct1];
+        }
+        setBlock(block, subBlocks);
+    }
 }
 
 sbfElemStiffMatrix::RowColData sbfElemStiffMatrixBeam6Dof::rowColData()

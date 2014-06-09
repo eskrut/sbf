@@ -193,6 +193,7 @@ sbfMatrixIterator *sbfStiffMatrixBlock6x6::createIterator() /*const*/
 void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)
 {
     if( !propSet_ ) throw std::runtime_error("nullptr in propSet");
+    null();
     sbfElement *elem = nullptr;
     sbfElemStiffMatrix *elemStiff = nullptr;
     std::map<ElementType, sbfElemStiffMatrix*> mapStiff;
@@ -206,7 +207,7 @@ void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)
         elemStiff->setElem(elem);
         elemStiff->computeSM();
         auto listIDData = elemStiff->rowColData();
-        iterator->setToColumn(listIDData.front().first.first);
+        iterator->setToRow(listIDData.front().first.first);
         for(auto idData : listIDData) {
             double *data = nullptr;
             if( idData.first.first != iterator->row())
