@@ -106,19 +106,4 @@ if(BUILD_TESTS)
 endif()
 
 option(MAKE_PYTHON_BINDING "Build interface library for Python" OFF)
-if(MAKE_PYTHON_BINDING)
-    FIND_PACKAGE(SWIG REQUIRED)
-    include(${SWIG_USE_FILE})
-
-    FIND_PACKAGE(PythonLibs)
-    INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
-
-    INCLUDE_DIRECTORIES(src)
-
-    SET(CMAKE_SWIG_FLAGS "-c++")
-
-    SET_SOURCE_FILES_PROPERTIES(src/swig.i PROPERTIES CPLUSPLUS ON)
-    SET_SOURCE_FILES_PROPERTIES(src/swig.i PROPERTIES SWIG_FLAGS "-includeall")
-    SWIG_ADD_MODULE(sbf python src/swig.i)
-    SWIG_LINK_LIBRARIES(sbf ${PYTHON_LIBRARIES} ${PROJECT_NAME})
-endif()
+add_subdirectory(swig)
