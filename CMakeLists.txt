@@ -104,3 +104,8 @@ option(BUILD_TESTS "Build tests" ON)
 if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
+
+option(MAKE_PYTHON_BINDINGS "Build ib for use in Python" ON)
+if(MAKE_PYTHON_BINDINGS)
+    add_subdirectory(boost.python)
+endif()
