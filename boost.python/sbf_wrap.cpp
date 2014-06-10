@@ -3,7 +3,9 @@
 #include <boost/python/stl_iterator.hpp>
 
 #include "sbfEnums.h"
+#include "sbfNode.h"
 #include "sbfElement.h"
+#include "sbfMesh.h"
 
 /// @brief Type that allows for registration of conversions from
 ///        python iterable types.
@@ -95,6 +97,22 @@ BOOST_PYTHON_MODULE(libsbfpy)
             .value("TETRAHEDRON_QUADRATIC", ElementType::TETRAHEDRON_QUADRATIC)
             .value("TETRAHEDRON_LINEAR", ElementType::TETRAHEDRON_LINEAR)
             ;
+
+    enum_<FileVersion>("FileVersion")
+            .value("OLD_FORMAT", FileVersion::OLD_FORMAT)
+            .value("NEW_FORMAT", FileVersion::NEW_FORMAT)
+            .value("AUTO_FORMAT", FileVersion::AUTO_FORMAT)
+            .value("NOT_DEFINED_FORMAT", FileVersion::NOT_DEFINED_FORMAT)
+            ;
+
+    class_<sbfNode>("sbfNode", init<float, float, float>())
+            .def(init<const sbfNode &>())
+            .def("rotate", &sbfNode::rotate)
+            ;
     class_<sbfElement>("sbfElement", init<const ElementType , const std::vector<int> &>())
+            ;
+    class_<sbfMesh>("sbfMesh", init<>())
+//            .def(init<const sbfMesh &>())
+            .def("readMeshFromFiles", &sbfMesh::readMeshFromFiles)
             ;
 }

@@ -27,7 +27,7 @@ sbfMesh::sbfMesh()
     reserveNodesNumber(1000);
     reserveElementsNumber(1000);
 }
-sbfMesh::sbfMesh(sbfMesh & mesh)
+sbfMesh::sbfMesh(sbfMesh &mesh)
 {
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     reserveNodesNumber(1000);

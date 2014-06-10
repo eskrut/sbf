@@ -37,7 +37,7 @@ public:
     sbfMesh();
     //sbfMesh(const char* indName, const char* crdName, const char* mtrName);
     //Copy constructor
-    sbfMesh(sbfMesh & mesh);
+    sbfMesh(sbfMesh &mesh);
     //Destructor
     ~sbfMesh();
 
