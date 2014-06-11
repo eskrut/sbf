@@ -30,13 +30,13 @@ public:
     CrdFloatType z() const;
     CrdFloatType & crdAtKort(int kort);
     //Check if all coordinates of nodes are equal with tolerance
-    bool isSame(sbfNode & node, const CrdFloatType tolerance = 0.001) const;
+    bool isSame(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
     //Check if spesific coordinate of nodes is equal with tolerance
-    bool isSameX(sbfNode & node, const CrdFloatType tolerance = 0.001) const;
-    bool isSameY(sbfNode & node, const CrdFloatType tolerance = 0.001) const;
-    bool isSameZ(sbfNode & node, const CrdFloatType tolerance = 0.001) const;
+    bool isSameX(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
+    bool isSameY(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
+    bool isSameZ(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
     //Returns the distance between nodes
-    float distance(sbfNode & node) const;
+    float distance(const sbfNode &node) const;
     //Rotate node around vector with components to angle of vector length
     void rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, CrdFloatType rotOriginX = 0.0, CrdFloatType rotOriginY = 0.0, CrdFloatType rotOriginZ = 0.0);
 };

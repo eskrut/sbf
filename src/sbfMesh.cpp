@@ -27,7 +27,7 @@ sbfMesh::sbfMesh()
     reserveNodesNumber(1000);
     reserveElementsNumber(1000);
 }
-sbfMesh::sbfMesh(sbfMesh &mesh)
+sbfMesh::sbfMesh(const sbfMesh &mesh)
 {
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     reserveNodesNumber(1000);
@@ -46,6 +46,7 @@ sbfMesh::sbfMesh(sbfMesh &mesh)
         //Not implemented yet!!!
     }
 }
+
 sbfMesh::~sbfMesh()
 {
     clearAllGroups();
@@ -355,6 +356,11 @@ sbfNode & sbfMesh::node(const int seqNumber)
 {
     return nodes_[seqNumber];
 }
+
+const sbfNode &sbfMesh::node(const int seqNumber) const
+{
+    return nodes_[seqNumber];
+}
 sbfElement & sbfMesh::elem(const int seqNumber)
 {
     return elems_[seqNumber];
@@ -499,7 +505,7 @@ int sbfMesh::addNode(float x, float y, float z, bool checkExisted, float tol)
     sbfNode node(x, y, z);
     return addNode(node, checkExisted, tol);
 }
-int sbfMesh::addNode(sbfNode & node, bool checkExisted, float tol)
+int sbfMesh::addNode(const sbfNode &node, bool checkExisted, float tol)
 {
     /*	return index of new created node or already existed node with tolerance	*/
     int nNodes = numNodes();
@@ -798,6 +804,16 @@ void sbfMesh::addMesh(sbfMesh * mesh, bool passGroups, bool checkExisted, float 
     {
         //TODO Not implemented yet!!!!
     }
+}
+
+void sbfMesh::setMtr(int mtr)
+{
+    applyToAllElements([=](sbfElement&elem){elem.setMtr(mtr);});
+}
+
+void sbfMesh::increaseMtr(int shift)
+{
+    applyToAllElements([=](sbfElement&elem){elem.setMtr(elem.mtr()+shift);});
 }
 
 //Geometry modifications

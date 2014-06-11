@@ -37,7 +37,7 @@ public:
     sbfMesh();
     //sbfMesh(const char* indName, const char* crdName, const char* mtrName);
     //Copy constructor
-    sbfMesh(sbfMesh &mesh);
+    sbfMesh(const sbfMesh &mesh);
     //Destructor
     ~sbfMesh();
 
@@ -73,6 +73,7 @@ public:
     //Access to members
 public:
     sbfNode & node(const int seqNumber);//Returns reference to specific node
+    const sbfNode &node(const int seqNumber) const;
     sbfElement & elem(const int seqNumber);//Returns reference to specific element
     sbfElement * elemPtr(const int sequenceNumber);//Returns pointer to specific element
 
@@ -101,7 +102,7 @@ public:
     void insertElement(const sbfElement & elem, int position);
     int addNode(float x, float y, float z, bool checkExisted = true, float tol = 0.001);
     //Add sbfNode node to mesh. Similar as previous.
-    int addNode(sbfNode & node, bool checkExisted = true, float tol = 0.001);
+    int addNode(const sbfNode &node, bool checkExisted = true, float tol = 0.001);
     //Delete node with index nodeIndex from mesh and optionally make renumbering of elements indexes
     void deleteNode(int nodeIndex, bool renumberElemIndexes = true);
     //Merge and renumber nodes in mesh. Coinsident nodes with tolerance tol will be dropped.
@@ -120,6 +121,10 @@ public:
     void addMesh(sbfMesh & mesh, bool passGroups = true, bool checkExisted = true, float tol = 0.001);
     //Add mesh by pointer. Similar as previous.
     void addMesh(sbfMesh * mesh, bool passGroups = true, bool checkExisted = true, float tol = 0.001);
+    //! Set material for all elements
+    void setMtr(int mtr);
+    //! Increase material number for all elements
+    void increaseMtr(int shift);
     //Reserve memory
     void reserveNodesNumber(const int newNodesNumber);
     void reserveElementsNumber(const int newElementNumber);

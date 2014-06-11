@@ -45,7 +45,7 @@ CrdFloatType & sbfNode::crdAtKort(int kort)
 {
     return crd_[kort];
 }
-bool sbfNode::isSame(sbfNode & node, const CrdFloatType tolerance) const
+bool sbfNode::isSame(const sbfNode &node, const CrdFloatType tolerance) const
 {
     if(!isSameX(node, tolerance))
         return false;
@@ -57,19 +57,19 @@ bool sbfNode::isSame(sbfNode & node, const CrdFloatType tolerance) const
         //Distance check should be here!!!!!!!!!!!!!!!!!
         return true;
 }
-bool sbfNode::isSameX(sbfNode & node, const CrdFloatType tolerance) const
+bool sbfNode::isSameX(const sbfNode &node, const CrdFloatType tolerance) const
 {
     return std::fabs(x()-node.x()) < tolerance ? true : false;
 }
-bool sbfNode::isSameY(sbfNode & node, const CrdFloatType tolerance) const
+bool sbfNode::isSameY(const sbfNode &node, const CrdFloatType tolerance) const
 {
     return std::fabs(y()-node.y()) < tolerance ? true : false;
 }
-bool sbfNode::isSameZ(sbfNode & node, const CrdFloatType tolerance) const
+bool sbfNode::isSameZ(const sbfNode &node, const CrdFloatType tolerance) const
 {
     return std::fabs(z()-node.z()) < tolerance ? true : false;
 }
-float sbfNode::distance(sbfNode & node) const
+float sbfNode::distance(const sbfNode &node) const
 {
     return std::sqrt(std::pow(x()-node.x(), static_cast<CrdFloatType>(2)) +std:: pow(y()-node.y(), static_cast<CrdFloatType>(2)) + std::pow(z()-node.z(), static_cast<CrdFloatType>(2)));
 }

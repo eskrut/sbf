@@ -73,7 +73,8 @@ BOOST_PYTHON_MODULE(libsbfpy)
     // Register interable conversions.
     iterable_converter()
             // Build-in type.
-            .from_python<std::vector<int> >()
+            .from_python<std::vector<int>>()
+            .from_python<std::vector<float>>()
             // Each dimension needs to be convertable.
             .from_python<std::vector<std::string> >()
             .from_python<std::vector<std::vector<std::string> > >()
@@ -111,8 +112,36 @@ BOOST_PYTHON_MODULE(libsbfpy)
             ;
     class_<sbfElement>("sbfElement", init<const ElementType , const std::vector<int> &>())
             ;
+
+    int (sbfMesh::*addNode_crd)(float, float, float, bool, float) = &sbfMesh::addNode;
+    int (sbfMesh::*addNode_node)(const sbfNode &, bool, float) = &sbfMesh::addNode;
+    void (sbfMesh::*scale_xyz)(float, float, float) = &sbfMesh::scale;
+    sbfMesh *(sbfMesh::*makeBlock_vec)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType);
+    sbfMesh *(sbfMesh::*makeBlock_dim)(float, float, float, int, int, int, ElementType);
+    sbfMesh *(sbfMesh::*makeCylinderPart_vec)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType);
+    sbfMesh *(sbfMesh::*makeCylinderPart_dim)(float, float, float, float, float, float, int, int, int, ElementType);
+    void (sbfMesh::*addMesh_ptr)(sbfMesh *, bool, bool, float) = &sbfMesh::addMesh;
     class_<sbfMesh>("sbfMesh", init<>())
-//            .def(init<const sbfMesh &>())
+            .def(init<const sbfMesh &>())
             .def("readMeshFromFiles", &sbfMesh::readMeshFromFiles)
+            .def("writeMeshToFiles", &sbfMesh::writeMeshToFiles)
+            .def("addNode", addNode_crd)
+            .def("addNode", addNode_node)
+            .def("addElement", &sbfMesh::addElement)
+            .def("scale", scale_xyz)
+            .def("translate", &sbfMesh::translate)
+            .def("rotate", &sbfMesh::rotate)
+            .def("makeBlock", makeBlock_vec, return_value_policy<manage_new_object>())
+            .def("makeBlock", makeBlock_dim, return_value_policy<manage_new_object>())
+            .staticmethod("makeBlock")
+            .def("makeCylinderPart", makeCylinderPart_vec, return_value_policy<manage_new_object>())
+            .def("makeCylinderPart", makeCylinderPart_dim, return_value_policy<manage_new_object>())
+            .staticmethod("makeCylinderPart")
+            .def("addMesh", addMesh_ptr)
+            .def("setMtr", &sbfMesh::setMtr)
+            .def("increaseMtr", &sbfMesh::increaseMtr)
+//            .def("", &sbfMesh::)
+//            .def("", &sbfMesh::)
+//            .def("", &sbfMesh::)
             ;
 }
