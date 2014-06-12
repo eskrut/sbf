@@ -7,17 +7,18 @@
 #include "sbfPropertiesSet.h"
 #include "sbfReporter.h"
 
-const double intCrd1[] = {0.0};
-const double intWgh1[] = {2.0};
-const double intCrd2[] = {-5.773502691896257645e-01, 5.773502691896257645e-01};
-const double intWgh2[] = {1.0, 1.0};
-const double intCrd3[] = {-7.745966692414833771e-01, 0.0, 7.745966692414833771e-01};
-const double intWgh3[] = {5.555555555555555556e-01, 8.888888888888888889e-01, 5.555555555555555556e-01};
-const double intCrd4[] = {-0.861136311594953, -0.339981043584856, 0.339981043584856, 0.861136311594953};
-const double intWgh4[] = {0.347854845137454, 0.652145154862546, 0.652145154862546, 0.347854845137454};
+//const double intCrd1[] = {0.0};
+//const double intWgh1[] = {2.0};
+//const double intCrd2[] = {-5.773502691896257645e-01, 5.773502691896257645e-01};
+//const double intWgh2[] = {1.0, 1.0};
+//const double intCrd3[] = {-7.745966692414833771e-01, 0.0, 7.745966692414833771e-01};
+//const double intWgh3[] = {5.555555555555555556e-01, 8.888888888888888889e-01, 5.555555555555555556e-01};
+//const double intCrd4[] = {-0.861136311594953, -0.339981043584856, 0.339981043584856, 0.861136311594953};
+//const double intWgh4[] = {0.347854845137454, 0.652145154862546, 0.652145154862546, 0.347854845137454};
 
-double const * intCrd[] = {intCrd1, intCrd2, intCrd3, intCrd4};
-double const * intWgh[] = {intWgh1, intWgh2, intWgh3, intWgh4};
+//double const * intCrd[] = {intCrd1, intCrd2, intCrd3, intCrd4};
+//double const * intWgh[] = {intWgh1, intWgh2, intWgh3, intWgh4};
+#include "sbfElemStiffMatrix.h"
 
 sbfElemStiffMatrixHexa8::sbfElemStiffMatrixHexa8()
 {

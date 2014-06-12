@@ -352,8 +352,9 @@ void TestStiffMatrixes::case04_CGMwP()
 {
     sbfTimer<> timer;
     timer.start();
-    float xSide = 100, ySide = 1, zSide = 1;
-    int xPart = 15, yPart = 4, zPart = 4;
+    float xSide = 100, ySide = 10, zSide = 10;
+    float targetError = 1e-2;
+    int xPart = 10, yPart = 5, zPart = 5;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
@@ -490,11 +491,98 @@ void TestStiffMatrixes::case04_CGMwP()
 
     qDebug() << numIterations << averDisp << dL << std::fabs(averDisp - dL)/dL;
 
-    if ( std::fabs(averDisp - dL)/dL > 0.001 ) {
+    if ( std::fabs(averDisp - dL)/dL > targetError ) {
         qDebug() << QString("Expected displacement of loaded side is %1, got %2, error %3").arg(dL).arg(averDisp).arg(std::fabs(averDisp - dL)/dL);
         QVERIFY2(false, "Fail to make simple tensile solution");
     }
 
     timer.stop();
     report("CGMwP test done in ", timer.timeSpanStr());
+}
+
+#include "sbfStiffMatrixBlock6x6.h"
+#include "sbfAdditions.h"
+
+void TestStiffMatrixes::case10_block6x6()
+{
+    auto material = sbfMaterialProperties::makeMPropertiesSteel();
+    auto aTable = new sbfPropertyTable("area");
+    aTable->addNodeValue(24.0f, 1.0f);
+    aTable->setCurParam(24.0f);
+    material->addTable(aTable);
+    auto gTable = new sbfPropertyTable("shear module");
+    gTable->addNodeValue(24.0f, 80000.0f);
+    gTable->setCurParam(24.0f);
+    material->addTable(gTable);
+    auto ixTable = new sbfPropertyTable("Ix");
+    ixTable->addNodeValue(24.0f, 1.0f);
+    ixTable->setCurParam(24.0f);
+    material->addTable(ixTable);
+    auto iyTable = new sbfPropertyTable("Iy");
+    iyTable->addNodeValue(24.0f, 1.0f);
+    iyTable->setCurParam(24.0f);
+    material->addTable(iyTable);
+    auto izTable = new sbfPropertyTable("Iz");
+    izTable->addNodeValue(24.0f, 1.0f);
+    izTable->setCurParam(24.0f);
+    material->addTable(izTable);
+    auto propSet = new sbfPropertiesSet();
+    propSet->addMaterial(material);
+
+    CreateSmartAndRawPtr(sbfMesh, new sbfMesh, mesh);
+    mesh->addNode(0, 0, 0);
+    mesh->addNode(1, 1, 1);
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 1}));
+    mesh->applyToAllElements([](sbfElement &elem){elem.setMtr(1);});
+
+    CreateSmartAndRawPtr(sbfStiffMatrixBlock6x6, new sbfStiffMatrixBlock6x6(mesh, propSet), stiff);
+
+    QVERIFY2(stiff->storeType() == MatrixStoreType::COMPACT, "Fail to get compact store type");
+
+    stiff->computeSequantially();
+    CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+
+    NodesData<double, 6> d(mesh), f(mesh);
+    auto mul = [](sbfStiffMatrixBlock6x6 *stiff, NodesData<double, 6> &d, NodesData<double, 6> &f){
+        f.null();
+        CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+        for(int ctNode = 0; ctNode < stiff->mesh()->numNodes(); ++ctNode) {
+            iterator->setToRow(ctNode);
+            while(iterator->isValid()) {
+                double *data = iterator->data();
+                double *dataF = f.data()+6*ctNode;
+                int columnID = iterator->column();
+                for(int ct1 = 0; ct1 < 6; ++ct1)
+                    for(int ct2 = 0; ct2 < 6; ++ct2)
+                        dataF[ct1] += data[ct1*6+ct2]*d.data()[6*columnID+ct2];
+                iterator->next();
+            }
+        }
+    };
+
+    for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 3; ct1++) d.data(ct, ct1) = 5.0/(ct1+1);
+    mul(stiff, d, f);
+    bool pass = true;
+    double eps = 1e-7;
+    for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 6; ct1++)
+        if( std::fabs(f.data(ct, ct1)) > eps ) pass = false;
+    QVERIFY2(pass, "Cant pass patch test");
+
+    mesh->node(0).setX(std::sqrt(1.0/3));
+    mesh->node(0).setY(std::sqrt(1.0/3));
+    mesh->node(0).setZ(std::sqrt(1.0/3));
+    mesh->node(1).setX(0);
+    mesh->node(1).setY(0);
+    mesh->node(1).setZ(0);
+    stiff->computeSequantially();
+    d.null();
+    d.data(1, 0) = std::sqrt(1.0/3);
+    d.data(1, 1) = std::sqrt(1.0/3);
+    d.data(1, 2) = std::sqrt(1.0/3);
+    mul(stiff, d, f);
+    pass = false;
+    if(!pass) {
+        for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 6; ct1++) qDebug() << d.data(ct, ct1) << f.data(ct, ct1);
+    }
+    QVERIFY2(pass, "Cant pass simple loading test");
 }

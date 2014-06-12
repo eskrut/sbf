@@ -16,6 +16,8 @@ private Q_SLOTS:
     void case02_createIncompleteChol2();
     void case03_solveLLTuf();
     void case04_CGMwP();
+
+    void case10_block6x6();
 };
 
 #endif // TEST_STIFFMATRICES_H
