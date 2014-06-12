@@ -11,7 +11,7 @@ class DECLSPEC sbfPropertyTable
 {
 public:
     sbfPropertyTable();
-    sbfPropertyTable(const std::string & name);
+    sbfPropertyTable(const std::string &name);
     ~sbfPropertyTable();
 private:
     std::string name_;
