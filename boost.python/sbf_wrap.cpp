@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <boost/python.hpp>
 #include <boost/python/stl_iterator.hpp>
+#include <vector>
 
 #include "sbfEnums.h"
 #include "sbfNode.h"
@@ -9,6 +10,8 @@
 #include "sbfPropertyTable.h"
 #include "sbfMaterialProperties.h"
 #include "sbfPropertiesSet.h"
+#include "sbfStiffMatrix.h"
+#include "sbfMatrixIterator.h"
 
 #include "iterable_converter.hpp"
 
@@ -21,6 +24,7 @@ BOOST_PYTHON_MODULE(libsbfpy)
             // Build-in type.
             .from_python<std::vector<int>>()
             .from_python<std::vector<float>>()
+            .from_python<std::vector<double>>()
             // Each dimension needs to be convertable.
             .from_python<std::vector<std::string> >()
             .from_python<std::vector<std::vector<std::string> > >()
@@ -62,10 +66,12 @@ BOOST_PYTHON_MODULE(libsbfpy)
     int (sbfMesh::*addNode_crd)(float, float, float, bool, float) = &sbfMesh::addNode;
     int (sbfMesh::*addNode_node)(const sbfNode &, bool, float) = &sbfMesh::addNode;
     void (sbfMesh::*scale_xyz)(float, float, float) = &sbfMesh::scale;
-    sbfMesh *(sbfMesh::*makeBlock_vec)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType);
-    sbfMesh *(sbfMesh::*makeBlock_dim)(float, float, float, int, int, int, ElementType);
-    sbfMesh *(sbfMesh::*makeCylinderPart_vec)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType);
-    sbfMesh *(sbfMesh::*makeCylinderPart_dim)(float, float, float, float, float, float, int, int, int, ElementType);
+
+    //FIXME compiler says that cant find appropriate signature :(
+//    sbfMesh *(sbfMesh::*makeBlock_vec)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType) = &sbfMesh::makeBlock;
+//    sbfMesh *(sbfMesh::*makeBlock_dim)(float, float, float, int, int, int, ElementType) = &sbfMesh::makeBlock;
+//    sbfMesh *(sbfMesh::*makeCylinderPart_vec)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType) = &sbfMesh::makeCylinderPart;
+//    sbfMesh *(sbfMesh::*makeCylinderPart_dim)(float, float, float, float, float, float, int, int, int, ElementType) = &sbfMesh::makeCylinderPart;
     void (sbfMesh::*addMesh_ptr)(sbfMesh *, bool, bool, float) = &sbfMesh::addMesh;
     class_<sbfMesh>("sbfMesh", init<>())
             .def(init<const sbfMesh &>())
@@ -77,18 +83,16 @@ BOOST_PYTHON_MODULE(libsbfpy)
             .def("scale", scale_xyz)
             .def("translate", &sbfMesh::translate)
             .def("rotate", &sbfMesh::rotate)
-            .def("makeBlock", makeBlock_vec, return_value_policy<manage_new_object>())
-            .def("makeBlock", makeBlock_dim, return_value_policy<manage_new_object>())
-            .staticmethod("makeBlock")
-            .def("makeCylinderPart", makeCylinderPart_vec, return_value_policy<manage_new_object>())
-            .def("makeCylinderPart", makeCylinderPart_dim, return_value_policy<manage_new_object>())
-            .staticmethod("makeCylinderPart")
+//            .def("makeBlock", (sbfMesh *(sbfMesh::*)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType))&sbfMesh::makeBlock)
+//            .def("makeBlock", makeBlock_vec, return_value_policy<manage_new_object>())
+//            .def("makeBlock", makeBlock_dim, return_value_policy<manage_new_object>())
+//            .staticmethod("makeBlock")
+//            .def("makeCylinderPart", makeCylinderPart_vec, return_value_policy<manage_new_object>())
+//            .def("makeCylinderPart", makeCylinderPart_dim, return_value_policy<manage_new_object>())
+//            .staticmethod("makeCylinderPart")
             .def("addMesh", addMesh_ptr)
             .def("setMtr", &sbfMesh::setMtr)
             .def("increaseMtr", &sbfMesh::increaseMtr)
-//            .def("", &sbfMesh::)
-//            .def("", &sbfMesh::)
-//            .def("", &sbfMesh::)
             ;
 
     class_<sbfPropertyTable>("sbfPropertyTable", init<const std::string &>())
@@ -110,5 +114,79 @@ BOOST_PYTHON_MODULE(libsbfpy)
     class_<sbfPropertiesSet>("sbfPropertiesSet")
             .def("material", &sbfPropertiesSet::material, return_value_policy<reference_existing_object>())
             .def("addMaterial", &sbfPropertiesSet::addMaterial)
+            ;
+
+    struct sbfStiffMatrix_Wrap : sbfStiffMatrix, wrapper<sbfStiffMatrix>
+    {
+        sbfStiffMatrix_Wrap(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type) :
+            sbfStiffMatrix(mesh, propSet, type) {}
+        // Pure virtual methods
+        void compute(int startID, int stopID) { this->get_override("compute")(startID, stopID); }
+        sbfMatrixIterator *createIterator() { return this->get_override("createIterator")(); }
+
+        // Virtual functions
+        MatrixStoreType storeType() const
+        {
+            if( override storeType = this->get_override("storeType") ) return storeType();
+            return sbfStiffMatrix::storeType();
+        }
+        MatrixStoreType default_storeType() const { return this->sbfStiffMatrix::storeType(); }
+
+        void read(std::ifstream &in)
+        {
+            if( override read = this->get_override("read") ) read(in);
+            else sbfStiffMatrix::read(in);
+        }
+        void default_read(std::ifstream &in) { this->sbfStiffMatrix::read(in); }
+
+        void write(std::ofstream &out) const
+        {
+            if( override write = this->get_override("write") ) write(out);
+            else sbfStiffMatrix::write(out);
+        }
+        void default_write(std::ofstream &out) const { this->sbfStiffMatrix::write(out); }
+    };
+    void (sbfStiffMatrix::*read_stream)(std::ifstream &in) = &sbfStiffMatrix::read;
+    void (sbfStiffMatrix::*write_stream)(std::ofstream &out) const = &sbfStiffMatrix::write;
+
+    class_<sbfStiffMatrix_Wrap, boost::noncopyable>("sbfStiffMatrix", init<sbfMesh *, sbfPropertiesSet *, MatrixType>())
+            .def("compute", pure_virtual(&sbfStiffMatrix::compute))
+            .def("createIterator", pure_virtual(&sbfStiffMatrix::createIterator), return_value_policy<manage_new_object>())
+            .def("storeType", &sbfStiffMatrix::storeType, &sbfStiffMatrix_Wrap::default_storeType)
+            .def("read", read_stream, &sbfStiffMatrix_Wrap::default_read)
+            .def("write", write_stream, &sbfStiffMatrix_Wrap::default_write)
+            ;
+
+    struct sbfMatrixIterator_Wrap : sbfMatrixIterator, wrapper<sbfMatrixIterator>
+    {
+        sbfMatrixIterator_Wrap() : sbfMatrixIterator() {}
+
+        // Pure virtual methods
+        void setToRow(const int rowIndex) { this->get_override("setToRow")(rowIndex); }
+        void setToColumn(const int columnIndex) { this->get_override("setToColumn")(columnIndex); }
+        void setToRowInverse(const int rowIndex) { this->get_override("setToRowInverse")(rowIndex); }
+        void setToColumnInverse(const int columnIndex) { this->get_override("setToColumnInverse")(columnIndex); }
+        bool isValid() const { return this->get_override("isValid")(); }
+        bool haveNext() const { return this->get_override("haveNext")(); }
+        bool next() { return this->get_override("next")(); }
+        double *data() const { return this->get_override("data")(); }
+        double *data(bool *isInNormal) const { return this->get_override("data")(isInNormal); }
+        bool isDiagonal() const { return this->get_override("isDiagonal")(); }
+        bool isInNormal() const { return this->get_override("isInNormal")(); }
+        double *diagonal(const int index) const { return this->get_override("diagonal")(index); }
+    };
+
+    class_<sbfMatrixIterator_Wrap, boost::noncopyable>("sbfMatrixIterator", init<>())
+            .def("setToRow", pure_virtual(&sbfMatrixIterator::setToRow))
+            .def("setToColumn", pure_virtual(&sbfMatrixIterator::setToColumn))
+            .def("setToRowInverse", pure_virtual(&sbfMatrixIterator::setToRowInverse))
+            .def("setToColumnInverse", pure_virtual(&sbfMatrixIterator::setToColumnInverse))
+            .def("isValid", pure_virtual(&sbfMatrixIterator::isValid))
+            .def("haveNext", pure_virtual(&sbfMatrixIterator::haveNext))
+            .def("next", pure_virtual(&sbfMatrixIterator::next))
+//            .def("data", pure_virtual( (double *(sbfMatrixIterator::*)() const)&sbfMatrixIterator::data ), return_value_policy<reference_existing_object>())
+            .def("isDiagonal", pure_virtual(&sbfMatrixIterator::isDiagonal))
+            .def("isInNormal", pure_virtual(&sbfMatrixIterator::isInNormal))
+//            .def("diagonal", pure_virtual(&sbfMatrixIterator::diagonal), return_value_policy<reference_existing_object>())
             ;
 }
