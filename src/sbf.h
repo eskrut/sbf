@@ -3,6 +3,7 @@
 
 #include "sbfDeclspec.h"
 #include "sbfEnums.h"
+#include "sbfAdditions.h"
 #include "sbfNode.h"
 #include "sbfElement.h"
 #include "sbfGroupFilter.h"
@@ -18,5 +19,7 @@
 #include "sbfStiffBlock3x3.h"
 #include "sbfElemStiffMatrixHexa8.h"
 #include "sbfStiffMatrixBlock3x3.h"
+#include "sbfStiffMatrixBlock6x6.h"
+#include "sbfMatrixIterator.h"
 
 #endif// SBF_H
