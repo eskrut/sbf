@@ -28,6 +28,30 @@ void sbfMaterialProperties::addTable(sbfPropertyTable *table)
     tables_[table->name()]=table;
 }
 
+void sbfMaterialProperties::read(std::ifstream &in)
+{
+    std::getline(in, name_);
+    size_t numTables;
+    in >> numTables;
+    in.ignore(10, '\n');
+    for(int ct = 0; ct < numTables; ct++) {
+        std::string name;
+        std::getline(in, name);
+        auto table = new sbfPropertyTable(name);
+        table->read(in);
+        tables_[name] = table;
+    }
+}
+
+void sbfMaterialProperties::write(std::ofstream &out) const
+{
+    out << name_ << std::endl << tables_.size() << std::endl;
+    for(auto t : tables_) {
+        out << t.first << std::endl;
+        t.second->write(out);
+    }
+}
+
 sbfPropertyTable *sbfMaterialProperties::propertyTable(const std::string &name)
 {
     auto it = tables_.find(name);

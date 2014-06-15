@@ -3,6 +3,7 @@
 
 #include "sbfPropertyTable.h"
 #include <map>
+#include <fstream>
 
 class DECLSPEC sbfMaterialProperties
 {
@@ -17,6 +18,9 @@ public:
     sbfPropertyTable *propertyTable(const std::string & name);
     void addTable(const std::string &name);
     void addTable(sbfPropertyTable *table);
+
+    void read(std::ifstream &in);
+    void write(std::ofstream &out) const;
 
     static sbfMaterialProperties *makeMPropertiesSteel();
     static sbfMaterialProperties *makeMPropertiesGold();

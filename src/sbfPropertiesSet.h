@@ -2,6 +2,7 @@
 #define SBFPROPERTIESSET_H
 
 #include "sbfMaterialProperties.h"
+#include <fstream>
 
 class DECLSPEC sbfPropertiesSet
 {
@@ -13,6 +14,9 @@ private:
 public:
     sbfMaterialProperties *material(const int seqNumber) const;
     void addMaterial(sbfMaterialProperties *material);
+
+    void read(const char *fileName);
+    void write(const char *fileName) const;
 };
 
 #endif // SBFPROPERTIESSET_H

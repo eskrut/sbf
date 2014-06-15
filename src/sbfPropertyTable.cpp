@@ -69,3 +69,24 @@ const std::string & sbfPropertyTable::name() const
 {
     return name_;
 }
+
+void sbfPropertyTable::read(std::ifstream &in)
+{
+    std::getline(in, name_);
+    size_t tableSize;
+    in >> tableSize;
+    in.ignore(10, '\n');
+    table_.resize(tableSize);
+    for(auto & node :table_)
+        in >> node.param >> node.value;
+    in >> curParam_ >> curValue_;
+    in.ignore(10, '\n');
+}
+
+void sbfPropertyTable::write(std::ofstream &out) const
+{
+    out << name_ << std::endl << table_.size() << std::endl;
+    for(auto node :table_)
+        out << node.param << "\t" << node.value << std::endl;
+    out << curParam_ << "\t" << curValue_ << std::endl;
+}

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 #include "sbfDeclspec.h"
 
 typedef struct{float param, value;}PropertyNode;
@@ -24,6 +25,9 @@ public:
     void setCurParam(const float param);
     float curValue() const;
     const std::string &name() const;
+
+    void read(std::ifstream &in);
+    void write(std::ofstream &out) const;
 };
 
 #endif // SBFPROPERTYTABLE_H
