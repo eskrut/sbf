@@ -18,6 +18,7 @@ private Q_SLOTS:
     void case04_CGMwP();
 
     void case10_block6x6();
+    void case11_CGMwP();
 };
 
 #endif // TEST_STIFFMATRICES_H

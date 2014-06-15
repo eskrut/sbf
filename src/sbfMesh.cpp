@@ -413,8 +413,11 @@ void sbfMesh::printInfo()
     numElementsMap[ElementType::TETRAHEDRON_LINEAR] = 0;
     numElementsMap[ElementType::TETRAHEDRON_QUADRATIC] = 0;
     numElementsMap[ElementType::NO_DEFINED_ELEMENT] = 0;
-    for(int ct = 0; ct < numElements(); ct++)
+    std::map<int, int> mtrMap;
+    for(int ct = 0; ct < numElements(); ct++) {
         numElementsMap[elemPtr(ct)->type()]++;
+        mtrMap[elemPtr(ct)->mtr()]++;
+    }
     sstr << "Elements in mesh:" << std::endl;
     sstr << "Beam 3 DOF linear\t\t" << numElementsMap[ElementType::BEAM_LINEAR_3DOF] << std::endl;
     sstr << "Beam 3 DOF quadratic\t\t" << numElementsMap[ElementType::BEAM_QUADRATIC_3DOF] << std::endl;
@@ -428,6 +431,8 @@ void sbfMesh::printInfo()
     sstr << "Number of elements groups " << this->numGroups() << std::endl;
     sstr << "Number of nodes groups " << this->numNodeGroups() << std::endl;
     sstr << "Bounding box:" << std::endl << "xMin = " << minX() << "\txMax = " << maxX() << std::endl << "yMin = " << minY() << "\tyMax = " << maxY() << std::endl << "zMin = " << minZ() << "\tzMax = " << maxZ() << std::endl;
+    sstr << "Materials in mesh:" << std::endl;
+    for(auto m : mtrMap) sstr << m.first << " (" << m.second << ")" << std::endl;
     report(sstr.str());
 }
 float sbfMesh::max(const int kort)

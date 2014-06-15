@@ -39,6 +39,9 @@ public:
 
     virtual void read(std::ifstream &in) {}
     virtual void write(std::ofstream &out) const {}
+
+    virtual sbfStiffMatrix *createIncompleteChol() /*const*/ { return nullptr; }
+    virtual void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr) { }
 };
 
 #endif // SBFSTIFFMATRIX_H

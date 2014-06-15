@@ -502,6 +502,22 @@ void TestStiffMatrixes::case04_CGMwP()
 
 #include "sbfStiffMatrixBlock6x6.h"
 #include "sbfAdditions.h"
+auto mul = [](sbfStiffMatrixBlock6x6 *stiff, NodesData<double, 6> &d, NodesData<double, 6> &f){
+    f.null();
+    CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+    for(int ctNode = 0; ctNode < stiff->mesh()->numNodes(); ++ctNode) {
+        iterator->setToRow(ctNode);
+        while(iterator->isValid()) {
+            double *data = iterator->data();
+            double *dataF = f.data()+6*ctNode;
+            int columnID = iterator->column();
+            for(int ct1 = 0; ct1 < 6; ++ct1)
+                for(int ct2 = 0; ct2 < 6; ++ct2)
+                    dataF[ct1] += data[ct1*6+ct2]*d.data()[6*columnID+ct2];
+            iterator->next();
+        }
+    }
+};
 
 void TestStiffMatrixes::case10_block6x6()
 {
@@ -528,6 +544,7 @@ void TestStiffMatrixes::case10_block6x6()
     material->addTable(izTable);
     auto propSet = new sbfPropertiesSet();
     propSet->addMaterial(material);
+    propSet->write("test.prop");
 
     CreateSmartAndRawPtr(sbfMesh, new sbfMesh, mesh);
     mesh->addNode(0, 0, 0);
@@ -543,22 +560,6 @@ void TestStiffMatrixes::case10_block6x6()
     CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
 
     NodesData<double, 6> d(mesh), f(mesh);
-    auto mul = [](sbfStiffMatrixBlock6x6 *stiff, NodesData<double, 6> &d, NodesData<double, 6> &f){
-        f.null();
-        CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
-        for(int ctNode = 0; ctNode < stiff->mesh()->numNodes(); ++ctNode) {
-            iterator->setToRow(ctNode);
-            while(iterator->isValid()) {
-                double *data = iterator->data();
-                double *dataF = f.data()+6*ctNode;
-                int columnID = iterator->column();
-                for(int ct1 = 0; ct1 < 6; ++ct1)
-                    for(int ct2 = 0; ct2 < 6; ++ct2)
-                        dataF[ct1] += data[ct1*6+ct2]*d.data()[6*columnID+ct2];
-                iterator->next();
-            }
-        }
-    };
 
     for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 3; ct1++) d.data(ct, ct1) = 5.0/(ct1+1);
     mul(stiff, d, f);
@@ -585,4 +586,86 @@ void TestStiffMatrixes::case10_block6x6()
         for(int ct = 0; ct < mesh->numNodes(); ct++) for(int ct1 = 0; ct1 < 6; ct1++) qDebug() << d.data(ct, ct1) << f.data(ct, ct1);
     }
     QVERIFY2(pass, "Cant pass simple loading test");
+}
+
+void TestStiffMatrixes::case11_CGMwP()
+{
+    CreateSmartAndRawPtr(sbfPropertiesSet, new sbfPropertiesSet, propSet);
+    propSet->read("test.prop");
+    CreateSmartAndRawPtr_2(sbfMesh, mesh);
+
+    float xSide = 1000;
+    float xPart = 100;
+    mesh->addNode(0, 0, 0, false);
+    for(int ct = 0; ct <= xPart; ct++)
+        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {ct, mesh->addNode(xSide/xPart*ct, 0, 0, false)}));
+    mesh->setMtr(1);
+    CreateSmartAndRawPtr(sbfStiffMatrixBlock6x6, new sbfStiffMatrixBlock6x6(mesh, propSet), stiff);
+
+    stiff->computeSequantially();
+
+    NodesData<double, 6> force(mesh), disp(mesh);
+    force.null();
+    disp.null();
+    CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iter);
+
+    iter->setToRow(0);
+    iter->diagonal(0);
+    double *data = iter->data();
+    for(int ct = 0; ct < 6; ++ct) data[ct*(6+1)] *= 1e3;
+    force.data(mesh->numNodes()-1, 0) = 1;
+
+    CreateSmartAndRawPtr(sbfStiffMatrixBlock6x6, reinterpret_cast<sbfStiffMatrixBlock6x6*>(stiff->createIncompleteChol()), iChol);
+
+    const int numDOF = mesh->numNodes()*6;
+
+    //_p1 stands for 'plus one'
+    NodesData<double, 6> KU(mesh), Kp(mesh), r(mesh), r_p1(mesh), z(mesh), z_p1(mesh), p(mesh), p_p1(mesh), tmp(mesh);
+    double *KU_ptr, *Kp_ptr, *r_ptr, *r_p1_ptr, *z_ptr, *z_p1_ptr, *p_ptr, *p_p1_ptr, *tmp_ptr, *disp_ptr;
+    KU_ptr = KU.data();
+    Kp_ptr = Kp.data();
+    r_ptr = r.data();
+    r_p1_ptr = r_p1.data();
+    z_ptr = z.data();
+    z_p1_ptr = z_p1.data();
+    p_ptr = p.data();
+    p_p1_ptr = p_p1.data();
+    tmp_ptr = tmp.data();
+    disp_ptr = disp.data();
+    double alpha, betta;
+
+    iChol->solve_L_LT_u_eq_f(disp.data(), force.data());
+    QVERIFY2(false, "ERROR");
+    mul(stiff, disp, KU);
+    r.copyData((force - KU).data());
+
+    //Solve L*L^T*z = r
+    iChol->solve_L_LT_u_eq_f(z.data(), r.data());
+    p.copyData(z.data());
+
+    double rNorm = 0.0;
+    for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
+    int numIterations = 0;
+    double rNormTarget = 1e-6;
+
+    while(rNorm > rNormTarget) {
+        mul(stiff, p, Kp);
+        alpha = z.scalMul(r)/p.scalMul(Kp);
+        for(int ct = 0; ct < numDOF; ct++) {
+            disp_ptr[ct] += alpha*p_ptr[ct];
+            r_p1_ptr[ct] = r_ptr[ct] - alpha*Kp_ptr[ct];
+        }
+        iChol->solve_L_LT_u_eq_f(z_p1_ptr, r_p1_ptr);
+        betta = z_p1.scalMul(r_p1)/z.scalMul(r);
+        for(int ct = 0; ct < numDOF; ct++)
+            p_p1_ptr[ct] = z_p1_ptr[ct] + betta*p_ptr[ct];
+        z.copyData(z_p1_ptr);
+        p.copyData(p_p1_ptr);
+        r.copyData(r_p1_ptr);
+        rNorm = 0.0;
+        for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
+        numIterations++;
+    }
+
+    qDebug() << numIterations << disp.data(mesh->numNodes()-1, 0);
 }

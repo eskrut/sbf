@@ -14,7 +14,8 @@ public:
     ~sbfStiffMatrixBlock6x6();
 
 private:
-    static const int blockSize_ = 36;
+    static const int blockDim_ = 6;
+    static const int blockSize_ = blockDim_*blockDim_;
 
     //FIXME the following is copy/paste from other class. Consider to make some base template class with blockSize_ as parameter
     //Number of nodes, used to construct stiffness matrix. I.e. nodes in FE mesh.
@@ -61,6 +62,8 @@ public:
     MatrixStoreType storeType() const { return MatrixStoreType::COMPACT; }
     sbfMatrixIterator *createIterator() /*const*/;
     void compute(int startID, int stopID);
+    sbfStiffMatrix *createIncompleteChol() /*const*/;
+    void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr);
 };
 
 #endif // SBFSTIFFMATRIXBLOCK6X6_H
