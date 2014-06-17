@@ -64,6 +64,7 @@ public:
     void compute(int startID, int stopID);
     sbfStiffMatrix *createIncompleteChol() /*const*/;
     void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr);
+    bool isValid();
 };
 
 #endif // SBFSTIFFMATRIXBLOCK6X6_H

@@ -42,6 +42,8 @@ public:
 
     virtual sbfStiffMatrix *createIncompleteChol() /*const*/ { return nullptr; }
     virtual void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr) { }
+
+    virtual bool isValid() { return false; }
 };
 
 #endif // SBFSTIFFMATRIX_H

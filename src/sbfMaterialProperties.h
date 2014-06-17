@@ -21,6 +21,8 @@ public:
 
     void read(std::ifstream &in);
     void write(std::ofstream &out) const;
+    void read(const char *fileName);
+    void write(const char *fileName) const;
 
     static sbfMaterialProperties *makeMPropertiesSteel();
     static sbfMaterialProperties *makeMPropertiesGold();

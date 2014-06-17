@@ -2,8 +2,9 @@
 
 sbfPropertiesSet::~sbfPropertiesSet()
 {
+    //FIXME are pointers managed by someone?
     for(auto m : materials_)
-        delete m;
+    { delete m; m = nullptr; }
     materials_.clear();
 }
 
@@ -28,6 +29,7 @@ void sbfPropertiesSet::read(const char *fileName)
     materials_.resize(numMaterials, new sbfMaterialProperties);
     for(auto m : materials_)
         m->read(in);
+    in.close();
 }
 
 void sbfPropertiesSet::write(const char *fileName) const
@@ -38,4 +40,5 @@ void sbfPropertiesSet::write(const char *fileName) const
     out << materials_.size() << std::endl;
     for(auto m : materials_)
         m->write(out);
+    out.close();
 }

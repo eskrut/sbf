@@ -13,7 +13,7 @@ sbfMaterialProperties::sbfMaterialProperties(const std::string &name)
 sbfMaterialProperties::~sbfMaterialProperties()
 {
     for(auto t : tables_)
-        delete t.second;
+    { delete t.second; t.second = nullptr; }
     tables_.clear();
 }
 
@@ -50,6 +50,24 @@ void sbfMaterialProperties::write(std::ofstream &out) const
         out << t.first << std::endl;
         t.second->write(out);
     }
+}
+
+void sbfMaterialProperties::read(const char *fileName)
+{
+    std::ifstream in(fileName);
+    if ( !in.good() )
+        throw std::runtime_error(std::string("Cant read file ") + fileName);
+    read(in);
+    in.close();
+}
+
+void sbfMaterialProperties::write(const char *fileName) const
+{
+    std::ofstream out(fileName);
+    if ( !out.good() )
+        throw std::runtime_error(std::string("Cant write file ") + fileName);
+    write(out);
+    out.close();
 }
 
 sbfPropertyTable *sbfMaterialProperties::propertyTable(const std::string &name)

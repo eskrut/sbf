@@ -185,6 +185,6 @@ sbfElemStiffMatrix::RowColData sbfElemStiffMatrixBeam6Dof::rowColData()
     RowColData rez;
     for(int rowCt = 0; rowCt < numNodes_; ++rowCt)
         for(int columnCt = 0; columnCt < numNodes_; ++columnCt)
-            rez.push_back(std::make_pair(std::make_pair(rowCt, columnCt), data_+(rowCt*numNodes_+columnCt)*blockSize_));
+            rez.push_back(std::make_pair(std::make_pair(ind_[rowCt], ind_[columnCt]), data_+(rowCt*numNodes_+columnCt)*blockSize_));
     return rez;
 }

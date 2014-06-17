@@ -6,6 +6,7 @@
 #include <cmath>
 
 #include "sbfElemStiffMatrixBeam6Dof.h"
+#include "sbfAdditions.h"
 
 sbfStiffMatrixBlock6x6::sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type) :
     sbfStiffMatrix(mesh, propSet, type)
@@ -211,7 +212,7 @@ void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)
         iterator->setToRow(listIDData.front().first.first);
         for(auto idData : listIDData) {
             double *data = nullptr;
-            if( idData.first.first != iterator->row())
+            if( idData.first.first != iterator->row() || iterator->column() > idData.first.second)
                 iterator->setToRow(idData.first.first);
             while(iterator->isValid())
                 if(iterator->column() == idData.first.second && iterator->isInNormal()) {
@@ -219,7 +220,8 @@ void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)
                     break;
                 }
                 else iterator->next();
-            if ( !data ) throw std::runtime_error("Can't find target block in global stiffness matrix");
+            if ( !data )
+                throw std::runtime_error("Can't find target block in global stiffness matrix");
             for(int ct = 0; ct < blockSize_; ++ct) data[ct] += idData.second[ct];
         }
     }//Loop over elements
@@ -426,4 +428,19 @@ void sbfStiffMatrixBlock6x6::solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIt
     }//Loop on rows
 
     if ( !iterator ) delete iter;
+}
+
+bool sbfStiffMatrixBlock6x6::isValid()
+{
+    CreateSmartAndRawPtr(sbfMatrixIterator, createIterator(), iter);
+
+    const int numNodes = mesh_->numNodes();
+    //Check diagonal elements
+    for(int ctNode = 0; ctNode < numNodes; ++ctNode) {
+        double * data = iter->diagonal(ctNode);
+        for(int ct = 0; ct < blockDim_; ct++)
+            if(data[ct*(blockDim_+1)] <= 0)
+                return false;
+    }
+    return true;
 }
