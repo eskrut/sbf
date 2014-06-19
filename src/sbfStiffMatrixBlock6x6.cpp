@@ -289,7 +289,7 @@ sbfStiffMatrix *sbfStiffMatrixBlock6x6::createIncompleteChol()
         for(int ct1 = 0; ct1 < blockDim_; ++ct1) {
             blockDiagTarget[ct1*(blockDim_+1)] = std::sqrt(blockDiag[ct1*(blockDim_+1)] - sum[ct1]);
             for(int ct2 = ct1+1; ct2 < blockDim_; ++ct2) {
-                blockDiagTarget[ct2*blockDim_+ct1] = (blockDiag[ct2*blockDim_+ct1] - sum[shift]) / blockDiagTarget[ct1*(blockDim_+1)];
+                blockDiagTarget[ct2*blockDim_+ct1] = (blockDiag[ct2*blockDim_+ct1] - sum[shift++]) / blockDiagTarget[ct1*(blockDim_+1)];
                 sum[ct2] += blockDiagTarget[ct2*blockDim_+ct1]*blockDiagTarget[ct2*blockDim_+ct1];
                 for(int ct3 = ct2+1; ct3 < blockDim_; ++ct3)
                     sum[sumShift[ct2][ct3]] += blockDiagTarget[ct2*blockDim_ + ct1]*blockDiagTarget[ct3*blockDim_ + ct1];
@@ -439,7 +439,10 @@ bool sbfStiffMatrixBlock6x6::isValid()
     for(int ctNode = 0; ctNode < numNodes; ++ctNode) {
         double * data = iter->diagonal(ctNode);
         for(int ct = 0; ct < blockDim_; ct++)
-            if(data[ct*(blockDim_+1)] <= 0)
+            if(
+                    data[ct*(blockDim_+1)] < 0 ||
+                    !std::isnormal(data[ct*(blockDim_+1)])
+                    )
                 return false;
     }
     return true;

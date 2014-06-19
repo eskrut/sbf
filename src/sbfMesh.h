@@ -205,7 +205,11 @@ private:
     void free();
 public:
     ArrayType * data(); // Return pointer to data
+    ArrayType *data() const;
     ArrayType & data(int nodeIndex, int compIndex); // Return  reference to value of specific component in specific node
+    //! Return data assuming type_ == ByNodes
+    ArrayType operator()(int nodeIndex, int compIndex) const;
+    ArrayType &operator()(int nodeIndex, int compIndex);
     void null(){if( data_ != nullptr) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = 0.0; }
     void copyData(ArrayType * data) { if( !data_ ) init(); for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = data[ct];}
     void copyData(/*const */NodesData<ArrayType, numComp> & nodesData) { if(!data_) init(); ArrayType * srcData = nodesData.data(); if(srcData) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = srcData[ct]; }
@@ -262,7 +266,16 @@ template < class ArrayType, int numComp>
 ArrayType * NodesData<ArrayType, numComp>::data() { return data_; }
 
 template < class ArrayType, int numComp>
+ArrayType * NodesData<ArrayType, numComp>::data() const { return data_; }
+
+template < class ArrayType, int numComp>
 ArrayType & NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) { if(type_ == ByNodes) return data_[nodeIndex*numComp+compIndex]; else /*if(type_ == ByKort)*/ return data_[compIndex*numNodes_+nodeIndex]; }
+
+template < class ArrayType, int numComp>
+ArrayType NodesData<ArrayType, numComp>::operator()(int nodeIndex, int compIndex) const { return *(data_ + numComp*nodeIndex + compIndex); }
+
+template < class ArrayType, int numComp>
+ArrayType &NodesData<ArrayType, numComp>::operator()(int nodeIndex, int compIndex) { return *(data_ + numComp*nodeIndex + compIndex); }
 
 template < class ArrayType, int numComp>
 int NodesData<ArrayType, numComp>::numNodes() { return numNodes_; }
