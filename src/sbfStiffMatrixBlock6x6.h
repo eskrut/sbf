@@ -65,6 +65,8 @@ public:
     sbfStiffMatrix *createIncompleteChol() /*const*/;
     void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr);
     bool isValid();
+    void read_stream(std::ifstream &in);
+    void write_stream(std::ofstream &out) const;
 };
 
 #endif // SBFSTIFFMATRIXBLOCK6X6_H

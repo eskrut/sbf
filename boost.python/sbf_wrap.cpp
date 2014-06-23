@@ -72,7 +72,7 @@ BOOST_PYTHON_MODULE(libsbfpy)
 //    sbfMesh *(sbfMesh::*makeBlock_dim)(float, float, float, int, int, int, ElementType) = &sbfMesh::makeBlock;
 //    sbfMesh *(sbfMesh::*makeCylinderPart_vec)(std::vector<float> &, std::vector<float> &, std::vector<float> &, ElementType) = &sbfMesh::makeCylinderPart;
 //    sbfMesh *(sbfMesh::*makeCylinderPart_dim)(float, float, float, float, float, float, int, int, int, ElementType) = &sbfMesh::makeCylinderPart;
-    void (sbfMesh::*addMesh_ptr)(sbfMesh *, bool, bool, float) = &sbfMesh::addMesh;
+    void (sbfMesh::*addMesh_ptr)(const sbfMesh *, bool, bool, float) = &sbfMesh::addMesh;
     class_<sbfMesh>("sbfMesh", init<>())
             .def(init<const sbfMesh &>())
             .def("readMeshFromFiles", &sbfMesh::readMeshFromFiles)
@@ -132,22 +132,22 @@ BOOST_PYTHON_MODULE(libsbfpy)
         }
         MatrixStoreType default_storeType() const { return this->sbfStiffMatrix::storeType(); }
 
-        void read(std::ifstream &in)
+        void read_stream(std::ifstream &in)
         {
-            if( override read = this->get_override("read") ) read(in);
-            else sbfStiffMatrix::read(in);
+            if( override read_stream = this->get_override("read") ) read_stream(in);
+            else sbfStiffMatrix::read_stream(in);
         }
-        void default_read(std::ifstream &in) { this->sbfStiffMatrix::read(in); }
+        void default_read(std::ifstream &in) { this->sbfStiffMatrix::read_stream(in); }
 
-        void write(std::ofstream &out) const
+        void write_stream(std::ofstream &out) const
         {
-            if( override write = this->get_override("write") ) write(out);
-            else sbfStiffMatrix::write(out);
+            if( override write_stream = this->get_override("write") ) write_stream(out);
+            else sbfStiffMatrix::write_stream(out);
         }
-        void default_write(std::ofstream &out) const { this->sbfStiffMatrix::write(out); }
+        void default_write(std::ofstream &out) const { this->sbfStiffMatrix::write_stream(out); }
     };
-    void (sbfStiffMatrix::*read_stream)(std::ifstream &in) = &sbfStiffMatrix::read;
-    void (sbfStiffMatrix::*write_stream)(std::ofstream &out) const = &sbfStiffMatrix::write;
+    void (sbfStiffMatrix::*read_stream)(std::ifstream &in) = &sbfStiffMatrix::read_stream;
+    void (sbfStiffMatrix::*write_stream)(std::ofstream &out) const = &sbfStiffMatrix::write_stream;
 
     class_<sbfStiffMatrix_Wrap, boost::noncopyable>("sbfStiffMatrix", init<sbfMesh *, sbfPropertiesSet *, MatrixType>())
             .def("compute", pure_virtual(&sbfStiffMatrix::compute))

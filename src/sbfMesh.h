@@ -74,7 +74,9 @@ public:
 public:
     sbfNode & node(const int seqNumber);//Returns reference to specific node
     const sbfNode &node(const int seqNumber) const;
-    sbfElement & elem(const int seqNumber);//Returns reference to specific element
+    //! Returns reference to specific element
+    sbfElement &elem(const int seqNumber);
+    const sbfElement &elem(const int seqNumber) const;
     sbfElement * elemPtr(const int sequenceNumber);//Returns pointer to specific element
 
     //Mesh information
@@ -84,14 +86,14 @@ public:
     int numGroups() const;
     int numNodeGroups() const;
     void printInfo();
-    float max(const int kort);
-    float min(const int kort);
-    float maxX();
-    float maxY();
-    float maxZ();
-    float minX();
-    float minY();
-    float minZ();
+    float max(const int kort) const;
+    float min(const int kort) const;
+    float maxX() const;
+    float maxY() const;
+    float maxZ() const;
+    float minX() const;
+    float minY() const;
+    float minZ() const;
     //Returns index of node (first found) near point (x, y, z) with tolerance tol
     int nodeAt(float x, float y, float z, float tol = 0.001) const;
 
@@ -120,7 +122,7 @@ public:
     //Add mesh by reference. If passGroups = true, existed groups will be added to current mesh. If checkExisted = true new nodes will be checked for coinsidential with tolerance tol.
     void addMesh(sbfMesh & mesh, bool passGroups = true, bool checkExisted = true, float tol = 0.001);
     //Add mesh by pointer. Similar as previous.
-    void addMesh(sbfMesh * mesh, bool passGroups = true, bool checkExisted = true, float tol = 0.001);
+    void addMesh(const sbfMesh *mesh, bool passGroups = true, bool checkExisted = true, float tol = 0.001);
     //! Set material for all elements
     void setMtr(int mtr);
     //! Increase material number for all elements

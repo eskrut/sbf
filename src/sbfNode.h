@@ -28,7 +28,8 @@ public:
     CrdFloatType x() const;
     CrdFloatType y() const;
     CrdFloatType z() const;
-    CrdFloatType & crdAtKort(int kort);
+    CrdFloatType &crdAtKort(int kort);
+    CrdFloatType crdAtKort(int kort) const;
     //Check if all coordinates of nodes are equal with tolerance
     bool isSame(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
     //Check if spesific coordinate of nodes is equal with tolerance

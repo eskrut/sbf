@@ -26,7 +26,7 @@ bool sbfStiffMatrix::read(const char *name)
 {
     std::ifstream in(name, std::ios::binary);
     if( !in.good() ) return false;
-    this->read(in);
+    this->read_stream(in);
     in.close();
     return true;
 }
@@ -35,7 +35,7 @@ bool sbfStiffMatrix::write(const char *name) const
 {
     std::ofstream out(name, std::ios::binary);
     if( !out.good() ) return false;
-    this->write(out);
+    this->write_stream(out);
     out.close();
     return true;
 }

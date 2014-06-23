@@ -447,3 +447,54 @@ bool sbfStiffMatrixBlock6x6::isValid()
     }
     return true;
 }
+
+void sbfStiffMatrixBlock6x6::read_stream(std::ifstream &in)
+{
+    in.read(reinterpret_cast<char *>(&type_), sizeof(type_));
+    in.read(reinterpret_cast<char *>(&numNodes_), sizeof(numNodes_));
+    in.read(reinterpret_cast<char *>(&numBlocks_), sizeof(numBlocks_));
+
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
+        in.read(reinterpret_cast<char *>(&numBlocksAlter_), sizeof(numBlocksAlter_));
+
+    if(type_ & FULL_MATRIX)
+        setNumBlocksNodes(numBlocks_, numNodes_);
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
+        setNumBlocksNodes(numBlocks_, numNodes_, numBlocksAlter_);
+
+    in.read(reinterpret_cast<char *>(indJ_), numBlocks_*sizeof(indJ_[0]));
+    in.read(reinterpret_cast<char *>(shiftInd_), (numNodes_+1)*sizeof(shiftInd_[0]));
+    in.read(reinterpret_cast<char *>(data_), numBlocks_*blockSize_*sizeof(data_[0]));
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){//Alternate information
+        in.read(reinterpret_cast<char *>(indJAlter_), numBlocksAlter_*sizeof(indJAlter_[0]));
+        in.read(reinterpret_cast<char *>(shiftIndAlter_), (numNodes_+1)*sizeof(shiftIndAlter_[0]));
+        std::vector<int> shiftPtrDataAlter;
+        shiftPtrDataAlter.resize(numBlocksAlter_);
+        in.read(reinterpret_cast<char *>(&(shiftPtrDataAlter[0])), numBlocksAlter_*sizeof(shiftPtrDataAlter[0]));
+        for(int ct = 0; ct < numBlocksAlter_; ct++)
+            ptrDataAlter_[ct] = data_ + shiftPtrDataAlter[ct];
+    }//Alternate information
+}
+
+void sbfStiffMatrixBlock6x6::write_stream(std::ofstream &out) const
+{
+    out.write(reinterpret_cast<const char *>(&type_), sizeof(type_));
+    out.write(reinterpret_cast<const char *>(&numNodes_), sizeof(numNodes_));
+    out.write(reinterpret_cast<const char *>(&numBlocks_), sizeof(numBlocks_));
+
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX)
+        out.write(reinterpret_cast<const char *>(&numBlocksAlter_), sizeof(numBlocksAlter_));
+
+    out.write(reinterpret_cast<const char *>(indJ_), numBlocks_*sizeof(indJ_[0]));
+    out.write(reinterpret_cast<const char *>(shiftInd_), (numNodes_+1)*sizeof(shiftInd_[0]));
+    out.write(reinterpret_cast<const char *>(data_), numBlocks_*blockSize_*sizeof(data_[0]));
+    if(type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX){//Alternate information
+        out.write(reinterpret_cast<const char *>(indJAlter_), numBlocksAlter_*sizeof(indJAlter_[0]));
+        out.write(reinterpret_cast<const char *>(shiftIndAlter_), (numNodes_+1)*sizeof(shiftIndAlter_[0]));
+        std::vector<int> shiftPtrDataAlter;
+        shiftPtrDataAlter.resize(numBlocksAlter_);
+        for(int ct = 0; ct < numBlocksAlter_; ct++)
+            shiftPtrDataAlter[ct] = static_cast<int>(ptrDataAlter_[ct] - data_);
+        out.write(reinterpret_cast<const char *>(&(shiftPtrDataAlter[0])), numBlocksAlter_*sizeof(shiftPtrDataAlter[0]));
+    }//Alternate information
+}

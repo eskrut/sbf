@@ -41,7 +41,12 @@ CrdFloatType sbfNode::z() const
 {
     return crd_[2];
 }
-CrdFloatType & sbfNode::crdAtKort(int kort)
+CrdFloatType &sbfNode::crdAtKort(int kort)
+{
+    return crd_[kort];
+}
+
+CrdFloatType sbfNode::crdAtKort(int kort) const
 {
     return crd_[kort];
 }

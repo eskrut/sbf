@@ -361,7 +361,11 @@ const sbfNode &sbfMesh::node(const int seqNumber) const
 {
     return nodes_[seqNumber];
 }
-sbfElement & sbfMesh::elem(const int seqNumber)
+sbfElement &sbfMesh::elem(const int seqNumber)
+{
+    return elems_[seqNumber];
+}
+const sbfElement &sbfMesh::elem(const int seqNumber) const
 {
     return elems_[seqNumber];
 }
@@ -435,7 +439,7 @@ void sbfMesh::printInfo()
     for(auto m : mtrMap) sstr << m.first << " (" << m.second << ")" << std::endl;
     report(sstr.str());
 }
-float sbfMesh::max(const int kort)
+float sbfMesh::max(const int kort) const
 {
     int nNode = numNodes();
     if(nNode == 0)
@@ -448,7 +452,7 @@ float sbfMesh::max(const int kort)
     }
     return max;
 }
-float sbfMesh::min(const int kort)
+float sbfMesh::min(const int kort) const
 {
     int nNode = numNodes();
     if(nNode == 0)
@@ -461,27 +465,27 @@ float sbfMesh::min(const int kort)
     }
     return min;
 }
-float sbfMesh::maxX()
+float sbfMesh::maxX() const
 {
     return max(0);
 }
-float sbfMesh::maxY()
+float sbfMesh::maxY() const
 {
     return max(1);
 }
-float sbfMesh::maxZ()
+float sbfMesh::maxZ() const
 {
     return max(2);
 }
-float sbfMesh::minX()
+float sbfMesh::minX() const
 {
     return min(0);
 }
-float sbfMesh::minY()
+float sbfMesh::minY() const
 {
     return min(1);
 }
-float sbfMesh::minZ()
+float sbfMesh::minZ() const
 {
     return min(2);
 }
@@ -789,7 +793,7 @@ void sbfMesh::addMesh(sbfMesh & mesh, bool passGroups, bool checkExisted, float 
         //TODO Not implemented yet!!!!
     }
 }
-void sbfMesh::addMesh(sbfMesh * mesh, bool passGroups, bool checkExisted, float tol)
+void sbfMesh::addMesh(const sbfMesh *mesh, bool passGroups, bool checkExisted, float tol)
 {
     //Add existed mesh content [and pass] groups to current mesh
 
