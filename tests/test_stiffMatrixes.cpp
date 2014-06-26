@@ -592,7 +592,7 @@ void TestStiffMatrixes::case11_CGMwP()
 {
     CreateSmartAndRawPtr(sbfPropertiesSet, new sbfPropertiesSet, propSet);
     propSet->read("test.prop");
-    CreateSmartAndRawPtr_2(sbfMesh, mesh);
+    CreateSmartAndRawPtr(sbfMesh, mesh);
 
     float xSide = 1000;
     float xPart = 100;

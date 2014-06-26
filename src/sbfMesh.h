@@ -185,9 +185,9 @@ template < class ArrayType, int numComp> class NodesData
 //template holder for nodes data
 {
 public:
-    NodesData(std::string name, sbfMesh* mesh);
+    NodesData(std::string name, const sbfMesh* mesh);
     NodesData(std::string name, int numNodes);
-    NodesData(sbfMesh* mesh);
+    NodesData(const sbfMesh *mesh);
     NodesData(int numNodes);
     ~NodesData();
     enum Type{ // Note that file writing is always store data by kort, while during solution data usually stored by nodes.
@@ -198,7 +198,7 @@ private:
     ArrayType *data_;
     int numNodes_;
     std::string name_;
-    sbfMesh *mesh_;
+    const sbfMesh *mesh_;
     std::string extension_;
     int numDigits_;
     int stepToProceed_;
@@ -244,13 +244,13 @@ public:
 
 
 template < class ArrayType, int numComp>
-NodesData<ArrayType, numComp>::NodesData(std::string name, sbfMesh* mesh) : data_(nullptr), numNodes_(0) , name_(name), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
+NodesData<ArrayType, numComp>::NodesData(std::string name, const sbfMesh *mesh) : data_(nullptr), numNodes_(0) , name_(name), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
 
 template < class ArrayType, int numComp>
 NodesData<ArrayType, numComp>::NodesData(std::string name, int numNodes) : data_(nullptr), numNodes_(numNodes) , name_(name), mesh_(nullptr), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { init(); }
 
 template < class ArrayType, int numComp>
-NodesData<ArrayType, numComp>::NodesData(sbfMesh* mesh) : data_(nullptr), numNodes_(0) , name_("data"), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
+NodesData<ArrayType, numComp>::NodesData(const sbfMesh* mesh) : data_(nullptr), numNodes_(0) , name_("data"), mesh_(mesh), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { numNodes_ = mesh ? mesh->numNodes() : 0; init(); }
 
 template < class ArrayType, int numComp>
 NodesData<ArrayType, numComp>::NodesData(int numNodes) : data_(nullptr), numNodes_(numNodes) , name_("data"), mesh_(nullptr), extension_(".sba"), numDigits_(4), stepToProceed_(1), type_(ByNodes) { init(); }
