@@ -364,75 +364,17 @@ int NodesData<ArrayType, numComp>::readFromFile(const char * name, int step, con
     stepToProceed_++;
     return 0;
 }
-//FIXME duplicated code
 template < class ArrayType, int numComp>
 template <class StorageType>
 int NodesData<ArrayType, numComp>::writeToFile()
 {
-    std::stringstream sstr;
-    sstr << name_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
-    std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
-    if(!out.good()) {report.error("Error while writing file \"", sstr.str().c_str(), "\""); return 1;}
-    //TODO implement compile time comparison
-    if(typeid(StorageType) == typeid(ArrayType)){
-        if(type_ == ByNodes){
-            ArrayType * storageData = new ArrayType [numNodes_*numComp];
-            for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) storageData[ct*numNodes_+ct1] = data_[ct1*numComp+ct];
-            out.write((const char *)storageData, sizeof(ArrayType)*numNodes_*numComp);
-            delete [] storageData;
-        }
-        else if(type_ == ByKort)
-            out.write((const char *)data_, sizeof(ArrayType)*numNodes_*numComp);
-    }
-    else{
-        StorageType * storageData = new StorageType [numNodes_*numComp];
-        if(type_ == ByNodes)
-            for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) storageData[ct*numNodes_+ct1] = static_cast<StorageType>(data_[ct1*numComp+ct]);
-        else if(type_ == ByKort)
-            for(int ct = 0; ct < numNodes_*numComp; ct++) storageData[ct] = static_cast<StorageType>(data_[ct]);
-        out.write((const char *)storageData, sizeof(StorageType)*numNodes_*numComp);
-        delete [] storageData;
-    }
-    out.close();
-    stepToProceed_++;
-    return 0;
+    return writeToFile<StorageType>(name_.c_str(), stepToProceed_, extension_.c_str(), numDigits_);
 }
-//FIXME duplicated code
 template < class ArrayType, int numComp>
 template <class StorageType>
 int NodesData<ArrayType, numComp>::readFromFile()
 {
-    std::stringstream sstr;
-    sstr << name_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
-    std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
-    if(!in.good()) {report.error("Error while reading file \"", sstr.str().c_str(), "\""); return 1;}
-    in.seekg(0, std::ios_base::end);
-    size_t length = in.tellg();
-    if(length != sizeof(ArrayType)*numNodes_*numComp) {report.error("Error! Data in file \"", sstr.str().c_str(), "\" not corresponds to data type and nodes number"); return 2;}
-    in.seekg(0, std::ios_base::beg);
-    //TODO implement compile time comparison
-    if(typeid(StorageType) == typeid(ArrayType)){
-        if(type_ == ByNodes){
-            ArrayType * storageData = new ArrayType [numNodes_*numComp];
-            in.read((char *)storageData, sizeof(ArrayType)*numNodes_*numComp);
-            for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) data_[ct1*numComp+ct] = storageData[ct*numNodes_+ct1];
-            delete [] storageData;
-        }
-        else if(type_ == ByKort)
-            in.read((char *)data_, sizeof(ArrayType)*numNodes_*numComp);
-    }
-    else{
-        StorageType * storageData = new StorageType [numNodes_*numComp];
-        in.read((char *)storageData, sizeof(StorageType)*numNodes_*numComp);
-        if(type_ == ByNodes)
-            for(int ct = 0; ct < numComp; ct++) for(int ct1 = 0; ct1 < numNodes_; ct1++) data_[ct1*numComp+ct] = static_cast<ArrayType>(storageData[ct*numNodes_+ct1]);
-        else if(type_ == ByKort)
-            for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = static_cast<ArrayType>(storageData[ct]);
-        delete [] storageData;
-    }
-    in.close();
-    stepToProceed_++;
-    return 0;
+    return readFromFile<StorageType>(name_.c_str(), stepToProceed_, extension_.c_str(), numDigits_);
 }
 template < class ArrayType, int numComp>
 bool NodesData<ArrayType, numComp>::exist()
@@ -532,7 +474,7 @@ int SolutionBundle<ArrayType, numArrays>::writeToFile(const char * baseName, int
             out.write((const char *)arrays_[ct]->data(), sizeof(ArrayType)*numNodes_);
         else{
             StorageType * storageData = new StorageType [numNodes_];
-            for(int ct = 0; ct < numNodes_; ct++) storageData[ct] = static_cast<StorageType>(arrays_[ct]->data()[ct]);
+            for(int ctNode = 0; ctNode < numNodes_; ctNode++) storageData[ctNode] = static_cast<StorageType>(arrays_[ct]->data()[ctNode]);
             out.write((const char *)storageData, sizeof(StorageType)*numNodes_);
             delete [] storageData;
         }
@@ -561,7 +503,7 @@ int SolutionBundle<ArrayType, numArrays>::readFromFile(const char * baseName, in
         else{
             StorageType * storageData = new StorageType [numNodes_];
             in.read((char *)storageData, sizeof(StorageType)*numNodes_);
-            for(int ct = 0; ct < numNodes_; ct++) arrays_[ct]->data()[ct] = static_cast<ArrayType>(storageData[ct]);
+            for(int ctNode = 0; ctNode < numNodes_; ctNode++) arrays_[ct]->data()[ctNode] = static_cast<ArrayType>(storageData[ctNode]);
             delete [] storageData;
         }
     }
@@ -573,54 +515,13 @@ template <class ArrayType, int numArrays>
 template <class StorageType>
 int SolutionBundle<ArrayType, numArrays>::writeToFile()
 {
-    std::stringstream sstr;
-    sstr << baseName_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
-    std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
-    if(!out.good()) {report.error("Error while writing file ", sstr.str()); return 1;}
-    int flags[numArrays];
-    for(int ct = 0; ct < numArrays; ct++) flags[ct] = arrays_[ct] ? 1 : 0;
-    out.write((const char *)flags, sizeof(int)*numArrays);
-    for(int ct = 0; ct < numArrays; ct++) if(flags[ct]){
-        //TODO implement compile time comparison
-        if(typeid(StorageType) == typeid(ArrayType))
-            out.write((const char *)arrays_[ct]->data(), sizeof(ArrayType)*numNodes_);
-        else{
-            StorageType * storageData = new StorageType [numNodes_];
-            for(int ct = 0; ct < numNodes_; ct++) storageData[ct] = static_cast<StorageType>(arrays_[ct]->data()[ct]);
-            out.write((const char *)storageData, sizeof(StorageType)*numNodes_);
-            delete [] storageData;
-        }
-    }
-    out.close();
-    stepToProceed_++;
-    return 0;
+    return writeToFile<StorageType>(baseName_.c_str(), stepToProceed_, extension_.c_str(), numDigits_);
 }
 template <class ArrayType, int numArrays>
 template <class StorageType>
 int SolutionBundle<ArrayType, numArrays>::readFromFile()
 {
-    free();
-    std::stringstream sstr;
-    sstr << baseName_ << std::setw(numDigits_) << std::setfill('0') << stepToProceed_ << extension_;
-    std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
-    if(!in.good()) {report.error("Error while reading file ", sstr.str()); return 1;}
-    int flags[numArrays];
-    in.read((char *)flags, sizeof(int)*numArrays);
-    for(int ct = 0; ct < numArrays; ct++) if(flags[ct]) allocate(ct);
-    for(int ct = 0; ct < numArrays; ct++) if(flags[ct]){
-        //TODO implement compile time comparison
-        if(typeid(StorageType) == typeid(ArrayType))
-            in.read((char *)arrays_[ct]->data(), sizeof(ArrayType)*numNodes_);
-        else{
-            StorageType * storageData = new StorageType [numNodes_];
-            in.read((char *)storageData, sizeof(StorageType)*numNodes_);
-            for(int ct = 0; ct < numNodes_; ct++) arrays_[ct]->data()[ct] = static_cast<ArrayType>(storageData[ct]);
-            delete [] storageData;
-        }
-    }
-    in.close();
-    stepToProceed_++;
-    return 0;
+    return readFromFile<StorageType>(baseName_.c_str(), stepToProceed_, extension_.c_str(), numDigits_);
 }
 template <class ArrayType, int numArrays>
 bool SolutionBundle<ArrayType, numArrays>::exist()
