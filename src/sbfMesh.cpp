@@ -396,7 +396,7 @@ int sbfMesh::numNodeGroups() const
     return (int) nodeGroups_.size();
 }
 
-void sbfMesh::printInfo()
+void sbfMesh::printInfo() const
 {
     std::stringstream sstr;
     sstr << "Number of elements " << numElements() << std::endl;
@@ -419,8 +419,8 @@ void sbfMesh::printInfo()
     numElementsMap[ElementType::NO_DEFINED_ELEMENT] = 0;
     std::map<int, int> mtrMap;
     for(int ct = 0; ct < numElements(); ct++) {
-        numElementsMap[elemPtr(ct)->type()]++;
-        mtrMap[elemPtr(ct)->mtr()]++;
+        numElementsMap[elems_[ct].type()]++;
+        mtrMap[elems_[ct].mtr()]++;
     }
     sstr << "Elements in mesh:" << std::endl;
     sstr << "Beam 3 DOF linear\t\t" << numElementsMap[ElementType::BEAM_LINEAR_3DOF] << std::endl;

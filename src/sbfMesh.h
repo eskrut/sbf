@@ -85,7 +85,7 @@ public:
     int numNodes() const;
     int numGroups() const;
     int numNodeGroups() const;
-    void printInfo();
+    void printInfo() const;
     float max(const int kort) const;
     float min(const int kort) const;
     float maxX() const;
