@@ -214,7 +214,7 @@ public:
     ArrayType &operator()(int nodeIndex, int compIndex);
     void null(){if( data_ != nullptr) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = 0.0; }
     void copyData(ArrayType * data) { if( !data_ ) init(); for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = data[ct];}
-    void copyData(/*const */NodesData<ArrayType, numComp> & nodesData) { if(!data_) init(); ArrayType * srcData = nodesData.data(); if(srcData) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = srcData[ct]; }
+    void copyData(const NodesData<ArrayType, numComp> & nodesData) { if(!data_) init(); ArrayType * srcData = nodesData.data(); if(srcData) for(int ct = 0; ct < numNodes_*numComp; ct++) data_[ct] = srcData[ct]; }
     //void setNumNodes(int numNodes);
     int numNodes();
     int numComponents();
