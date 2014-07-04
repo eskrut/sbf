@@ -123,6 +123,7 @@ BOOST_PYTHON_MODULE(libsbfpy)
         // Pure virtual methods
         void compute(int startID, int stopID) { this->get_override("compute")(startID, stopID); }
         sbfMatrixIterator *createIterator() { return this->get_override("createIterator")(); }
+        int numDof() const { return this->get_override("numDof")(); }
 
         // Virtual functions
         MatrixStoreType storeType() const
@@ -159,7 +160,7 @@ BOOST_PYTHON_MODULE(libsbfpy)
 
     struct sbfMatrixIterator_Wrap : sbfMatrixIterator, wrapper<sbfMatrixIterator>
     {
-        sbfMatrixIterator_Wrap() : sbfMatrixIterator() {}
+        sbfMatrixIterator_Wrap() : sbfMatrixIterator(nullptr) {}
 
         // Pure virtual methods
         void setToRow(const int rowIndex) { this->get_override("setToRow")(rowIndex); }
@@ -176,7 +177,7 @@ BOOST_PYTHON_MODULE(libsbfpy)
         double *diagonal(const int index) const { return this->get_override("diagonal")(index); }
     };
 
-    class_<sbfMatrixIterator_Wrap, boost::noncopyable>("sbfMatrixIterator", init<>())
+    class_<sbfMatrixIterator_Wrap, boost::noncopyable>("sbfMatrixIterator", init<>(nullptr))
             .def("setToRow", pure_virtual(&sbfMatrixIterator::setToRow))
             .def("setToColumn", pure_virtual(&sbfMatrixIterator::setToColumn))
             .def("setToRowInverse", pure_virtual(&sbfMatrixIterator::setToRowInverse))

@@ -5,7 +5,7 @@
 //TODO THis all already implemented in 3x3 block matrix iterator - consider to implement some base class
 
 sbfStiffMatrixBlock6x6Iterator::sbfStiffMatrixBlock6x6Iterator(sbfStiffMatrixBlock6x6 *matrix) :
-    matrix_(matrix),
+    sbfMatrixIterator(matrix),
     type_(matrix->type()),
     isInNormal_(false),
     isHaveNext_(false),

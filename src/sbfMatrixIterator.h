@@ -6,10 +6,12 @@
 //! @class sbfMatrixIterator
 //! @brief This class should be used as a base polymorphic class to implement iteration mechanism over rows and columns of specific matrixes.
 
+class sbfStiffMatrix;
+
 class sbfMatrixIterator
 {
 public:
-    sbfMatrixIterator();
+    sbfMatrixIterator(const sbfStiffMatrix *matrix);
     virtual ~sbfMatrixIterator();
 
 public:
@@ -42,6 +44,8 @@ public:
 
 protected:
     enum class IterateDirection { RowDirect, RowInvert, ColumnDirect, ColumnInvert };
+    //!Base matrix
+    const sbfStiffMatrix *matrix_;
     //!Current row in use
     int curRowIndex_;
     //!Current column in use
@@ -49,6 +53,7 @@ protected:
     //!Current direction
     IterateDirection dir_;
 public:
+    const sbfStiffMatrix *matrix() const { return matrix_; }
     int row() const;
     int column() const;
     std::pair<int, int> rowColumn() const;

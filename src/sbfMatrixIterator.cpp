@@ -1,6 +1,8 @@
 #include "sbfMatrixIterator.h"
+#include "sbfStiffMatrix.h"
 
-sbfMatrixIterator::sbfMatrixIterator()
+sbfMatrixIterator::sbfMatrixIterator(const sbfStiffMatrix *matrix):
+    matrix_(matrix)
 {
 }
 

@@ -233,6 +233,11 @@ float sbfElement::volume() const
     return (float)vol;
 }
 
+int sbfElement::numNodeDof() const
+{
+    return numDof(type_);
+}
+
 
 int numNodesInElement(const ElementType type)
 {
@@ -257,6 +262,27 @@ int numNodesInElement(const ElementType type)
         return 10;
     default:
         return -1;
+    }
+    return -1;
+}
+
+int numDof(const ElementType type)
+{
+    switch (type) {
+    case ElementType::HEXAHEDRON_LINEAR:
+    case ElementType::HEXAHEDRON_QUADRATIC:
+    case ElementType::BEAM_LINEAR_3DOF:
+    case ElementType::BEAM_QUADRATIC_3DOF:
+    case ElementType::RECTANGLE_LINEAR:
+    case ElementType::TETRAHEDRON_LINEAR:
+    case ElementType::TETRAHEDRON_QUADRATIC:
+        return 3;
+    case ElementType::BEAM_LINEAR_6DOF:
+    case ElementType::BEAM_QUADRATIC_6DOF:
+        return 6;
+        break;
+    default:
+        break;
     }
     return -1;
 }

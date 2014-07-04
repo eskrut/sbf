@@ -31,11 +31,16 @@ public:
     virtual MatrixStoreType storeType() const { return MatrixStoreType::NO_DEFINED_STORE_TYPE; }
     void computeSequantially();
 
+    static sbfStiffMatrix *New(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType symType = MatrixType::FULL_MATRIX, MatrixStoreType storeType = MatrixStoreType::COMPACT);
+
     //Virtual functions that should be implemented in derived class
 
     virtual void compute(int startID, int stopID) = 0;
 
     virtual sbfMatrixIterator *createIterator() /*const*/ = 0;
+
+    //!Get number of DOF per node
+    virtual int numDof() const = 0;
 
     virtual void read_stream(std::ifstream &in) {}
     virtual void write_stream(std::ofstream &out) const {}

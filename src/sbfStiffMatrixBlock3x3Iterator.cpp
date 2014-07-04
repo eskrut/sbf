@@ -4,6 +4,7 @@
 //TODO This all may have poor efficiency
 
 sbfStiffMatrixBlock3x3Iterator::sbfStiffMatrixBlock3x3Iterator(sbfStiffMatrixBlock3x3 *matrix) :
+    sbfMatrixIterator(nullptr),
     matrix_(matrix),
     type_(matrix->type()),
     isInNormal_(false),

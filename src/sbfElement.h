@@ -69,8 +69,11 @@ public:
     //Returns element volume if exist
     float volume() const;
 
+    int numNodeDof() const;
+
 };
 
 DECLSPEC int numNodesInElement(const ElementType type);
+DECLSPEC int numDof(const ElementType type);
 
 #endif // SBFELEMENT_H

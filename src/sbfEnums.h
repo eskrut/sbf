@@ -45,7 +45,7 @@ inline MatrixType operator|(MatrixType first, MatrixType second) {
     return static_cast<MatrixType>(static_cast<short>(first) | static_cast<short>(second));
 }
 
-enum MatrixStoreType : short {
+enum  class MatrixStoreType : short {
     NO_DEFINED_STORE_TYPE,
     COMPACT,                //Store only non-zero elements of matrix
     FULL                    //Store all elements of matrix

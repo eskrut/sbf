@@ -67,6 +67,7 @@ public:
     bool isValid();
     void read_stream(std::ifstream &in);
     void write_stream(std::ofstream &out) const;
+    int numDof() const { return blockDim_; }
 };
 
 #endif // SBFSTIFFMATRIXBLOCK6X6_H

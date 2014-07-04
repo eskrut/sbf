@@ -11,7 +11,6 @@ class sbfStiffMatrixBlock6x6Iterator : public sbfMatrixIterator
 public:
     sbfStiffMatrixBlock6x6Iterator(sbfStiffMatrixBlock6x6 *matrix);
 private:
-    sbfStiffMatrixBlock6x6 *matrix_;
     //!Base matrix topology type.
     MatrixType type_;
 
