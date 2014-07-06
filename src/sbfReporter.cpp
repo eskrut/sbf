@@ -10,6 +10,7 @@ sbfReporter::sbfReporter(std::streambuf *out, std::streambuf *err) :
     out_(new std::ostream(out)),
     err_(new std::ostream(err)),
     delemeter_('\t'),
+    placeDelimeterAtOutput_(true),
     progressBarTitle_(),
     progressBarWidth_(40),
     progressBarFill_('*'),
@@ -28,6 +29,16 @@ sbfReporter::~sbfReporter()
     critSecDestroy(lockOut_);
     delete lockOut_;
 }
+bool sbfReporter::placeDelimeterAtOutput() const
+{
+    return placeDelimeterAtOutput_;
+}
+
+void sbfReporter::setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput)
+{
+    placeDelimeterAtOutput_ = placeDelimeterAtOutput;
+}
+
 
 bool sbfReporter::allowOtput() const
 {

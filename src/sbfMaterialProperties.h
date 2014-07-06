@@ -18,6 +18,7 @@ public:
     sbfPropertyTable *propertyTable(const std::string & name);
     void addTable(const std::string &name);
     void addTable(sbfPropertyTable *table);
+    bool removeTable(const std::string &name);
 
     void read(std::ifstream &in);
     void write(std::ofstream &out) const;

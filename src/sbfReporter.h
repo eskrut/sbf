@@ -20,6 +20,7 @@ private:
     std::ostream * out_;
     std::ostream * err_;
     char delemeter_;
+    bool placeDelimeterAtOutput_;
     std::string progressBarTitle_;
     int progressBarWidth_;
     char progressBarFill_;
@@ -58,6 +59,8 @@ public:
     void operator()(First && first, Rest&&... rest);
     template <class First, class... Rest>
     void error(First && first, Rest&&... rest);
+    bool placeDelimeterAtOutput() const;
+    void setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput);
 };
 
 
@@ -67,6 +70,7 @@ void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
     if ( flagAllowOtput_ ) {
         if (flagExclusiveOut_) critSecBegin(lockOut_);
         *stream << obj;
+        stream->flush();
         if (flagExclusiveOut_) critSecEnd(lockOut_);
     }
 }
@@ -81,6 +85,7 @@ template<typename T>
 void sbfReporter::unpack(std::stringstream & sstr) { sstr << std::endl; return; }
 template<typename T, typename ...Ts>
 void sbfReporter::unpack(std::stringstream & sstr, T && t, Ts && ... ts) {
+    if(placeDelimeterAtOutput_) sstr << delemeter_;
     sstr << std::forward<T>(t);
     unpack(sstr, std::forward<Ts>(ts)...);
     return;

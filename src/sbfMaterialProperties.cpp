@@ -28,6 +28,17 @@ void sbfMaterialProperties::addTable(sbfPropertyTable *table)
     tables_[table->name()]=table;
 }
 
+bool sbfMaterialProperties::removeTable(const std::string &name)
+{
+    auto pos = tables_.find(name);
+    if (pos != tables_.end()) {
+        delete pos->second;
+        tables_.erase(pos);
+        return true;
+    }
+    return false;
+}
+
 void sbfMaterialProperties::read(std::ifstream &in)
 {
     std::getline(in, name_);

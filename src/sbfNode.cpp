@@ -85,6 +85,7 @@ void sbfNode::rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, Cr
     //Generate rotate matrix.
     CrdFloatType angle, dirx, diry, dirz, cs, sn;
     angle = std::sqrt(std::pow(rotX, static_cast<CrdFloatType>(2)) + std::pow(rotY, static_cast<CrdFloatType>(2)) + std::pow(rotZ, static_cast<CrdFloatType>(2)));
+    if(angle < 1e-10) return;
     dirx = rotX/angle;
     diry = rotY/angle;
     dirz = rotZ/angle;
