@@ -229,7 +229,7 @@ void sbfStiffMatrixBlock6x6::compute(int startID, int stopID)
 
 sbfStiffMatrix *sbfStiffMatrixBlock6x6::createIncompleteChol()
 {
-    report.createNewProgress("Compute incomplete cholesky");
+    //report.createNewProgress("Compute incomplete cholesky");
     sbfStiffMatrixBlock6x6 *cholFactor = new sbfStiffMatrixBlock6x6(mesh_, nullptr, MatrixType::DOWN_TREANGLE_MATRIX | MatrixType::INCOMPLETE_CHOL);
 
 //    //Manually remove alternative storage
@@ -259,7 +259,7 @@ sbfStiffMatrix *sbfStiffMatrixBlock6x6::createIncompleteChol()
     }
     for(int diagCt = 0; diagCt < numNodes_; diagCt++){//Loop on block rows
         //Process diagonal block
-        if(numNodes_ > 100 && (diagCt % (numNodes_/100) == 0)) report.updateProgress(0, numNodes_, diagCt);
+        //if(numNodes_ > 100 && (diagCt % (numNodes_/100) == 0)) report.updateProgress(0, numNodes_, diagCt);
 
         blockDiag = iteratorThis->diagonal(diagCt);
         blockDiagTarget = iteratorChol->diagonal(diagCt);
@@ -362,7 +362,7 @@ sbfStiffMatrix *sbfStiffMatrixBlock6x6::createIncompleteChol()
         //Process blocks under diagonal - END
     }//Loop on block rows
 
-    report.finalizeProgress();
+    //report.finalizeProgress();
     return cholFactor;
 }
 
