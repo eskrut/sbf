@@ -172,7 +172,7 @@ void sbfElemStiffMatrixHexa8::computeSM()
     double c_mul = E/((1+mu)*(1-2*mu));//Additional multiplicator
 
     //Perform integration over volume of integral(BT*C*B*detJ dV)
-    for(int ct = 0; ct < 8*8*9; data_[ct++] = 0);//Nulling
+    for(int ct = 0; ct < 8*8*9; dataBuf_[ct++] = 0);//Nulling
     for(int ct = 0; ct < 8*3*6; temp_[ct++] = 0);//Nulling
     //Loop over integration points
     for(int ctR = 0; ctR < numIntPoints_; ctR++){//Loop in r dir
@@ -211,17 +211,17 @@ void sbfElemStiffMatrixHexa8::computeSM()
                 //Compute matrix multiplication (BT*C)*B and add result to stiffness matrix with weights and determinant
                 for(int ct1 = 0; ct1 < 8; ct1++){//Loop on rows blocks of matrix (BT*C) upper triangle
                     for(int ct2 = ct1; ct2 < 8; ct2++){//Loop on rows blocks of matrix B upper triangle
-                        data_[(ct1*3)*3*8 + ct2*3] += (temp_[3*6*ct1]*dhdg_[3*ct2]+temp_[3*6*ct1+3]*dhdg_[3*ct2+1]+temp_[3*6*ct1+5]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;
-                        data_[(ct1*3)*3*8 + ct2*3 + 1] += (temp_[3*6*ct1+1]*dhdg_[3*ct2+1]+temp_[3*6*ct1+3]*dhdg_[3*ct2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+4] == 0;
-                        data_[(ct1*3)*3*8 + ct2*3 + 2] += (temp_[3*6*ct1+2]*dhdg_[3*ct2+2]+temp_[3*6*ct1+5]*dhdg_[3*ct2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+4] == 0;
+                        dataBuf_[(ct1*3)*3*8 + ct2*3] += (temp_[3*6*ct1]*dhdg_[3*ct2]+temp_[3*6*ct1+3]*dhdg_[3*ct2+1]+temp_[3*6*ct1+5]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;
+                        dataBuf_[(ct1*3)*3*8 + ct2*3 + 1] += (temp_[3*6*ct1+1]*dhdg_[3*ct2+1]+temp_[3*6*ct1+3]*dhdg_[3*ct2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+4] == 0;
+                        dataBuf_[(ct1*3)*3*8 + ct2*3 + 2] += (temp_[3*6*ct1+2]*dhdg_[3*ct2+2]+temp_[3*6*ct1+5]*dhdg_[3*ct2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+4] == 0;
 
-                        data_[(ct1*3+1)*3*8 + ct2*3] += (temp_[3*6*ct1+6]*dhdg_[3*ct2]+temp_[3*6*ct1+9]*dhdg_[3*ct2+1])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+11] == 0;
-                        data_[(ct1*3+1)*3*8 + ct2*3 + 1] += (temp_[3*6*ct1+7]*dhdg_[3*ct2+1]+temp_[3*6*ct1+9]*dhdg_[3*ct2]+temp_[3*6*ct1+10]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;
-                        data_[(ct1*3+1)*3*8 + ct2*3 + 2] += (temp_[3*6*ct1+8]*dhdg_[3*ct2+2]+temp_[3*6*ct1+10]*dhdg_[3*ct2+1])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+11] == 0;
+                        dataBuf_[(ct1*3+1)*3*8 + ct2*3] += (temp_[3*6*ct1+6]*dhdg_[3*ct2]+temp_[3*6*ct1+9]*dhdg_[3*ct2+1])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+11] == 0;
+                        dataBuf_[(ct1*3+1)*3*8 + ct2*3 + 1] += (temp_[3*6*ct1+7]*dhdg_[3*ct2+1]+temp_[3*6*ct1+9]*dhdg_[3*ct2]+temp_[3*6*ct1+10]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;
+                        dataBuf_[(ct1*3+1)*3*8 + ct2*3 + 2] += (temp_[3*6*ct1+8]*dhdg_[3*ct2+2]+temp_[3*6*ct1+10]*dhdg_[3*ct2+1])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+11] == 0;
 
-                        data_[(ct1*3+2)*3*8 + ct2*3] += (temp_[3*6*ct1+12]*dhdg_[3*ct2]+temp_[3*6*ct1+17]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+15] == 0;
-                        data_[(ct1*3+2)*3*8 + ct2*3 + 1] += (temp_[3*6*ct1+13]*dhdg_[3*ct2+1]+temp_[3*6*ct1+16]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+15] == 0;
-                        data_[(ct1*3+2)*3*8 + ct2*3 + 2] += (temp_[3*6*ct1+14]*dhdg_[3*ct2+2]+temp_[3*6*ct1+16]*dhdg_[3*ct2+1]+temp_[3*6*ct1+17]*dhdg_[3*ct2])*weigthR*weigthS*weigthT*detJ_;
+                        dataBuf_[(ct1*3+2)*3*8 + ct2*3] += (temp_[3*6*ct1+12]*dhdg_[3*ct2]+temp_[3*6*ct1+17]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+15] == 0;
+                        dataBuf_[(ct1*3+2)*3*8 + ct2*3 + 1] += (temp_[3*6*ct1+13]*dhdg_[3*ct2+1]+temp_[3*6*ct1+16]*dhdg_[3*ct2+2])*weigthR*weigthS*weigthT*detJ_;//temp_[3*6*ct1+15] == 0;
+                        dataBuf_[(ct1*3+2)*3*8 + ct2*3 + 2] += (temp_[3*6*ct1+14]*dhdg_[3*ct2+2]+temp_[3*6*ct1+16]*dhdg_[3*ct2+1]+temp_[3*6*ct1+17]*dhdg_[3*ct2])*weigthR*weigthS*weigthT*detJ_;
                     }//Loop on rows blocks of matrix B
                 }//Loop on rows blocks of matrix (BT*C)
 
@@ -230,24 +230,27 @@ void sbfElemStiffMatrixHexa8::computeSM()
     }//Loop in r dir
     for(int ct1 = 0; ct1 < 8; ct1++){//Loop on rows blocks of matrix (BT*C) lower triangle
         for(int ct2 = 0; ct2 < ct1; ct2++){//Loop on rows blocks of matrix B lower triangle
-            data_[(ct1*3)*3*8 + ct2*3] = data_[(ct2*3)*3*8 + ct1*3];
-            data_[(ct1*3)*3*8 + ct2*3 + 1] = data_[(ct2*3+1)*3*8 + ct1*3];
-            data_[(ct1*3)*3*8 + ct2*3 + 2] = data_[(ct2*3+2)*3*8 + ct1*3];
+            dataBuf_[(ct1*3)*3*8 + ct2*3] = dataBuf_[(ct2*3)*3*8 + ct1*3];
+            dataBuf_[(ct1*3)*3*8 + ct2*3 + 1] = dataBuf_[(ct2*3+1)*3*8 + ct1*3];
+            dataBuf_[(ct1*3)*3*8 + ct2*3 + 2] = dataBuf_[(ct2*3+2)*3*8 + ct1*3];
 
-            data_[(ct1*3+1)*3*8 + ct2*3] = data_[(ct2*3)*3*8 + ct1*3 + 1];
-            data_[(ct1*3+1)*3*8 + ct2*3 + 1] = data_[(ct2*3+1)*3*8 + ct1*3 + 1];
-            data_[(ct1*3+1)*3*8 + ct2*3 + 2] = data_[(ct2*3+2)*3*8 + ct1*3 + 1];
+            dataBuf_[(ct1*3+1)*3*8 + ct2*3] = dataBuf_[(ct2*3)*3*8 + ct1*3 + 1];
+            dataBuf_[(ct1*3+1)*3*8 + ct2*3 + 1] = dataBuf_[(ct2*3+1)*3*8 + ct1*3 + 1];
+            dataBuf_[(ct1*3+1)*3*8 + ct2*3 + 2] = dataBuf_[(ct2*3+2)*3*8 + ct1*3 + 1];
 
-            data_[(ct1*3+2)*3*8 + ct2*3] = data_[(ct2*3)*3*8 + ct1*3 + 2];
-            data_[(ct1*3+2)*3*8 + ct2*3 + 1] = data_[(ct2*3+1)*3*8 + ct1*3 + 2];
-            data_[(ct1*3+2)*3*8 + ct2*3 + 2] = data_[(ct2*3+2)*3*8 + ct1*3 + 2];
+            dataBuf_[(ct1*3+2)*3*8 + ct2*3] = dataBuf_[(ct2*3)*3*8 + ct1*3 + 2];
+            dataBuf_[(ct1*3+2)*3*8 + ct2*3 + 1] = dataBuf_[(ct2*3+1)*3*8 + ct1*3 + 2];
+            dataBuf_[(ct1*3+2)*3*8 + ct2*3 + 2] = dataBuf_[(ct2*3+2)*3*8 + ct1*3 + 2];
         }//Loop on rows blocks of matrix B
     }//Loop on rows blocks of matrix (BT*C)
-    //Check diagonal
-    for(int ctNode = 0; ctNode < 8; ++ctNode)
-        for(int ctDof = 0; ctDof < 3; ++ctDof)
-            if ( data_[ctNode*8*9 + ctNode*9 + ctDof*3 + ctDof] < 0 )
-                report("Negative diagonal!", ctNode, ctDof, 3, 9);
+    //Unroll to nurmal block storage
+    for(int ct1 = 0; ct1 < 8*3; ++ct1) for(int ct2 = 0; ct2 < 8*3; ++ct2) {
+        int rowID = ct1/3;
+        int rowDof = ct1%3;
+        int colID = ct2/3;
+        int colDof = ct2%3;
+        data_[numNodes_*rowID*blockSize_ + colID*blockSize_ + rowDof*numDOF_ + colDof] = dataBuf_[ct1*3*8+ct2];
+    }
 }
 
 double sbfElemStiffMatrixHexa8::computeVolume()

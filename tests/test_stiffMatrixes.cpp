@@ -6,9 +6,8 @@
 
 void TestStiffMatrixes::case01_patchTest01()
 {
-    float xSide = 100, ySide = 100, zSide = 100;
-//    int xPart = 25, yPart = 5, zPart = 8;
-    int xPart = 1, yPart = 1, zPart = 1;
+    float xSide = 100, ySide = 10, zSide = 15;
+    int xPart = 25, yPart = 5, zPart = 8;
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
     mesh->applyToAllElements([](sbfElement & elem){elem.setMtr(1);});
@@ -356,7 +355,7 @@ void TestStiffMatrixes::case04_CGMwP()
     timer.start();
     float xSide = 100, ySide = 10, zSide = 10;
     float targetError = 1e-2;
-    int xPart = 10, yPart = 5, zPart = 5;
+    int xPart = 100, yPart = 10, zPart = 10;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
@@ -390,17 +389,20 @@ void TestStiffMatrixes::case04_CGMwP()
 
     qDebug() << "Compute stiff matrix";
     stiff->computeSequantially();
+    QVERIFY2(stiff->isValid(), "Stiffness is not valid");
 
     NodesData<> force(mesh), disp(mesh);
     force.null();
     disp.null();
-    qDebug() << "Fixing nodes";
-    for( auto node : lockInds ) stiff->lockDof(node, 0, 0, force.data(), LockType::APPROXIMATE_LOCK_TYPE);
-    stiff->lockDof(mesh->nodeAt(0, 0, 0), 1, 0, force.data(), LockType::APPROXIMATE_LOCK_TYPE);
-    stiff->lockDof(mesh->nodeAt(0, 0, 0), 2, 0, force.data(), LockType::APPROXIMATE_LOCK_TYPE);
 
     //FIXME make normal loading
     for( auto node : loadInds ) force.data(node, 0) = 1.0/loadInds.size();
+
+    qDebug() << "Fixing nodes";
+    for( auto node : lockInds ) stiff->lockDof(node, 0, 0, force.data(), LockType::EXACT_LOCK_TYPE);
+    stiff->lockDof(mesh->nodeAt(0, 0, 0), 1, 0, force.data(), LockType::EXACT_LOCK_TYPE);
+    stiff->lockDof(mesh->nodeAt(0, 0, 0), 2, 0, force.data(), LockType::EXACT_LOCK_TYPE);
+    QVERIFY2(stiff->isValid(), "Stiffness is not valid");
 
     qDebug() << "Make incomplete Chol";
     std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(reinterpret_cast<sbfStiffMatrixBlock3x3*>(stiff->createIncompleteChol()));

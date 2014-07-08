@@ -27,6 +27,8 @@ private:
     static const int numNodes_ = 8;
     static const int numDOF_ = 3;
     static const int blockSize_ = numDOF_*numDOF_;
+    //FIXME - this is intermediate buffer
+    double dataBuf_[numNodes_*numNodes_*blockSize_];
     void init();
     void clean();
     void computeH(double r, double s = 0, double t = 0);

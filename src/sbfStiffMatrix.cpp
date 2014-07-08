@@ -114,7 +114,33 @@ void sbfStiffMatrix::lockDof(int nodeIndex, int dofIndex, double value, double *
         if(force) force[nodeIndex*numDofPerNode + dofIndex] = targetBlock[shift]*value;
     }
     else {
-        throw std::runtime_error("EXACT_LOCK_TYPE is not implemented");
+        //TODO add more tests for this lock type
+        const int numNodes = mesh_->numNodes();
+        for(int ctRow = 0; ctRow < numNodes; ++ctRow) {
+            iter->setToRow(ctRow);
+            if (ctRow == nodeIndex) {
+                while(iter->isValid()){
+                    double *block = iter->data();
+                    const int columnID = iter->column();
+                    if (force) for(int ctDof = 0; ctDof < numDofPerNode; ++ctDof) force[columnID*numDofPerNode + ctDof] -= block[numDofPerNode*dofIndex + ctDof]*value;
+                    for(int ctDof = 0; ctDof < numDofPerNode; ++ctDof) block[numDofPerNode*dofIndex + ctDof] = 0.0;
+                    iter->next();
+                }
+            }
+            else {
+                while(iter->isValid()){
+                    if (iter->column() == nodeIndex) {
+                        double *block = iter->data();
+                        for(int ctDof = 0; ctDof < numDofPerNode; ++ctDof) block[dofIndex + numDofPerNode*ctDof] = 0.0;
+                    }
+                    iter->next();
+                }
+            }
+        }
+        double *block = iter->diagonal(nodeIndex);
+        for(int ctDof = 0; ctDof < numDofPerNode; ++ctDof) block[dofIndex + numDofPerNode*ctDof] = 0.0;
+        block[dofIndex*(numDofPerNode+1)] = 1.0;
+        force[nodeIndex*numDofPerNode+dofIndex] = value;
     }
 }
 
