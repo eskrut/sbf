@@ -383,9 +383,6 @@ void TestStiffMatrixes::case04_CGMwP()
 
     std::unique_ptr<sbfStiffMatrixBlock3x3> stiffRes(new sbfStiffMatrixBlock3x3(mesh, &propSet));
     sbfStiffMatrixBlock3x3 * stiff = stiffRes.get();
-//    stiff->setMesh(mesh);
-//    stiff->setPropSet(&propSet);
-//    stiff->updateIndexesFromMesh();
 
     qDebug() << "Compute stiff matrix";
     stiff->computeSequantially();
