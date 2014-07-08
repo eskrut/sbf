@@ -49,6 +49,10 @@ public:
     virtual void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr) { }
 
     virtual bool isValid() { return false; }
+
+    void multiplyByVector(double *vector, double *result, sbfMatrixIterator *iterator = nullptr);
+
+    void lockDof(int nodeIndex, int dofIndex, double value, double *force, LockType lockType);
 };
 
 #endif // SBFSTIFFMATRIX_H

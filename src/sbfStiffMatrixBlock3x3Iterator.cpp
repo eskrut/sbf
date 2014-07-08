@@ -4,19 +4,18 @@
 //TODO This all may have poor efficiency
 
 sbfStiffMatrixBlock3x3Iterator::sbfStiffMatrixBlock3x3Iterator(sbfStiffMatrixBlock3x3 *matrix) :
-    sbfMatrixIterator(nullptr),
-    matrix_(matrix),
+    sbfMatrixIterator(matrix),
     type_(matrix->type()),
     isInNormal_(false),
     isHaveNext_(false),
     isValid_(false)
 {
-    columnsByRowsNormal_ = const_cast<int *>(matrix->indData());
-    shiftsRowNormal_ = const_cast<int *>(matrix->shiftIndData());
-    columnsByRowsAlter_ = const_cast<int *>(matrix->indDataAlter());
-    shiftsRowAlter_ = const_cast<int *>(matrix->shiftIndDataAlter());
-    blocksByRowsAlter_ = matrix->ptrDataAlter();
-    base_ = const_cast<double *>(matrix->data());
+    columnsByRowsNormal_ = matrix->indJ_;
+    shiftsRowNormal_ = matrix->shiftInd_;
+    columnsByRowsAlter_ = matrix->indJAlter_;
+    shiftsRowAlter_ = matrix->shiftIndAlter_;
+    blocksByRowsAlter_ = matrix->ptrDataAlter_;
+    base_ = matrix->data_;
 }
 
 void sbfStiffMatrixBlock3x3Iterator::setToRow(const int rowIndex)

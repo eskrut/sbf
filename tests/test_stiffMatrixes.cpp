@@ -6,8 +6,9 @@
 
 void TestStiffMatrixes::case01_patchTest01()
 {
-    float xSide = 1000, ySide = 1, zSide = 1;
-    int xPart = 25, yPart = 5, zPart = 8;
+    float xSide = 100, ySide = 100, zSide = 100;
+//    int xPart = 25, yPart = 5, zPart = 8;
+    int xPart = 1, yPart = 1, zPart = 1;
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
     mesh->applyToAllElements([](sbfElement & elem){elem.setMtr(1);});
@@ -15,27 +16,28 @@ void TestStiffMatrixes::case01_patchTest01()
     sbfPropertiesSet propSet;
     propSet.addMaterial(sbfMaterialProperties::makeMPropertiesSteel());
 
-    std::unique_ptr<sbfStiffMatrixBlock3x3> stiffRes(new sbfStiffMatrixBlock3x3());
+    std::unique_ptr<sbfStiffMatrixBlock3x3> stiffRes(new sbfStiffMatrixBlock3x3(mesh, &propSet));
     sbfStiffMatrixBlock3x3 * stiff = stiffRes.get();
-    stiff->setMesh(mesh);
-    stiff->setPropSet(&propSet);
-    stiff->updateIndexesFromMesh();
+//    stiff->setMesh(mesh);
+//    stiff->setPropSet(&propSet);
+//    stiff->updateIndexesFromMesh();
 
-    stiff->compute();
+    stiff->computeSequantially();
+    QVERIFY2(stiff->isValid(), "Stiffness is not valid");
 
     NodesData<> forces(mesh), displacements(mesh), forces2(mesh);
 
     displacements.null();
-    DefaultWorkDataType ampX = 0.01, ampY = 0.001, ampZ = 0.005;
+    DefaultWorkDataType ampX = 0.01, ampY = 0.01, ampZ = 0.01;
 
     //Apply displacements with uniforn strain
     int ct = 0;
-    auto setDispl = [&](sbfNode & node) {
+    for(int ct = 0; ct < mesh->numNodes(); ++ct){
+        sbfNode &node = mesh->node(ct);
         displacements.data(ct, 0) = ampX/xSide*node.x();
         displacements.data(ct, 1) = ampY/ySide*node.y();
-        displacements.data(ct++, 2) = ampZ/zSide*node.z();
+        displacements.data(ct, 2) = ampZ/zSide*node.z();
     };
-    mesh->applyToAllNodes(setDispl);
 
     //Make multiplycation
     stiff->multiplyByVector(displacements.data(), forces.data());
@@ -54,7 +56,7 @@ void TestStiffMatrixes::case01_patchTest01()
                     std::fabs(forces.data(ct, 1)) > eps ||
                     std::fabs(forces.data(ct, 2)) > eps
                 )
-           ) { qDebug() << QString("Sholud be zero: %1 %2 %3 (eps=%4)").arg(forces.data(ct, 0)).arg(forces.data(ct, 1)).arg(forces.data(ct, 2)).arg(eps); pass = false; break; }
+           ) { qDebug() << QString("Sholud be zero: %1 %2 %3 %4 (eps=%5)").arg(forces.data(ct, 0)).arg(forces.data(ct, 1)).arg(forces.data(ct, 2)).arg(ct).arg(eps); pass = false; break; }
         if ( // outer nodes
                 (
                     ( node.x() == 0 || node.x() == xSide ) ||
@@ -95,258 +97,258 @@ void TestStiffMatrixes::case01_patchTest01()
     QVERIFY2(pass, "Fail to produce zero inner forces (2-nd approach)");
 }
 
-void TestStiffMatrixes::case01_mapHexa01()
-{
-    /*
-     *    7-------6
-     *   /|      /|     Z
-     *  4-------5 |     |   Y
-     *  | |     | |     |  /
-     *  | 3- - -|-2     | /
-     *  |/      |/      |/
-     *  0-------1       0-------- X
-    */
+//void TestStiffMatrixes::case01_mapHexa01()
+//{
+//    /*
+//     *    7-------6
+//     *   /|      /|     Z
+//     *  4-------5 |     |   Y
+//     *  | |     | |     |  /
+//     *  | 3- - -|-2     | /
+//     *  |/      |/      |/
+//     *  0-------1       0-------- X
+//    */
 
-    /* Msp to the triangle
-     *    7-6
-     *   /| | \         Z
-     *  4-------5       |   Y
-     *  | | |   |       |  /
-     *  | 3-2   |       | /
-     *  |/    \ |       |/
-     *  0-------1       0-------- X
-    */
+//    /* Msp to the triangle
+//     *    7-6
+//     *   /| | \         Z
+//     *  4-------5       |   Y
+//     *  | | |   |       |  /
+//     *  | 3-2   |       | /
+//     *  |/    \ |       |/
+//     *  0-------1       0-------- X
+//    */
 
-    std::unique_ptr<sbfMesh> meshSmartPtr(new sbfMesh());
-    sbfMesh *m = meshSmartPtr.get();
-    for(auto z : {0, 1}) {
-        m->addNode(0, 0, z, false);
-        m->addNode(1, 0, z, false);
-        m->addNode(0, 1, z, false);
-        m->addNode(0, 1, z, false); // Yes, this is duplicate. By the way it's nodes map test
-    }
-    m->addElement(sbfElement(ElementType::HEXAHEDRON_LINEAR, {0, 1, 2, 3, 4, 5, 6, 7}));
-    sbfElemStiffMatrixHexa8 elStif(m->elemPtr(0));
-    auto vol = elStif.computeVolume();
-    auto eps = 1e-6;
-    QVERIFY2(std::fabs(vol - 0.5) < eps, "Fail to get normal volume");
-    //Surprisengly, but it pass!!! May be we should not need tetra and prisme elem matrixes.
-    //Stell we should make more strict tests.
-}
+//    std::unique_ptr<sbfMesh> meshSmartPtr(new sbfMesh());
+//    sbfMesh *m = meshSmartPtr.get();
+//    for(auto z : {0, 1}) {
+//        m->addNode(0, 0, z, false);
+//        m->addNode(1, 0, z, false);
+//        m->addNode(0, 1, z, false);
+//        m->addNode(0, 1, z, false); // Yes, this is duplicate. By the way it's nodes map test
+//    }
+//    m->addElement(sbfElement(ElementType::HEXAHEDRON_LINEAR, {0, 1, 2, 3, 4, 5, 6, 7}));
+//    sbfElemStiffMatrixHexa8 elStif(m->elemPtr(0));
+//    auto vol = elStif.computeVolume();
+//    auto eps = 1e-6;
+//    QVERIFY2(std::fabs(vol - 0.5) < eps, "Fail to get normal volume");
+//    //Surprisengly, but it pass!!! May be we should not need tetra and prisme elem matrixes.
+//    //Stell we should make more strict tests.
+//}
 
-void TestStiffMatrixes::case02_createIncompleteChol(){
-    //Create simple matrix
-    sbfStiffMatrixBlock3x3 * matrix = new sbfStiffMatrixBlock3x3(4, 2);
-    /*
-     *  [   24  0   6   0   0   0   ]
-     *  [   0   8   2   0   0   0   ]
-     *  [   6   2   8   -6  2   0   ]
-     *  [   0   0   -6  24  0   0   ]
-     *  [   0   0   2   0   8   0   ]
-     *  [   0   0   0   0   0   1   ]
-     */
-    matrix->setType(MatrixType::FULL_MATRIX);
-    std::vector<int> indJ{0, 1, 0, 1}, shiftInd{0, 2, 4};
-    matrix->setIndData(2, 4, &indJ[0], &shiftInd[0]);
-    matrix->null();
-    double * block = matrix->blockPtr(0, 0);
-    block[0] = 24; block[1] = 0; block[2] = 6;
-    block[3] = 0; block[4] = 8; block[5] = 2;
-    block[6] = 6; block[7] = 2; block[8] = 8;
-    block = matrix->blockPtr(0, 1);
-    block[6] = -6; block[7] = 2;
-    block = matrix->blockPtr(1, 0);
-    block[2] = -6;
-    block[5] = 2;
-    block = matrix->blockPtr(1, 1);
-    block[0] = 24;
-    block[4] = 8;
-    block[8] = 1;
+//void TestStiffMatrixes::case02_createIncompleteChol(){
+//    //Create simple matrix
+//    sbfStiffMatrixBlock3x3_old * matrix = new sbfStiffMatrixBlock3x3_old(4, 2);
+//    /*
+//     *  [   24  0   6   0   0   0   ]
+//     *  [   0   8   2   0   0   0   ]
+//     *  [   6   2   8   -6  2   0   ]
+//     *  [   0   0   -6  24  0   0   ]
+//     *  [   0   0   2   0   8   0   ]
+//     *  [   0   0   0   0   0   1   ]
+//     */
+//    matrix->setType(MatrixType::FULL_MATRIX);
+//    std::vector<int> indJ{0, 1, 0, 1}, shiftInd{0, 2, 4};
+//    matrix->setIndData(2, 4, &indJ[0], &shiftInd[0]);
+//    matrix->null();
+//    double * block = matrix->blockPtr(0, 0);
+//    block[0] = 24; block[1] = 0; block[2] = 6;
+//    block[3] = 0; block[4] = 8; block[5] = 2;
+//    block[6] = 6; block[7] = 2; block[8] = 8;
+//    block = matrix->blockPtr(0, 1);
+//    block[6] = -6; block[7] = 2;
+//    block = matrix->blockPtr(1, 0);
+//    block[2] = -6;
+//    block[5] = 2;
+//    block = matrix->blockPtr(1, 1);
+//    block[0] = 24;
+//    block[4] = 8;
+//    block[8] = 1;
 
-    //std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(matrix->makeIncompleteChol());
-    sbfStiffMatrixBlock3x3 * iChol = matrix->makeIncompleteChol();
+//    //std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(matrix->makeIncompleteChol());
+//    sbfStiffMatrixBlock3x3_old * iChol = matrix->makeIncompleteChol();
 
-    //test
-    bool pass = true;
-    const double eps = 0.0001;
-    block = iChol->blockPtr(0, 0);
-    if ( std::fabs(block[0] - 4.8990) > eps ||
-         std::fabs(block[4] - 2.8284) > eps ||
-         std::fabs(block[6] - 1.2247) > eps || std::fabs(block[7] - 0.7071) > eps || std::fabs(block[8] - 2.4495) > eps)
-        pass = false;
-    if ( !pass )
-        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
-    block = iChol->blockPtr(1, 0);
-    if ( std::fabs(block[2] + 2.4495) > eps ||
-         std::fabs(block[5] - 0.8165) > eps )
-        pass = false;
-    if ( !pass )
-        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
-    block = iChol->blockPtr(1, 1);
-    if ( std::fabs(block[0] - 4.2426) > eps ||
-         std::fabs(block[3] - 0.0) > eps || std::fabs(block[4] - 2.7080) > eps )
-        pass = false;
-    if ( !pass )
-        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+//    //test
+//    bool pass = true;
+//    const double eps = 0.0001;
+//    block = iChol->blockPtr(0, 0);
+//    if ( std::fabs(block[0] - 4.8990) > eps ||
+//         std::fabs(block[4] - 2.8284) > eps ||
+//         std::fabs(block[6] - 1.2247) > eps || std::fabs(block[7] - 0.7071) > eps || std::fabs(block[8] - 2.4495) > eps)
+//        pass = false;
+//    if ( !pass )
+//        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+//    block = iChol->blockPtr(1, 0);
+//    if ( std::fabs(block[2] + 2.4495) > eps ||
+//         std::fabs(block[5] - 0.8165) > eps )
+//        pass = false;
+//    if ( !pass )
+//        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+//    block = iChol->blockPtr(1, 1);
+//    if ( std::fabs(block[0] - 4.2426) > eps ||
+//         std::fabs(block[3] - 0.0) > eps || std::fabs(block[4] - 2.7080) > eps )
+//        pass = false;
+//    if ( !pass )
+//        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
 
-    QVERIFY2(pass, "Fail to compute incomplete Chol");
+//    QVERIFY2(pass, "Fail to compute incomplete Chol");
 
-    auto colsInRows = iChol->columnsInRows();
-    pass = true;
-    if( colsInRows[0] != std::vector<int>({0}) ) pass = false;
-    if( colsInRows[1] != std::vector<int>({0, 1}) ) pass = false;
-    QVERIFY2(pass, "Fail to get column indexes in rows");
+//    auto colsInRows = iChol->columnsInRows();
+//    pass = true;
+//    if( colsInRows[0] != std::vector<int>({0}) ) pass = false;
+//    if( colsInRows[1] != std::vector<int>({0, 1}) ) pass = false;
+//    QVERIFY2(pass, "Fail to get column indexes in rows");
 
-    auto rowsInCols = iChol->rowsInColumns();
-    pass = true;
-    if( rowsInCols[0] != std::vector<int>({0, 1}) ) pass = false;
-    if( rowsInCols[1] != std::vector<int>({1}) ) pass = false;
-    QVERIFY2(pass, "Fail to get rows indexes in columns");
+//    auto rowsInCols = iChol->rowsInColumns();
+//    pass = true;
+//    if( rowsInCols[0] != std::vector<int>({0, 1}) ) pass = false;
+//    if( rowsInCols[1] != std::vector<int>({1}) ) pass = false;
+//    QVERIFY2(pass, "Fail to get rows indexes in columns");
 
-    //FIXME not working
-    //delete matrix;
-    //delete iChol;
-}
+//    //FIXME not working
+//    //delete matrix;
+//    //delete iChol;
+//}
 
-void TestStiffMatrixes::case02_createIncompleteChol2(){
-    //Create simple matrix
-    sbfStiffMatrixBlock3x3 * matrix = new sbfStiffMatrixBlock3x3(3, 2);
-    /*
-     *  [   24  0   6   0   0   0   ]
-     *  [   0   8   2   0   0   0   ]
-     *  [   6   2   8   -6  2   0   ]
-     *  [   0   0   -6  24  0   0   ]
-     *  [   0   0   2   0   8   0   ]
-     *  [   0   0   0   0   0   1   ]
-     */
-    matrix->setType(MatrixType::DOWN_TREANGLE_MATRIX);
-    std::vector<int> indJ{0, 0, 1}, shiftInd{0, 1, 3};
-    std::vector<int> indJAlt{1}, shiftIndAlt{0, 1, 1};
-    matrix->setIndData(2, 3, &indJ[0], &shiftInd[0], 1, &indJAlt[0], &shiftIndAlt[0]);
-    matrix->null();
-    double * block = matrix->blockPtr(0, 0);
-    block[0] = 24; block[1] = 0; block[2] = 6;
-    block[3] = 0; block[4] = 8; block[5] = 2;
-    block[6] = 6; block[7] = 2; block[8] = 8;
-    block = matrix->blockPtr(1, 0);
-    block[2] = -6;
-    block[5] = 2;
-    block = matrix->blockPtr(1, 1);
-    block[0] = 24;
-    block[4] = 8;
-    block[8] = 1;
+//void TestStiffMatrixes::case02_createIncompleteChol2(){
+//    //Create simple matrix
+//    sbfStiffMatrixBlock3x3_old * matrix = new sbfStiffMatrixBlock3x3_old(3, 2);
+//    /*
+//     *  [   24  0   6   0   0   0   ]
+//     *  [   0   8   2   0   0   0   ]
+//     *  [   6   2   8   -6  2   0   ]
+//     *  [   0   0   -6  24  0   0   ]
+//     *  [   0   0   2   0   8   0   ]
+//     *  [   0   0   0   0   0   1   ]
+//     */
+//    matrix->setType(MatrixType::DOWN_TREANGLE_MATRIX);
+//    std::vector<int> indJ{0, 0, 1}, shiftInd{0, 1, 3};
+//    std::vector<int> indJAlt{1}, shiftIndAlt{0, 1, 1};
+//    matrix->setIndData(2, 3, &indJ[0], &shiftInd[0], 1, &indJAlt[0], &shiftIndAlt[0]);
+//    matrix->null();
+//    double * block = matrix->blockPtr(0, 0);
+//    block[0] = 24; block[1] = 0; block[2] = 6;
+//    block[3] = 0; block[4] = 8; block[5] = 2;
+//    block[6] = 6; block[7] = 2; block[8] = 8;
+//    block = matrix->blockPtr(1, 0);
+//    block[2] = -6;
+//    block[5] = 2;
+//    block = matrix->blockPtr(1, 1);
+//    block[0] = 24;
+//    block[4] = 8;
+//    block[8] = 1;
 
-    //std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(matrix->makeIncompleteChol());
-    sbfStiffMatrixBlock3x3 * iChol = matrix->makeIncompleteChol();
+//    //std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(matrix->makeIncompleteChol());
+//    sbfStiffMatrixBlock3x3_old * iChol = matrix->makeIncompleteChol();
 
-    //test
-    bool pass = true;
-    const double eps = 0.0001;
-    block = iChol->blockPtr(0, 0);
-    if ( std::fabs(block[0] - 4.8990) > eps ||
-         std::fabs(block[4] - 2.8284) > eps ||
-         std::fabs(block[6] - 1.2247) > eps || std::fabs(block[7] - 0.7071) > eps || std::fabs(block[8] - 2.4495) > eps)
-        pass = false;
-    if ( !pass )
-        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
-    block = iChol->blockPtr(1, 0);
-    if ( std::fabs(block[2] + 2.4495) > eps ||
-         std::fabs(block[5] - 0.8165) > eps )
-        pass = false;
-    if ( !pass )
-        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
-    block = iChol->blockPtr(1, 1);
-    if ( std::fabs(block[0] - 4.2426) > eps ||
-         std::fabs(block[3] - 0.0) > eps || std::fabs(block[4] - 2.7080) > eps )
-        pass = false;
-    if ( !pass )
-        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+//    //test
+//    bool pass = true;
+//    const double eps = 0.0001;
+//    block = iChol->blockPtr(0, 0);
+//    if ( std::fabs(block[0] - 4.8990) > eps ||
+//         std::fabs(block[4] - 2.8284) > eps ||
+//         std::fabs(block[6] - 1.2247) > eps || std::fabs(block[7] - 0.7071) > eps || std::fabs(block[8] - 2.4495) > eps)
+//        pass = false;
+//    if ( !pass )
+//        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+//    block = iChol->blockPtr(1, 0);
+//    if ( std::fabs(block[2] + 2.4495) > eps ||
+//         std::fabs(block[5] - 0.8165) > eps )
+//        pass = false;
+//    if ( !pass )
+//        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
+//    block = iChol->blockPtr(1, 1);
+//    if ( std::fabs(block[0] - 4.2426) > eps ||
+//         std::fabs(block[3] - 0.0) > eps || std::fabs(block[4] - 2.7080) > eps )
+//        pass = false;
+//    if ( !pass )
+//        qDebug() << block[0] << block[1] << block[2] << block[3] << block[4] << block[5] << block[6] << block[7] << block[8];
 
-    QVERIFY2(pass, "Fail to compute incomplete Chol");
+//    QVERIFY2(pass, "Fail to compute incomplete Chol");
 
-    auto colsInRows = iChol->columnsInRows();
-    pass = true;
-    if( colsInRows[0] != std::vector<int>({0}) ) pass = false;
-    if( colsInRows[1] != std::vector<int>({0, 1}) ) pass = false;
-    QVERIFY2(pass, "Fail to get column indexes in rows");
+//    auto colsInRows = iChol->columnsInRows();
+//    pass = true;
+//    if( colsInRows[0] != std::vector<int>({0}) ) pass = false;
+//    if( colsInRows[1] != std::vector<int>({0, 1}) ) pass = false;
+//    QVERIFY2(pass, "Fail to get column indexes in rows");
 
-    auto rowsInCols = iChol->rowsInColumns();
-    pass = true;
-    if( rowsInCols[0] != std::vector<int>({0, 1}) ) pass = false;
-    if( rowsInCols[1] != std::vector<int>({1}) ) pass = false;
-    QVERIFY2(pass, "Fail to get rows indexes in columns");
+//    auto rowsInCols = iChol->rowsInColumns();
+//    pass = true;
+//    if( rowsInCols[0] != std::vector<int>({0, 1}) ) pass = false;
+//    if( rowsInCols[1] != std::vector<int>({1}) ) pass = false;
+//    QVERIFY2(pass, "Fail to get rows indexes in columns");
 
-    //FIXME not working
-    //delete matrix;
-    //delete iChol;
-}
+//    //FIXME not working
+//    //delete matrix;
+//    //delete iChol;
+//}
 
-void TestStiffMatrixes::case03_solveLLTuf()
-{
-    //Create simple matrix
-    sbfStiffMatrixBlock3x3 * matrix = new sbfStiffMatrixBlock3x3(3, 2);
-    /*
-     *
-     *  [   10  0   0   0   0   0   ]   [1]     [10]
-     *  [   1   10  0   0   0   0   ]   [1.9]   [20]
-     *  [   0   0   10  0   0   0   ] * [1]   = [10]
-     *  [   2   0   0   20  0   0   ]   [1]     [22]
-     *  [   0   0   0   3   10  0   ]   [2]     [23]
-     *  [   1   1   1   1   1   10  ]   [0]     [6.9]
-     *
-     */
-    matrix->setType(MatrixType::DOWN_TREANGLE_MATRIX);
-    std::vector<int> indJ{0, 0, 1}, shiftInd{0, 1, 3};
-    //Iterator expects symmetry matrix to process columns
-    std::vector<int> indJAlter{1}, shiftIndAlter{0, 1, 1};
-    matrix->setIndData(2, 3, indJ.data(), shiftInd.data(), indJAlter.size(), indJAlter.data(), shiftIndAlter.data());
-    matrix->null();
-    double * block = matrix->blockPtr(0, 0);
-    //Iterator expects symmetry matrix to process columns
-    block[0] = 10; /*block[1] = 1;*/
-    block[3] = 1; block[4] = 10;
-    block[8] = 10;
-    block = matrix->blockPtr(1, 0);
-    block[0] = 2;
-    block[6] = 1; block[7] = 1; block[8] = 1;
-    block = matrix->blockPtr(1, 1);
-    //Iterator expects symmetry matrix to process columns
-    block[0] = 20; /*block[1] = 3; block[2] = 1;*/
-    block[3] = 3; block[4] = 10; /*block[5] = 1;*/
-    block[6] = 1; block[7] = 1; block[8] = 10;
+//void TestStiffMatrixes::case03_solveLLTuf()
+//{
+//    //Create simple matrix
+//    sbfStiffMatrixBlock3x3_old * matrix = new sbfStiffMatrixBlock3x3_old(3, 2);
+//    /*
+//     *
+//     *  [   10  0   0   0   0   0   ]   [1]     [10]
+//     *  [   1   10  0   0   0   0   ]   [1.9]   [20]
+//     *  [   0   0   10  0   0   0   ] * [1]   = [10]
+//     *  [   2   0   0   20  0   0   ]   [1]     [22]
+//     *  [   0   0   0   3   10  0   ]   [2]     [23]
+//     *  [   1   1   1   1   1   10  ]   [0]     [6.9]
+//     *
+//     */
+//    matrix->setType(MatrixType::DOWN_TREANGLE_MATRIX);
+//    std::vector<int> indJ{0, 0, 1}, shiftInd{0, 1, 3};
+//    //Iterator expects symmetry matrix to process columns
+//    std::vector<int> indJAlter{1}, shiftIndAlter{0, 1, 1};
+//    matrix->setIndData(2, 3, indJ.data(), shiftInd.data(), indJAlter.size(), indJAlter.data(), shiftIndAlter.data());
+//    matrix->null();
+//    double * block = matrix->blockPtr(0, 0);
+//    //Iterator expects symmetry matrix to process columns
+//    block[0] = 10; /*block[1] = 1;*/
+//    block[3] = 1; block[4] = 10;
+//    block[8] = 10;
+//    block = matrix->blockPtr(1, 0);
+//    block[0] = 2;
+//    block[6] = 1; block[7] = 1; block[8] = 1;
+//    block = matrix->blockPtr(1, 1);
+//    //Iterator expects symmetry matrix to process columns
+//    block[0] = 20; /*block[1] = 3; block[2] = 1;*/
+//    block[3] = 3; block[4] = 10; /*block[5] = 1;*/
+//    block[6] = 1; block[7] = 1; block[8] = 10;
 
-    NodesData<> u(2), f(2), uTarget(2), f_test(2);
-    f.data()[0] = 10;
-    f.data()[1] = 20;
-    f.data()[2] = 10;
-    f.data()[3] = 22;
-    f.data()[4] = 23;
-    f.data()[5] = 6.9;
+//    NodesData<> u(2), f(2), uTarget(2), f_test(2);
+//    f.data()[0] = 10;
+//    f.data()[1] = 20;
+//    f.data()[2] = 10;
+//    f.data()[3] = 22;
+//    f.data()[4] = 23;
+//    f.data()[5] = 6.9;
 
-    uTarget.data()[0] = 0.077;
-    uTarget.data()[1] = 1.9000e-01;
-    uTarget.data()[2] = 1.0000e-01;
-    uTarget.data()[3] = 2.0000e-02;
-    uTarget.data()[4] = 2.0000e-01;
-    uTarget.data()[5] = 0.0;
+//    uTarget.data()[0] = 0.077;
+//    uTarget.data()[1] = 1.9000e-01;
+//    uTarget.data()[2] = 1.0000e-01;
+//    uTarget.data()[3] = 2.0000e-02;
+//    uTarget.data()[4] = 2.0000e-01;
+//    uTarget.data()[5] = 0.0;
 
-    matrix->solve_L_LT_u_eq_f(u.data(), f.data());
+//    matrix->solve_L_LT_u_eq_f(u.data(), f.data());
 
-//    matrix->multiplyByVector(u.data(), f_test.data());
+////    matrix->multiplyByVector(u.data(), f_test.data());
 
-    bool pass = true;
-    double eps = 1e-8;
-    for(int ct = 0; ct < 6; ct++)
-        if ( fabs(u.data()[ct] - uTarget.data()[ct]) > eps ) pass = false;
+//    bool pass = true;
+//    double eps = 1e-8;
+//    for(int ct = 0; ct < 6; ct++)
+//        if ( fabs(u.data()[ct] - uTarget.data()[ct]) > eps ) pass = false;
 
-    if(!pass) {
-        qDebug() << u.data()[0] << u.data()[1] << u.data()[2] << u.data()[3] << u.data()[4] << u.data()[5];
-        qDebug() << uTarget.data()[0] << uTarget.data()[1] << uTarget.data()[2] << uTarget.data()[3] << uTarget.data()[4] << uTarget.data()[5];
-    }
+//    if(!pass) {
+//        qDebug() << u.data()[0] << u.data()[1] << u.data()[2] << u.data()[3] << u.data()[4] << u.data()[5];
+//        qDebug() << uTarget.data()[0] << uTarget.data()[1] << uTarget.data()[2] << uTarget.data()[3] << uTarget.data()[4] << uTarget.data()[5];
+//    }
 
-    QVERIFY2(pass, "Failed to make LLTuf solution");
-    //delete matrix;
-}
+//    QVERIFY2(pass, "Failed to make LLTuf solution");
+//    //delete matrix;
+//}
 
 void TestStiffMatrixes::case04_CGMwP()
 {
@@ -380,28 +382,28 @@ void TestStiffMatrixes::case04_CGMwP()
     sbfPropertiesSet propSet;
     propSet.addMaterial(sbfMaterialProperties::makeMPropertiesSteel());
 
-    std::unique_ptr<sbfStiffMatrixBlock3x3> stiffRes(new sbfStiffMatrixBlock3x3());
+    std::unique_ptr<sbfStiffMatrixBlock3x3> stiffRes(new sbfStiffMatrixBlock3x3(mesh, &propSet));
     sbfStiffMatrixBlock3x3 * stiff = stiffRes.get();
-    stiff->setMesh(mesh);
-    stiff->setPropSet(&propSet);
-    stiff->updateIndexesFromMesh();
+//    stiff->setMesh(mesh);
+//    stiff->setPropSet(&propSet);
+//    stiff->updateIndexesFromMesh();
 
     qDebug() << "Compute stiff matrix";
-    stiff->compute();
+    stiff->computeSequantially();
 
     NodesData<> force(mesh), disp(mesh);
     force.null();
     disp.null();
     qDebug() << "Fixing nodes";
-    for( auto node : lockInds ) stiff->lockKort(node, 0, 0, force.data());
-    stiff->lockKort(mesh->nodeAt(0, 0, 0), 1, 0, force.data());
-    stiff->lockKort(mesh->nodeAt(0, 0, 0), 2, 0, force.data());
+    for( auto node : lockInds ) stiff->lockDof(node, 0, 0, force.data(), LockType::APPROXIMATE_LOCK_TYPE);
+    stiff->lockDof(mesh->nodeAt(0, 0, 0), 1, 0, force.data(), LockType::APPROXIMATE_LOCK_TYPE);
+    stiff->lockDof(mesh->nodeAt(0, 0, 0), 2, 0, force.data(), LockType::APPROXIMATE_LOCK_TYPE);
 
     //FIXME make normal loading
     for( auto node : loadInds ) force.data(node, 0) = 1.0/loadInds.size();
 
     qDebug() << "Make incomplete Chol";
-    std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(stiff->makeIncompleteChol());
+    std::unique_ptr<sbfStiffMatrixBlock3x3> iCholRes(reinterpret_cast<sbfStiffMatrixBlock3x3*>(stiff->createIncompleteChol()));
     sbfStiffMatrixBlock3x3 * iChol = iCholRes.get();
 
 //    qDebug() << "Prepare indexes";

@@ -8,7 +8,7 @@ class TestMatrixIterator : public QObject
 {
     Q_OBJECT
 private Q_SLOTS:
-    void case01_block3x3();
+//    void case01_block3x3();
 
 };
 

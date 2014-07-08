@@ -49,6 +49,8 @@ protected:
     double *dhdg_;
     //! Temporary hold for BT*C matrix multiplication
     double *temp_;
+    //! Number of integration points in each direction
+    int numIntPoints_;
 
 private:
     virtual void init() = 0;
@@ -67,9 +69,12 @@ public:
     sbfElement *elem() const { return elem_; }
     //! @brief This function shoudl be implemented in subclasses to compute elemente stiffness matrix
     virtual void computeSM() = 0;
+    virtual double computeVolume() { return 0; }
     double *data() const { return data_; }
     using RowColData = std::list<std::pair<std::pair<int/*rowID*/, int/*columnID*/>, const double */*data*/>>;
     virtual RowColData rowColData() = 0;
+    int numIntPoints() const;
+    void setNumIntPoints(int numIntPoints);
 };
 
 #endif // SBFELEMSTIFFMATRIX_H

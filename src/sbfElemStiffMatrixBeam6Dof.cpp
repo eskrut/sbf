@@ -15,7 +15,7 @@ void sbfElemStiffMatrixBeam6Dof::init()
     crd_ = new double [numNodes_*3];
     ind_ = new int [numNodes_];
     h_ = new double [numNodes_];
-    dhdn_ = new double [numNodes_];
+    dhdn_ = new double [numNodes_*3];
     dhdg_ = new double [numNodes_*3];
     temp_ = new double [numNodes_*3*6];
 }
@@ -42,7 +42,7 @@ void sbfElemStiffMatrixBeam6Dof::computeSM()
     double Iz = mp->propertyTable("Iz")->curValue();
 
     //FIXME - this is cheat!!!!
-    double L = std::sqrt( std::pow(crd_[0] - crd_[3], 2.0) + std::pow(crd_[1] - crd_[4], 2.0) + std::pow(crd_[2] - crd_[5], 2.0) );
+    double L = std::sqrt( std::pow(crd_[1] - crd_[0], 2.0) + std::pow(crd_[3] - crd_[2], 2.0) + std::pow(crd_[5] - crd_[4], 2.0) );
     double EA_L = E*A/L;
     double EIz12_L3 = 12*E*Iz/std::pow(L, 3.0);
     double EIy12_L3 = 12*E*Iy/std::pow(L, 3.0);
@@ -120,9 +120,9 @@ void sbfElemStiffMatrixBeam6Dof::computeSM()
 
     //Rotate matrix
 
-    double cosA = (crd_[3] - crd_[0])/L;
+    double cosA = (crd_[1] - crd_[0])/L;
     if(cosA == 1.0) return;
-    double rot[3] = {0, -(crd_[5] - crd_[2]), crd_[4] - crd_[1]};
+    double rot[3] = {0, -(crd_[5] - crd_[4]), crd_[3] - crd_[2]};
     double norm = std::sqrt( std::pow(rot[1], 2.0) + std::pow(rot[2], 2.0) );
     rot[1] /= norm; rot[2] /= norm;
     double angle = -std::fabs(std::acos(cosA));

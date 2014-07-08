@@ -2,7 +2,7 @@
 #include "sbfElement.h"
 #include <vector>
 #include <set>
-#include <assert.h>
+#include <cassert>
 #include <cmath>
 
 #include "sbfElemStiffMatrixBeam6Dof.h"

@@ -1,6 +1,8 @@
 #ifndef SBFSTIFFMATRIXBLOCK3X3ITERATOR_H
 #define SBFSTIFFMATRIXBLOCK3X3ITERATOR_H
 
+class sbfStiffMatrixBlock3x3Iterator;
+
 #include "sbfMatrixIterator.h"
 #include "sbfStiffMatrixBlock3x3.h"
 
@@ -9,7 +11,6 @@ class sbfStiffMatrixBlock3x3Iterator : public sbfMatrixIterator
 public:
     sbfStiffMatrixBlock3x3Iterator(sbfStiffMatrixBlock3x3 * matrix);
 private:
-    sbfStiffMatrixBlock3x3 * matrix_;
     //!Base matrix topology type.
     MatrixType type_;
 
