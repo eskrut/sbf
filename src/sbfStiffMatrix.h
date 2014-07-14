@@ -45,10 +45,13 @@ public:
     virtual void read_stream(std::ifstream &in) {}
     virtual void write_stream(std::ofstream &out) const {}
 
+    virtual sbfStiffMatrix *createChol() /*const*/ { return nullptr; }
     virtual sbfStiffMatrix *createIncompleteChol() /*const*/ { return nullptr; }
     virtual void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr) { }
 
     virtual bool isValid() { return false; }
+
+    virtual double *data() const { return nullptr; }
 
     void multiplyByVector(double *vector, double *result, sbfMatrixIterator *iterator = nullptr);
 

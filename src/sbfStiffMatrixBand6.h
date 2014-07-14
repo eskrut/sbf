@@ -1,23 +1,22 @@
-#ifndef SBFSTIFFMATRIXBLOCK6X6_H
-#define SBFSTIFFMATRIXBLOCK6X6_H
+#ifndef SBFSTIFFMATRIXBAND6_H
+#define SBFSTIFFMATRIXBAND6_H
 
-class sbfStiffMatrixBlock6x6;
+class sbfStiffMatrixBand6;
 
 #include "sbfStiffMatrix.h"
-#include "sbfStiffMatrixBlock6x6Iterator.h"
+#include "sbfStiffMatrixBand6Iterator.h"
 
-class sbfStiffMatrixBlock6x6 : public sbfStiffMatrix
+class sbfStiffMatrixBand6 : public sbfStiffMatrix
 {
-    friend class sbfStiffMatrixBlock6x6Iterator;
+    friend class sbfStiffMatrixBand6Iterator;
 public:
-    explicit sbfStiffMatrixBlock6x6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type = MatrixType::FULL_MATRIX);
-    ~sbfStiffMatrixBlock6x6();
+    explicit sbfStiffMatrixBand6(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type = MatrixType::FULL_MATRIX);
+    ~sbfStiffMatrixBand6();
 
 private:
     static const int blockDim_ = 6;
     static const int blockSize_ = blockDim_*blockDim_;
 
-    //FIXME the following is copy/paste from other class. Consider to make some base template class with blockSize_ as parameter
     //Number of nodes, used to construct stiffness matrix. I.e. nodes in FE mesh.
     int numNodes_;
     //Number of stiffness blocks in matrix.
@@ -26,7 +25,7 @@ private:
     int numBlocksAlter_;
     //Linear storage array for stiffness data by blocks of 36 values. [36*numBlocks_]
     double *data_;
-    //Indexes of stiffness blocks in data_. [numBlocks_] [indJ0(of indI0), indJ1(of indI0), ...].
+    //Indexes of first and last (included) stiffness blocks in data_. [numNodes_*2] [indJ0(of indI0), indJK(of indI0), ...].
     int *indJ_;
     //Array for indexing to certain stiff block row. [numNodes_+1]
     int *shiftInd_;
@@ -59,11 +58,10 @@ private:
     double * blockPtr(int indI, int indJ);
 
 public:
-    MatrixStoreType storeType() const { return MatrixStoreType::COMPACT; }
+    MatrixStoreType storeType() const { return MatrixStoreType::FULL; }
     sbfMatrixIterator *createIterator() /*const*/;
     void compute(int startID, int stopID);
     sbfStiffMatrix *createChol() /*const*/;
-    sbfStiffMatrix *createIncompleteChol() /*const*/;
     void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr);
     bool isValid();
     double *data() const { return data_; }
@@ -72,4 +70,4 @@ public:
     int numDof() const { return blockDim_; }
 };
 
-#endif // SBFSTIFFMATRIXBLOCK6X6_H
+#endif // SBFSTIFFMATRIXBAND6_H

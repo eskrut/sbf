@@ -1,10 +1,6 @@
-#include "sbfStiffMatrixBlock6x6Iterator.h"
-#include <stdexcept>
+#include "sbfStiffMatrixBand6Iterator.h"
 
-//TODO This all may have poor efficiency
-//TODO THis all already implemented in 3x3 block matrix iterator - consider to implement some base class
-
-sbfStiffMatrixBlock6x6Iterator::sbfStiffMatrixBlock6x6Iterator(sbfStiffMatrixBlock6x6 *matrix) :
+sbfStiffMatrixBand6Iterator::sbfStiffMatrixBand6Iterator(sbfStiffMatrixBand6 *matrix) :
     sbfMatrixIterator(matrix),
     type_(matrix->type()),
     isInNormal_(false),
@@ -19,7 +15,7 @@ sbfStiffMatrixBlock6x6Iterator::sbfStiffMatrixBlock6x6Iterator(sbfStiffMatrixBlo
     base_ = matrix->data_;
 }
 
-void sbfStiffMatrixBlock6x6Iterator::setToRow(const int rowIndex)
+void sbfStiffMatrixBand6Iterator::setToRow(const int rowIndex)
 {
     curRowIndex_ = rowIndex;
     dir_ = IterateDirection::RowDirect;
@@ -39,13 +35,13 @@ void sbfStiffMatrixBlock6x6Iterator::setToRow(const int rowIndex)
 
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( curShiftNormal_ != shiftNormalLast_ ) {
-            curColumnIndex_ = columnsByRowsNormal_[curShiftNormal_];
+            curColumnIndex_ = columnsByRowsNormal_[rowIndex*2];
             isInNormal_ = true;
             curData_ = base_ + blockSize_*curShiftNormal_;
             isValid_ = true;
         }
         else {
-            curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
+            curColumnIndex_ = columnsByRowsAlter_[rowIndex*2];
             isInNormal_ = false;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
             isValid_ = true;
@@ -56,8 +52,9 @@ void sbfStiffMatrixBlock6x6Iterator::setToRow(const int rowIndex)
     }//type_ == UP_TREANGLE_MATRIX
 }
 
-void sbfStiffMatrixBlock6x6Iterator::setToColumn(const int columnIndex)
+void sbfStiffMatrixBand6Iterator::setToColumn(const int columnIndex)
 {
+    //Since matrix have symmetry, this will actually iterate over row
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnDirect;
     curShiftNormal_ = shiftsRowNormal_[curColumnIndex_];
@@ -76,13 +73,13 @@ void sbfStiffMatrixBlock6x6Iterator::setToColumn(const int columnIndex)
 
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( curShiftNormal_ != shiftNormalLast_ ) {
-            curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
+            curRowIndex_ = columnsByRowsNormal_[columnIndex*2];
             isInNormal_ = false;
             curData_ = base_ + blockSize_*curShiftNormal_;
             isValid_ = true;
         }
         else {
-            curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
+            curRowIndex_ = columnsByRowsAlter_[columnIndex*2];
             isInNormal_ = true;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
             isValid_ = true;
@@ -93,9 +90,8 @@ void sbfStiffMatrixBlock6x6Iterator::setToColumn(const int columnIndex)
     }//type_ == UP_TREANGLE_MATRIX
 }
 
-void sbfStiffMatrixBlock6x6Iterator::setToRowInverse(const int rowIndex)
+void sbfStiffMatrixBand6Iterator::setToRowInverse(const int rowIndex)
 {
-    //Since matrix have symmetry, this will actually iterate over row
     curRowIndex_ = rowIndex;
     dir_ = IterateDirection::RowInvert;
     curShiftNormal_ = shiftsRowNormal_[curRowIndex_ + 1] - 1;
@@ -114,7 +110,7 @@ void sbfStiffMatrixBlock6x6Iterator::setToRowInverse(const int rowIndex)
 
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( --curShiftAlter_ >= shiftAlterLast_ ) {
-            curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
+            curColumnIndex_ = columnsByRowsAlter_[rowIndex*2+1];
             isInNormal_ = false;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
             isValid_ = true;
@@ -122,7 +118,7 @@ void sbfStiffMatrixBlock6x6Iterator::setToRowInverse(const int rowIndex)
             curShiftNormal_++;
         }
         else {
-            curColumnIndex_ = columnsByRowsNormal_[curShiftNormal_];
+            curColumnIndex_ = columnsByRowsNormal_[rowIndex*2+1];
             isInNormal_ = true;
             curData_ = base_ + blockSize_*curShiftNormal_;
             isValid_ = true;
@@ -133,7 +129,7 @@ void sbfStiffMatrixBlock6x6Iterator::setToRowInverse(const int rowIndex)
     }//type_ == UP_TREANGLE_MATRIX
 }
 
-void sbfStiffMatrixBlock6x6Iterator::setToColumnInverse(const int columnIndex)
+void sbfStiffMatrixBand6Iterator::setToColumnInverse(const int columnIndex)
 {
     //Since matrix have symmetry, this will actually iterate over row
     curColumnIndex_ = columnIndex;
@@ -154,7 +150,7 @@ void sbfStiffMatrixBlock6x6Iterator::setToColumnInverse(const int columnIndex)
 
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
         if ( --curShiftAlter_ >= shiftAlterLast_ ) {
-            curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
+            curRowIndex_ = columnsByRowsAlter_[columnIndex*2+1];
             isInNormal_ = true;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
             isValid_ = true;
@@ -162,7 +158,7 @@ void sbfStiffMatrixBlock6x6Iterator::setToColumnInverse(const int columnIndex)
             curShiftNormal_++;
         }
         else {
-            curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
+            curRowIndex_ = columnsByRowsNormal_[columnIndex*2+1];
             isInNormal_ = false;
             curData_ = base_ + blockSize_*curShiftNormal_;
             isValid_ = true;
@@ -173,17 +169,17 @@ void sbfStiffMatrixBlock6x6Iterator::setToColumnInverse(const int columnIndex)
     }//type_ == UP_TREANGLE_MATRIX
 }
 
-bool sbfStiffMatrixBlock6x6Iterator::isValid() const
+bool sbfStiffMatrixBand6Iterator::isValid() const
 {
     return isValid_;
 }
 
-bool sbfStiffMatrixBlock6x6Iterator::haveNext() const
+bool sbfStiffMatrixBand6Iterator::haveNext() const
 {
     return isHaveNext_;
 }
 
-bool sbfStiffMatrixBlock6x6Iterator::next()
+bool sbfStiffMatrixBand6Iterator::next()
 {
     if (!isHaveNext_){
         isValid_ = false;
@@ -194,7 +190,7 @@ bool sbfStiffMatrixBlock6x6Iterator::next()
         switch (dir_) {
         case IterateDirection::RowDirect:
             if ( isInNormal_ && ++curShiftNormal_ != shiftNormalLast_) {
-                curColumnIndex_ = columnsByRowsNormal_[curShiftNormal_];
+                ++curColumnIndex_;
                 curData_ = base_ + blockSize_*curShiftNormal_;
                 if ( curShiftNormal_+1 == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_) isHaveNext_ = false;
             }
@@ -203,8 +199,8 @@ bool sbfStiffMatrixBlock6x6Iterator::next()
                     isInNormal_ = false;
                     curShiftAlter_--;//For first block only
                 }
-                curShiftAlter_++;
-                curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
+                ++curShiftAlter_;
+                ++curColumnIndex_;
                 curData_ = blocksByRowsAlter_[curShiftAlter_];
                 if ( curShiftAlter_+1 == shiftAlterLast_ ) isHaveNext_ = false;
             }
@@ -216,17 +212,17 @@ bool sbfStiffMatrixBlock6x6Iterator::next()
             break;
         case IterateDirection::ColumnDirect:
             if ( !isInNormal_ && ++curShiftNormal_ != shiftNormalLast_) {
-                curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
+                ++curRowIndex_;
                 curData_ = base_ + blockSize_*curShiftNormal_;
-                if ( curShiftNormal_+1 == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_) isHaveNext_ = false;
+                if ( curShiftNormal_+1 == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_ ) isHaveNext_ = false;
             }
             else if ( curShiftAlter_ != shiftAlterLast_ ) {
                 if (!isInNormal_) {
                     isInNormal_ = true;
                     curShiftAlter_--;//For first block only
                 }
-                curShiftAlter_++;
-                curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
+                ++curShiftAlter_;
+                ++curRowIndex_;
                 curData_ = blocksByRowsAlter_[curShiftAlter_];
                 if ( curShiftAlter_+1 == shiftAlterLast_ ) isHaveNext_ = false;
             }
@@ -238,13 +234,13 @@ bool sbfStiffMatrixBlock6x6Iterator::next()
             break;
         case IterateDirection::RowInvert:
             if ( !isInNormal_ && --curShiftAlter_ >= shiftAlterLast_ ) {
-                curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
+                --curColumnIndex_;
                 curData_ = blocksByRowsAlter_[curShiftAlter_];
             }
             else if ( curShiftNormal_-- >= shiftNormalLast_ ) {
                 if(!isInNormal_)
                     isInNormal_ = true;
-                curColumnIndex_ = columnsByRowsNormal_[curShiftNormal_];
+                --curColumnIndex_;
                 curData_ = base_ + blockSize_*curShiftNormal_;
                 if ( curShiftNormal_ == shiftNormalLast_ ) isHaveNext_ = false;
             }
@@ -256,13 +252,13 @@ bool sbfStiffMatrixBlock6x6Iterator::next()
             break;
         case IterateDirection::ColumnInvert:
             if ( isInNormal_ && --curShiftAlter_ >= shiftAlterLast_ ) {
-                curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
+                --curRowIndex_;
                 curData_ = blocksByRowsAlter_[curShiftAlter_];
             }
             else if ( curShiftNormal_-- >= shiftNormalLast_ ) {
                 if(isInNormal_)
                     isInNormal_ = false;
-                curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
+                --curRowIndex_;
                 curData_ = base_ + blockSize_*curShiftNormal_;
                 if ( curShiftNormal_ == shiftNormalLast_ ) isHaveNext_ = false;
             }
@@ -280,45 +276,41 @@ bool sbfStiffMatrixBlock6x6Iterator::next()
     return isValid_;
 }
 
-double * sbfStiffMatrixBlock6x6Iterator::sbfStiffMatrixBlock6x6Iterator::data() const
+double *sbfStiffMatrixBand6Iterator::data() const
 {
     return curData_;
 }
 
-double *sbfStiffMatrixBlock6x6Iterator::data(bool *isInNormal) const
+double *sbfStiffMatrixBand6Iterator::data(bool *isInNormal) const
 {
     *isInNormal = isInNormal_;
     return curData_;
 }
 
-bool sbfStiffMatrixBlock6x6Iterator::isDiagonal() const
+bool sbfStiffMatrixBand6Iterator::isDiagonal() const
 {
     if (curRowIndex_ == curColumnIndex_) return true;
     return false;
 }
 
-bool sbfStiffMatrixBlock6x6Iterator::isInNormal() const
+bool sbfStiffMatrixBand6Iterator::isInNormal() const
 {
     return isInNormal_;
 }
 
-double *sbfStiffMatrixBlock6x6Iterator::diagonal(const int index) const
+double *sbfStiffMatrixBand6Iterator::diagonal(const int index) const
 {
     //Diagonal should be always be in normal storage
-    int shiftStop = shiftsRowNormal_[index+1];
-    shiftStop--;
-    if(columnsByRowsNormal_[shiftStop] == index)
-        //Wow! I find it at once!!! I gess it is low triangle matrix.
-        return base_ + blockSize_*(shiftStop);
-    int shiftStart = shiftsRowNormal_[index];
-    if(columnsByRowsNormal_[shiftStart] == index)
-        //Cool it's first element. Mmmm.. Upper diagonal? Strange...
-        return base_ + blockSize_*shiftStart;
-    //Well, I'll go through all blocks :( And I do not like it!
-    for(int ct = shiftStart + 1; ct < shiftStop; ct++)
-        if(columnsByRowsNormal_[ct] == index)
-            //Gosh, I'm almost lost a hope!
-            return base_ + blockSize_*ct;
-    //It is not possible!!! I'm unhappy! So many work and what?! Thiere is no diagonal element! Take your NULL and do not bring me such a bad data!
-    return nullptr;
+    if ( columnsByRowsNormal_[index*2 + 1] == index )
+        //As I expected, we deal with low triangle matrix!
+        return base_ + blockSize_*(shiftsRowNormal_[index+1]-1);
+    if ( columnsByRowsNormal_[index*2] == index )
+        //Still OK, this is probably up triangle matrix
+        return base_ + blockSize_*(shiftsRowNormal_[index]);
+    //Hmmm... A full matrix?
+    if ( index < columnsByRowsNormal_[index*2] || index > columnsByRowsNormal_[index*2+1])
+        //Imposible!
+        return nullptr;
+    //May be I should return this one and do not make all work abowe?
+    return base_ + blockSize_*(shiftsRowNormal_[index] + index - columnsByRowsNormal_[index*2]);
 }
