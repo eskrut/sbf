@@ -19,8 +19,10 @@ private Q_SLOTS:
 
     void case10_block6x6();
     void case10_band6();
+    void case10_rodRotated();
     void case11_CGMwP();
     void case11_CGMwP_band6();
+    void case12_CGMwP_band6();
 };
 
 #endif // TEST_STIFFMATRICES_H

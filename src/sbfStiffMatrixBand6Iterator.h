@@ -32,6 +32,21 @@ private:
     //!Pointers to actual data.
     double **blocksByRowsAlter_;
 
+    //Column iteration indexation
+    std::vector<std::vector<std::pair<int /*rowId*/, double* /*ptr*/> /*column*/ > > &columnsIndsPtrs_;
+    std::vector<std::vector<std::pair<int /*rowId*/, double* /*ptr*/> /*column*/ > > &columnsIndsPtrsAlter_;
+
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>> *curColumnIndsPtrs_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>> *curColumnIndsPtrsAlter_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::iterator colIndsPtrsIter_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::iterator colIndsPtrsAlterIter_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::iterator colIndsPtrsEnd_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::iterator colIndsPtrsAlterEnd_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::reverse_iterator colIndsPtrsIterRev_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::reverse_iterator colIndsPtrsAlterIterRev_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::reverse_iterator colIndsPtrsEndRev_;
+    std::vector<std::pair<int /*rowId*/, double* /*ptr*/>>::reverse_iterator colIndsPtrsAlterEndRev_;
+
     //Some helpers
     double *curData_;
     int curShiftNormal_;

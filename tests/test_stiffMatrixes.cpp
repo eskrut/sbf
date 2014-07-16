@@ -356,7 +356,7 @@ void TestStiffMatrixes::case04_CGMwP()
     timer.start();
     float xSide = 100, ySide = 10, zSide = 10;
     float targetError = 1e-2;
-    int xPart = 100, yPart = 10, zPart = 10;
+    int xPart = 100, yPart = 2, zPart = 2;
     qDebug() << "Make mesh";
     std::unique_ptr<sbfMesh> meshRes(sbfMesh::makeBlock(xSide, ySide, zSide, xPart, yPart, zPart));
     sbfMesh * mesh = meshRes.get();
@@ -661,23 +661,85 @@ void TestStiffMatrixes::case10_band6()
     QVERIFY2(pass, "Cant pass simple loading test");
 }
 
+void TestStiffMatrixes::case10_rodRotated()
+{
+    auto material = sbfMaterialProperties::makeMPropertiesSteel();
+    auto aTable = new sbfPropertyTable("area");
+    aTable->addNodeValue(24.0f, 1.0f);
+    aTable->setCurParam(24.0f);
+    material->addTable(aTable);
+    auto gTable = new sbfPropertyTable("shear module");
+    gTable->addNodeValue(24.0f, 80000.0f);
+    gTable->setCurParam(24.0f);
+    material->addTable(gTable);
+    auto ixTable = new sbfPropertyTable("Ix");
+    ixTable->addNodeValue(24.0f, 1.0f);
+    ixTable->setCurParam(24.0f);
+    material->addTable(ixTable);
+    auto iyTable = new sbfPropertyTable("Iy");
+    iyTable->addNodeValue(24.0f, 1.0f);
+    iyTable->setCurParam(24.0f);
+    material->addTable(iyTable);
+    auto izTable = new sbfPropertyTable("Iz");
+    izTable->addNodeValue(24.0f, 1.0f);
+    izTable->setCurParam(24.0f);
+    material->addTable(izTable);
+    auto propSet = new sbfPropertiesSet();
+    propSet->addMaterial(material);
+    propSet->write("test.prop");
+
+    CreateSmartAndRawPtr(sbfMesh, new sbfMesh, mesh);
+    mesh->addNode(0, 0, 0);
+    mesh->addNode(std::sqrt(2.0)/2, std::sqrt(2.0)/2, 0);
+//    mesh->addNode(1, 0, 0);
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 1}));
+    mesh->setMtr(1);
+
+    NodesData<double, 6> force(mesh), disp(mesh);
+    force.null();
+    disp.null();
+    force.data(1, 0) = std::sqrt(2.0)/2;
+    force.data(1, 1) = std::sqrt(2.0)/2;
+
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, new sbfStiffMatrixBand6(mesh, propSet), stiff);
+
+    QVERIFY2(stiff->storeType() == MatrixStoreType::FULL, "Fail to get full store type");
+
+    stiff->computeSequantially();
+    QVERIFY2(stiff->isValid(), "Not valid");
+    CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+    stiff->lockDof(0, 0, 0, force.data(), APPROXIMATE_LOCK_TYPE);
+    stiff->lockDof(0, 1, 0, force.data(), APPROXIMATE_LOCK_TYPE);
+    stiff->lockDof(0, 2, 0, force.data(), APPROXIMATE_LOCK_TYPE);
+    stiff->lockDof(0, 3, 0, force.data(), APPROXIMATE_LOCK_TYPE);
+    stiff->lockDof(0, 4, 0, force.data(), APPROXIMATE_LOCK_TYPE);
+    stiff->lockDof(0, 5, 0, force.data(), APPROXIMATE_LOCK_TYPE);
+
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, reinterpret_cast<sbfStiffMatrixBand6*>(stiff->createChol()), chol);
+    chol->solve_L_LT_u_eq_f(disp.data(), force.data());
+    for(int ct = 0; ct < 12; ++ct) std::cout << disp.data()[ct] << "\t";
+    std::cout.flush();
+    QVERIFY2(true, "ok");
+}
+
 void TestStiffMatrixes::case11_CGMwP()
 {
     CreateSmartAndRawPtr(sbfPropertiesSet, new sbfPropertiesSet, propSet);
     propSet->read("test.prop");
     CreateSmartAndRawPtr(sbfMesh, mesh);
 
-    float xSide = 1000;
+    float xSide = 1000.0/std::sqrt(3.0);
+    float length = 1000.0;
     float xPart = 100;
     mesh->addNode(0, 0, 0, false);
     for(int ct = 1; ct <= xPart; ct++)
-        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {ct-1, mesh->addNode(xSide/xPart*ct, 0, 0, false)}));
+        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {ct-1, mesh->addNode(xSide/xPart*ct, xSide/xPart*ct, xSide/xPart*ct, false)}));
     mesh->setMtr(1);
-    CreateSmartAndRawPtr(sbfStiffMatrixBlock6x6, new sbfStiffMatrixBlock6x6(mesh, propSet), stiff);
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, new sbfStiffMatrixBand6(mesh, propSet), stiff);
 
     stiff->computeSequantially();
 
-    NodesData<double, 6> force(mesh), disp(mesh);
+    NodesData<double, 6> force("canteliver_force", mesh), disp("canteliver_disp", mesh);
     force.null();
     disp.null();
     CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iter);
@@ -685,13 +747,13 @@ void TestStiffMatrixes::case11_CGMwP()
     iter->setToRow(0);
     iter->diagonal(0);
     double *data = iter->data();
-    for(int ct = 0; ct < 6; ++ct) data[ct*(6+1)] *= 1e3;
-    double forceAmp = 1;
-    force.data(mesh->numNodes()-1, 0) = forceAmp;
-    force.data(mesh->numNodes()-1, 3) = forceAmp;
-    force.data(mesh->numNodes()-1, 1) = forceAmp;
+    for(int ct = 0; ct < 6; ++ct) data[ct*(6+1)] *= 1e10;
+    double forceAmp = 1.0;
+    force.data(mesh->numNodes()-1, 0) = forceAmp*std::sqrt(2.0/3.0);
+    force.data(mesh->numNodes()-1, 1) = -forceAmp*std::sqrt(1.0/6.0);
+    force.data(mesh->numNodes()-1, 2) = -forceAmp*std::sqrt(1.0/6.0);
 
-    CreateSmartAndRawPtr(sbfStiffMatrixBlock6x6, reinterpret_cast<sbfStiffMatrixBlock6x6*>(stiff->createChol()), iChol);
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, reinterpret_cast<sbfStiffMatrixBand6*>(stiff->createChol()), iChol);
 
     const int numDOF = mesh->numNodes()*6;
 
@@ -712,7 +774,8 @@ void TestStiffMatrixes::case11_CGMwP()
 
     iChol->solve_L_LT_u_eq_f(disp.data(), force.data());
     //QVERIFY2(false, "ERROR");
-    mul(stiff, disp, KU);
+//    mul(stiff, disp, KU);
+    stiff->multiplyByVector(disp.data(), KU.data());
     r.copyData((force - KU).data());
 
     //Solve L*L^T*z = r
@@ -725,7 +788,106 @@ void TestStiffMatrixes::case11_CGMwP()
     double rNormTarget = 1e-6;
 
     while(rNorm > rNormTarget) {
-        mul(stiff, p, Kp);
+//        mul(stiff, p, Kp);
+        stiff->multiplyByVector(p.data(), Kp.data());
+        alpha = z.scalMul(r)/p.scalMul(Kp);
+        for(int ct = 0; ct < numDOF; ct++) {
+            disp_ptr[ct] += alpha*p_ptr[ct];
+            r_p1_ptr[ct] = r_ptr[ct] - alpha*Kp_ptr[ct];
+        }
+        iChol->solve_L_LT_u_eq_f(z_p1_ptr, r_p1_ptr);
+        betta = z_p1.scalMul(r_p1)/z.scalMul(r);
+        for(int ct = 0; ct < numDOF; ct++)
+            p_p1_ptr[ct] = z_p1_ptr[ct] + betta*p_ptr[ct];
+        z.copyData(z_p1_ptr);
+        p.copyData(p_p1_ptr);
+        r.copyData(r_p1_ptr);
+        rNorm = 0.0;
+        for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
+        numIterations++;
+    }
+
+    auto mtr = propSet->material(0);
+    double d = std::sqrt(std::pow(disp.data(mesh->numNodes()-1, 0), 2.0)+std::pow(disp.data(mesh->numNodes()-1, 1), 2.0)+std::pow(disp.data(mesh->numNodes()-1, 2), 2.0));
+    qDebug() << numIterations << disp.data(mesh->numNodes()-1, 0) << forceAmp*xSide/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("area")->curValue();
+    qDebug() << numIterations << disp.data(mesh->numNodes()-1, 3) << forceAmp*xSide/mtr->propertyTable("shear module")->curValue()/mtr->propertyTable("area")->curValue();
+    qDebug() << numIterations << disp.data(mesh->numNodes()-1, 1) << forceAmp*xSide*xSide*xSide/3/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("Iz")->curValue();
+    qDebug() << numIterations << d << forceAmp*length*length*length/3/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("Iz")->curValue();
+
+    mesh->writeMeshToFiles("canteliver_ind.sba", "canteliver_crd.sba", "canteliver_mtr001.sba");
+    force.writeToFileSplited<float, 3>();
+    disp.writeToFileSplited<float, 3>();
+}
+
+void TestStiffMatrixes::case11_CGMwP_band6()
+{
+    CreateSmartAndRawPtr(sbfPropertiesSet, new sbfPropertiesSet, propSet);
+    propSet->read("test.prop");
+    CreateSmartAndRawPtr(sbfMesh, mesh);
+
+    float xSide = 1000;
+    float xPart = 100;
+    mesh->addNode(0, 0, 0, false);
+    for(int ct = 1; ct <= xPart; ct++)
+        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {ct-1, mesh->addNode(xSide/xPart*ct, 0, 0, false)}));
+    mesh->setMtr(1);
+    mesh->rotate(4, 7, /*std::atan(1)*2.*/2);
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, new sbfStiffMatrixBand6(mesh, propSet), stiff);
+
+    stiff->computeSequantially();
+    QVERIFY2(stiff->isValid(), "Not valid stiffness matrix");
+
+    NodesData<double, 6> force(mesh), disp(mesh);
+    force.null();
+    disp.null();
+    CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iter);
+
+    iter->setToRow(0);
+    iter->diagonal(0);
+    double *data = iter->data();
+    for(int ct = 0; ct < 6; ++ct) data[ct*(6+1)] *= 1e3;
+    double forceAmp = 1;
+    force.data(mesh->numNodes()-1, 0) = forceAmp;
+    force.data(mesh->numNodes()-1, 3) = forceAmp;
+    force.data(mesh->numNodes()-1, 1) = forceAmp;
+
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, reinterpret_cast<sbfStiffMatrixBand6*>(stiff->createChol()), iChol);
+
+    const int numDOF = mesh->numNodes()*6;
+
+    //_p1 stands for 'plus one'
+    NodesData<double, 6> KU(mesh), Kp(mesh), r(mesh), r_p1(mesh), z(mesh), z_p1(mesh), p(mesh), p_p1(mesh), tmp(mesh);
+    double *KU_ptr, *Kp_ptr, *r_ptr, *r_p1_ptr, *z_ptr, *z_p1_ptr, *p_ptr, *p_p1_ptr, *tmp_ptr, *disp_ptr;
+    KU_ptr = KU.data();
+    Kp_ptr = Kp.data();
+    r_ptr = r.data();
+    r_p1_ptr = r_p1.data();
+    z_ptr = z.data();
+    z_p1_ptr = z_p1.data();
+    p_ptr = p.data();
+    p_p1_ptr = p_p1.data();
+    tmp_ptr = tmp.data();
+    disp_ptr = disp.data();
+    double alpha, betta;
+
+    iChol->solve_L_LT_u_eq_f(disp.data(), force.data());
+    //QVERIFY2(false, "ERROR");
+    stiff->multiplyByVector(disp.data(), KU.data());
+//    mul(stiff, disp, KU);
+    r.copyData((force - KU).data());
+
+    //Solve L*L^T*z = r
+    iChol->solve_L_LT_u_eq_f(z.data(), r.data());
+    p.copyData(z.data());
+
+    double rNorm = 0.0;
+    for(int ct = 0; ct < numDOF; ct++) if ( rNorm < fabs(r_ptr[ct]) ) rNorm = fabs(r_ptr[ct]);
+    int numIterations = 0;
+    double rNormTarget = 1e-6;
+
+    while(rNorm > rNormTarget) {
+//        mul(stiff, p, Kp);
+        stiff->multiplyByVector(p.data(), Kp.data());
         alpha = z.scalMul(r)/p.scalMul(Kp);
         for(int ct = 0; ct < numDOF; ct++) {
             disp_ptr[ct] += alpha*p_ptr[ct];
@@ -747,21 +909,23 @@ void TestStiffMatrixes::case11_CGMwP()
     qDebug() << numIterations << disp.data(mesh->numNodes()-1, 0) << forceAmp*xSide/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("area")->curValue();
     qDebug() << numIterations << disp.data(mesh->numNodes()-1, 3) << forceAmp*xSide/mtr->propertyTable("shear module")->curValue()/mtr->propertyTable("area")->curValue();
     qDebug() << numIterations << disp.data(mesh->numNodes()-1, 1) << forceAmp*xSide*xSide*xSide/3/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("Iz")->curValue();
-
 }
 
-void TestStiffMatrixes::case11_CGMwP_band6()
+void TestStiffMatrixes::case12_CGMwP_band6()
 {
     CreateSmartAndRawPtr(sbfPropertiesSet, new sbfPropertiesSet, propSet);
     propSet->read("test.prop");
     CreateSmartAndRawPtr(sbfMesh, mesh);
 
     float xSide = 1000;
+    float rad = xSide/(std::atan(1)*4.0);
     float xPart = 100;
+    float dFi = std::atan(1)*4.0/xPart;
     mesh->addNode(0, 0, 0, false);
     for(int ct = 1; ct <= xPart; ct++)
-        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {ct-1, mesh->addNode(xSide/xPart*ct, 0, 0, false)}));
+        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {ct-1, mesh->addNode(rad*std::sin(dFi*ct), rad*(1.0 - std::cos(dFi*ct)), 0, false)}));
     mesh->setMtr(1);
+    mesh->writeMeshToFiles("test_ind.sba", "test_crd.sba", "test_mtr001.sba");
     CreateSmartAndRawPtr(sbfStiffMatrixBand6, new sbfStiffMatrixBand6(mesh, propSet), stiff);
 
     stiff->computeSequantially();

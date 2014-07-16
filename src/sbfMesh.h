@@ -229,6 +229,7 @@ public:
     template <class StorageType = DefaultStorageDataType> int readFromFile(const char * name, int step, const char * extension = ".sba", int numDigits = 4);
     template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
     template <class StorageType = DefaultStorageDataType> int readFromFile();
+    template <class StorageType = DefaultStorageDataType, int numInOneFile> int writeToFileSplited();
     bool exist();//Check if file with current step exists
 
     //Useful mathematics functions
@@ -375,6 +376,16 @@ template <class StorageType>
 int NodesData<ArrayType, numComp>::readFromFile()
 {
     return readFromFile<StorageType>(name_.c_str(), stepToProceed_, extension_.c_str(), numDigits_);
+}
+template < class ArrayType, int numComp>
+template <class StorageType, int numInOneFile>
+int NodesData<ArrayType, numComp>::writeToFileSplited()
+{
+    NodesData<ArrayType, numInOneFile> tmp(name_+std::to_string(1), mesh_);
+    tmp.setStep(step());
+    for(int ct = 0;ct < numInOneFile; ct++)
+        for(int ct1 = 0; ct1 < numNodes_; ct1++) tmp.data(ct1, ct) = data(ct1, ct);
+    tmp.writeToFile();
 }
 template < class ArrayType, int numComp>
 bool NodesData<ArrayType, numComp>::exist()

@@ -20,6 +20,7 @@
 #include "sbfElemStiffMatrixHexa8.h"
 #include "sbfStiffMatrixBlock3x3.h"
 #include "sbfStiffMatrixBlock6x6.h"
+#include "sbfStiffMatrixBand6.h"
 #include "sbfMatrixIterator.h"
 
 #endif// SBF_H

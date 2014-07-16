@@ -5,7 +5,11 @@ sbfStiffMatrixBand6Iterator::sbfStiffMatrixBand6Iterator(sbfStiffMatrixBand6 *ma
     type_(matrix->type()),
     isInNormal_(false),
     isHaveNext_(false),
-    isValid_(false)
+    isValid_(false),
+    columnsIndsPtrs_(matrix->columnsIndsPtrs_),
+    columnsIndsPtrsAlter_(matrix->columnsIndsPtrsAlter_),
+    curColumnIndsPtrs_(nullptr),
+    curColumnIndsPtrsAlter_(nullptr)
 {
     columnsByRowsNormal_ = matrix->indJ_;
     shiftsRowNormal_ = matrix->shiftInd_;
@@ -50,44 +54,77 @@ void sbfStiffMatrixBand6Iterator::setToRow(const int rowIndex)
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error("Not implemented yet :(");
     }//type_ == UP_TREANGLE_MATRIX
+    curColumnIndsPtrs_ = nullptr;
+    curColumnIndsPtrsAlter_ = nullptr;
 }
 
 void sbfStiffMatrixBand6Iterator::setToColumn(const int columnIndex)
 {
-    //Since matrix have symmetry, this will actually iterate over row
+    curColumnIndsPtrs_ = &(columnsIndsPtrs_[columnIndex]);
+    curColumnIndsPtrsAlter_ = &(columnsIndsPtrsAlter_[columnIndex]);
+    colIndsPtrsIter_ = curColumnIndsPtrs_->begin();
+    colIndsPtrsAlterIter_ = curColumnIndsPtrsAlter_->begin();
+    colIndsPtrsEnd_ = curColumnIndsPtrs_->end();
+    colIndsPtrsAlterEnd_ = curColumnIndsPtrsAlter_->end();
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnDirect;
-    curShiftNormal_ = shiftsRowNormal_[curColumnIndex_];
-    shiftNormalLast_ = shiftsRowNormal_[curColumnIndex_ + 1];
-    if (shiftsRowAlter_) {
-        curShiftAlter_ = shiftsRowAlter_[curColumnIndex_];
-        shiftAlterLast_ = shiftsRowAlter_[curColumnIndex_ + 1];
-    }
-    else {
-        curShiftAlter_ = shiftAlterLast_ = -1;
-    }
-    if (curShiftNormal_ == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_)
-        isHaveNext_ = false;
-    else
-        isHaveNext_ = true;
 
+    if ( colIndsPtrsIter_+1 < colIndsPtrsEnd_ || colIndsPtrsAlterIter_ +1 < colIndsPtrsAlterEnd_ )
+        isHaveNext_ = true;
+    else
+        isHaveNext_ = false;
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
-        if ( curShiftNormal_ != shiftNormalLast_ ) {
-            curRowIndex_ = columnsByRowsNormal_[columnIndex*2];
+        if ( colIndsPtrsAlterIter_ != colIndsPtrsAlterEnd_ ) {
+            curRowIndex_ = colIndsPtrsAlterIter_->first;
             isInNormal_ = false;
-            curData_ = base_ + blockSize_*curShiftNormal_;
+            curData_ = colIndsPtrsAlterIter_->second;
             isValid_ = true;
         }
         else {
-            curRowIndex_ = columnsByRowsAlter_[columnIndex*2];
+            curRowIndex_ = colIndsPtrsIter_->first;
             isInNormal_ = true;
-            curData_ = blocksByRowsAlter_[curShiftAlter_];
+            curData_ = colIndsPtrsIter_->second;
             isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error("Not implemented yet :(");
     }//type_ == UP_TREANGLE_MATRIX
+
+//    //Since matrix have symmetry, this will actually iterate over row
+//    curColumnIndex_ = columnIndex;
+//    dir_ = IterateDirection::ColumnDirect;
+//    curShiftNormal_ = shiftsRowNormal_[curColumnIndex_];
+//    shiftNormalLast_ = shiftsRowNormal_[curColumnIndex_ + 1];
+//    if (shiftsRowAlter_) {
+//        curShiftAlter_ = shiftsRowAlter_[curColumnIndex_];
+//        shiftAlterLast_ = shiftsRowAlter_[curColumnIndex_ + 1];
+//    }
+//    else {
+//        curShiftAlter_ = shiftAlterLast_ = -1;
+//    }
+//    if (curShiftNormal_ == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_)
+//        isHaveNext_ = false;
+//    else
+//        isHaveNext_ = true;
+
+//    if ( !(type_ & UP_TREANGLE_MATRIX) ) {
+//        if ( curShiftNormal_ != shiftNormalLast_ ) {
+//            curRowIndex_ = columnsByRowsNormal_[columnIndex*2];
+//            isInNormal_ = false;
+//            curData_ = base_ + blockSize_*curShiftNormal_;
+//            isValid_ = true;
+//        }
+//        else {
+//            curRowIndex_ = columnsByRowsAlter_[columnIndex*2];
+//            isInNormal_ = true;
+//            curData_ = blocksByRowsAlter_[curShiftAlter_];
+//            isValid_ = true;
+//        }
+//    }//type_ != UP_TREANGLE_MATRIX
+//    else {//type_ == UP_TREANGLE_MATRIX
+//        throw std::runtime_error("Not implemented yet :(");
+//    }//type_ == UP_TREANGLE_MATRIX
 }
 
 void sbfStiffMatrixBand6Iterator::setToRowInverse(const int rowIndex)
@@ -127,46 +164,78 @@ void sbfStiffMatrixBand6Iterator::setToRowInverse(const int rowIndex)
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error("Not implemented yet :(");
     }//type_ == UP_TREANGLE_MATRIX
+    curColumnIndsPtrs_ = nullptr;
+    curColumnIndsPtrsAlter_ = nullptr;
 }
 
 void sbfStiffMatrixBand6Iterator::setToColumnInverse(const int columnIndex)
 {
-    //Since matrix have symmetry, this will actually iterate over row
+    curColumnIndsPtrs_ = &(columnsIndsPtrs_[columnIndex]);
+    curColumnIndsPtrsAlter_ = &(columnsIndsPtrsAlter_[columnIndex]);
+    colIndsPtrsIterRev_ = curColumnIndsPtrs_->rbegin();
+    colIndsPtrsAlterIterRev_ = curColumnIndsPtrsAlter_->rbegin();
+    colIndsPtrsEndRev_ = curColumnIndsPtrs_->rend();
+    colIndsPtrsAlterEndRev_ = curColumnIndsPtrsAlter_->rend();
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnInvert;
-    curShiftNormal_ = shiftsRowNormal_[curColumnIndex_ + 1] - 1;
-    shiftNormalLast_ = shiftsRowNormal_[curColumnIndex_];
-    if (shiftsRowAlter_) {
-        curShiftAlter_ = shiftsRowAlter_[curColumnIndex_ + 1];
-        shiftAlterLast_ = shiftsRowAlter_[curColumnIndex_];
-    }
-    else {
-        curShiftAlter_ = shiftAlterLast_ = -1;
-    }
-    if (curShiftNormal_ == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_)
-        isHaveNext_ = false;
-    else
-        isHaveNext_ = true;
 
+    if ( colIndsPtrsIterRev_+1 < colIndsPtrsEndRev_ || colIndsPtrsAlterIterRev_+1 < colIndsPtrsAlterEndRev_ )
+        isHaveNext_ = true;
+    else
+        isHaveNext_ = false;
     if ( !(type_ & UP_TREANGLE_MATRIX) ) {
-        if ( --curShiftAlter_ >= shiftAlterLast_ ) {
-            curRowIndex_ = columnsByRowsAlter_[columnIndex*2+1];
+        if ( colIndsPtrsIterRev_ != colIndsPtrsEndRev_ ) {
+            curRowIndex_ = colIndsPtrsIterRev_->first;
             isInNormal_ = true;
-            curData_ = blocksByRowsAlter_[curShiftAlter_];
+            curData_ = colIndsPtrsIterRev_->second;
             isValid_ = true;
-            //Litle hack to perform next()
-            curShiftNormal_++;
         }
         else {
-            curRowIndex_ = columnsByRowsNormal_[columnIndex*2+1];
+            curRowIndex_ = colIndsPtrsAlterIterRev_->first;
             isInNormal_ = false;
-            curData_ = base_ + blockSize_*curShiftNormal_;
+            curData_ = colIndsPtrsAlterIterRev_->second;
             isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error("Not implemented yet :(");
     }//type_ == UP_TREANGLE_MATRIX
+//    //Since matrix have symmetry, this will actually iterate over row
+//    curColumnIndex_ = columnIndex;
+//    dir_ = IterateDirection::ColumnInvert;
+//    curShiftNormal_ = shiftsRowNormal_[curColumnIndex_ + 1] - 1;
+//    shiftNormalLast_ = shiftsRowNormal_[curColumnIndex_];
+//    if (shiftsRowAlter_) {
+//        curShiftAlter_ = shiftsRowAlter_[curColumnIndex_ + 1];
+//        shiftAlterLast_ = shiftsRowAlter_[curColumnIndex_];
+//    }
+//    else {
+//        curShiftAlter_ = shiftAlterLast_ = -1;
+//    }
+//    if (curShiftNormal_ == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_)
+//        isHaveNext_ = false;
+//    else
+//        isHaveNext_ = true;
+
+//    if ( !(type_ & UP_TREANGLE_MATRIX) ) {
+//        if ( --curShiftAlter_ >= shiftAlterLast_ ) {
+//            curRowIndex_ = columnsByRowsAlter_[columnIndex*2+1];
+//            isInNormal_ = true;
+//            curData_ = blocksByRowsAlter_[curShiftAlter_];
+//            isValid_ = true;
+//            //Litle hack to perform next()
+//            curShiftNormal_++;
+//        }
+//        else {
+//            curRowIndex_ = columnsByRowsNormal_[columnIndex*2+1];
+//            isInNormal_ = false;
+//            curData_ = base_ + blockSize_*curShiftNormal_;
+//            isValid_ = true;
+//        }
+//    }//type_ != UP_TREANGLE_MATRIX
+//    else {//type_ == UP_TREANGLE_MATRIX
+//        throw std::runtime_error("Not implemented yet :(");
+//    }//type_ == UP_TREANGLE_MATRIX
 }
 
 bool sbfStiffMatrixBand6Iterator::isValid() const
@@ -211,21 +280,36 @@ bool sbfStiffMatrixBand6Iterator::next()
             }
             break;
         case IterateDirection::ColumnDirect:
-            if ( !isInNormal_ && ++curShiftNormal_ != shiftNormalLast_) {
-                ++curRowIndex_;
-                curData_ = base_ + blockSize_*curShiftNormal_;
-                if ( curShiftNormal_+1 == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_ ) isHaveNext_ = false;
+            if( curColumnIndsPtrsAlter_->size() && colIndsPtrsAlterIter_ +1 < colIndsPtrsAlterEnd_ ) {
+                ++colIndsPtrsAlterIter_;
+                curRowIndex_ = colIndsPtrsAlterIter_->first;
+                isInNormal_ = false;
+                curData_ = colIndsPtrsAlterIter_->second;
+                isValid_ = true;
             }
-            else if ( curShiftAlter_ != shiftAlterLast_ ) {
-                if (!isInNormal_) {
-                    isInNormal_ = true;
-                    curShiftAlter_--;//For first block only
-                }
-                ++curShiftAlter_;
-                ++curRowIndex_;
-                curData_ = blocksByRowsAlter_[curShiftAlter_];
-                if ( curShiftAlter_+1 == shiftAlterLast_ ) isHaveNext_ = false;
+            else if( colIndsPtrsIter_ +1 < colIndsPtrsEnd_ ) {
+                if (isInNormal_ == true)
+                    ++colIndsPtrsIter_;
+                curRowIndex_ = colIndsPtrsIter_->first;
+                isInNormal_ = true;
+                curData_ = colIndsPtrsIter_->second;
+                isValid_ = true;
             }
+//            if ( !isInNormal_ && ++curShiftNormal_ != shiftNormalLast_) {
+//                ++curRowIndex_;
+//                curData_ = base_ + blockSize_*curShiftNormal_;
+//                if ( curShiftNormal_+1 == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_ ) isHaveNext_ = false;
+//            }
+//            else if ( curShiftAlter_ != shiftAlterLast_ ) {
+//                if (!isInNormal_) {
+//                    isInNormal_ = true;
+//                    curShiftAlter_--;//For first block only
+//                }
+//                ++curShiftAlter_;
+//                ++curRowIndex_;
+//                curData_ = blocksByRowsAlter_[curShiftAlter_];
+//                if ( curShiftAlter_+1 == shiftAlterLast_ ) isHaveNext_ = false;
+//            }
             else {
                 curData_ = nullptr;
                 isHaveNext_ = false;
@@ -251,17 +335,32 @@ bool sbfStiffMatrixBand6Iterator::next()
             }
             break;
         case IterateDirection::ColumnInvert:
-            if ( isInNormal_ && --curShiftAlter_ >= shiftAlterLast_ ) {
-                --curRowIndex_;
-                curData_ = blocksByRowsAlter_[curShiftAlter_];
+            if( colIndsPtrsIterRev_ +1 < colIndsPtrsEndRev_ ) {
+                ++colIndsPtrsIterRev_;
+                curRowIndex_ = colIndsPtrsIterRev_->first;
+                isInNormal_ = true;
+                curData_ = colIndsPtrsIterRev_->second;
+                isValid_ = true;
             }
-            else if ( curShiftNormal_-- >= shiftNormalLast_ ) {
-                if(isInNormal_)
-                    isInNormal_ = false;
-                --curRowIndex_;
-                curData_ = base_ + blockSize_*curShiftNormal_;
-                if ( curShiftNormal_ == shiftNormalLast_ ) isHaveNext_ = false;
+            else if( curColumnIndsPtrsAlter_->size() && colIndsPtrsAlterIterRev_ +1 < colIndsPtrsAlterEndRev_ ) {
+                if (isInNormal_ == false)
+                    ++colIndsPtrsAlterIterRev_;
+                curRowIndex_ = colIndsPtrsAlterIterRev_->first;
+                isInNormal_ = false;
+                curData_ = colIndsPtrsAlterIterRev_->second;
+                isValid_ = true;
             }
+//            if ( isInNormal_ && --curShiftAlter_ >= shiftAlterLast_ ) {
+//                --curRowIndex_;
+//                curData_ = blocksByRowsAlter_[curShiftAlter_];
+//            }
+//            else if ( curShiftNormal_-- >= shiftNormalLast_ ) {
+//                if(isInNormal_)
+//                    isInNormal_ = false;
+//                --curRowIndex_;
+//                curData_ = base_ + blockSize_*curShiftNormal_;
+//                if ( curShiftNormal_ == shiftNormalLast_ ) isHaveNext_ = false;
+//            }
             else {
                 curData_ = nullptr;
                 isHaveNext_ = false;

@@ -10,6 +10,7 @@ class TestMatrixIterator : public QObject
 private Q_SLOTS:
     void case01_band6();
     //    void case01_block3x3();
+    void case02_band6_advanced();
 
 };
 

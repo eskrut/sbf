@@ -389,3 +389,153 @@ void TestMatrixIterator::case01_band6()
         QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
     }
 }
+
+void TestMatrixIterator::case02_band6_advanced()
+{
+    CreateSmartAndRawPtr(sbfMesh, new sbfMesh, mesh);
+    mesh->addNode(0, 0, 0);
+    mesh->addNode(1, 1, 0);
+    mesh->addNode(0, 2, 0);
+    mesh->addNode(-1, 1, 0);
+    mesh->addNode(-1, -1, 0);
+    mesh->addNode(0, -2, 0);
+    mesh->addNode(1, -1, 0);
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 1}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 2}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 3}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 4}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 5}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {0, 6}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {1, 2}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {2, 3}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {3, 4}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {4, 5}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {5, 6}));
+    mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {6, 1}));
+    mesh->setMtr(1);
+    const int blockSize = 36;
+
+    {
+        CreateSmartAndRawPtr(sbfStiffMatrixBand6, new sbfStiffMatrixBand6(mesh, nullptr), stiff);
+
+        QVERIFY2(stiff->storeType() == MatrixStoreType::FULL, "Fail to get full store type");
+
+        CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+
+        /*
+         *  0   1   2   3   4   5   6
+         *  7   8   9   10  11  12  13
+         *  14  15  16  17
+         *  18  19  20  21  22
+         *  23  24  25  26  27  28
+         *  29  30  31  32  33  34  35
+         *  36  37  38  39  40  41  42
+         */
+        iterator->setToRow(3);
+        QVERIFY2(iterator->column() == 0, "Failed to evaluate column index");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*18, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->column() == 1, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*22, "Failed to initialize row");
+        QVERIFY2(iterator->column() == 4, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        iterator->setToColumn(4);
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*4, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 0, "Failed to evaluate column index");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*40, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 6, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        iterator->setToColumnInverse(6);
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*42, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 6, "Failed to evaluate column index");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->row() == 5, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->row() == 1, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*6, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 0, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        QVERIFY2(iterator->diagonal(0) == stiff->data()+blockSize*0, "Failed to get diagonal");
+        QVERIFY2(iterator->diagonal(4) == stiff->data()+blockSize*27, "Failed to get diagonal");
+        QVERIFY2(iterator->diagonal(6) == stiff->data()+blockSize*42, "Failed to get diagonal");
+
+    }
+
+    {
+        CreateSmartAndRawPtr(sbfStiffMatrixBand6, new sbfStiffMatrixBand6(mesh, nullptr, MatrixType::DOWN_TREANGLE_MATRIX), stiff);
+
+        QVERIFY2(stiff->storeType() == MatrixStoreType::FULL, "Fail to get full store type");
+
+        CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
+
+        /*
+         *  0   1   3   6   10  15  21
+         *  1   2   4   7   11  16  22
+         *  3   4   5   8
+         *  6   7   8   9   13
+         *  10  11  12  13  14  19
+         *  15  16  17  18  19  20  26
+         *  21  22  23  24  25  26  27
+         */
+        iterator->setToRow(3);
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*6, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*13, "Failed to initialize row");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        iterator->setToColumn(4);
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*10, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 0, "Failed to evaluate column index");
+        QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->row() == 3, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->row() == 4, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*19, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*25, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 6, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        iterator->setToColumnInverse(6);
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*27, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 6, "Failed to evaluate column index");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*26, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 5, "Failed to evaluate column index");
+        QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->row() == 1, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*21, "Failed to initialize row");
+        QVERIFY2(iterator->row() == 0, "Failed to evaluate column index");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        QVERIFY2(iterator->diagonal(0) == stiff->data()+blockSize*0, "Failed to get diagonal");
+        QVERIFY2(iterator->diagonal(4) == stiff->data()+blockSize*14, "Failed to get diagonal");
+        QVERIFY2(iterator->diagonal(6) == stiff->data()+blockSize*27, "Failed to get diagonal");
+    }
+}

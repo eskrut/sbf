@@ -2,6 +2,7 @@
 #include "sbfElement.h"
 #include "sbfStiffMatrixBlock3x3.h"
 #include "sbfStiffMatrixBlock6x6.h"
+#include "sbfStiffMatrixBand6.h"
 #include <cassert>
 #include "sbfAdditions.h"
 
@@ -65,8 +66,7 @@ sbfStiffMatrix *sbfStiffMatrix::New(sbfMesh *mesh, sbfPropertiesSet *propSet, Ma
         if(storeType == MatrixStoreType::COMPACT)
             return new sbfStiffMatrixBlock6x6(mesh, propSet, symType);
         else
-            return nullptr;
-
+            return new sbfStiffMatrixBand6(mesh, propSet, symType);
     }
 
     return nullptr;

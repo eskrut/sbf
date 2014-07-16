@@ -35,6 +35,11 @@ private:
     int *shiftIndAlter_;
     //Array of pointers to data corresponded to alternative indexation. != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
     double **ptrDataAlter_;
+
+    //Column iteration indexation
+    std::vector<std::vector<std::pair<int /*rowId*/, double* /*ptr*/> /*column*/ > > columnsIndsPtrs_;
+    std::vector<std::vector<std::pair<int /*rowId*/, double* /*ptr*/> /*column*/ > > columnsIndsPtrsAlter_;
+
     //Basic initialization function
     void init();
     //Clean all data (call delete for initialized arrays)
@@ -56,6 +61,8 @@ private:
     void updataAlterPtr();
     //Returns pointer to stiffness block with indexes indI, indJ. Search in regular storage ONLY
     double * blockPtr(int indI, int indJ);
+    //Update columns indexing
+    void updateColumnsIndsPtrs();
 
 public:
     MatrixStoreType storeType() const { return MatrixStoreType::FULL; }
