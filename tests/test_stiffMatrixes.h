@@ -23,6 +23,7 @@ private Q_SLOTS:
     void case11_CGMwP();
     void case11_CGMwP_band6();
     void case12_CGMwP_band6();
+    void case13_LDLT_band6();
 };
 
 #endif // TEST_STIFFMATRICES_H

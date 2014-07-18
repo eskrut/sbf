@@ -69,7 +69,9 @@ public:
     sbfMatrixIterator *createIterator() /*const*/;
     void compute(int startID, int stopID);
     sbfStiffMatrix *createChol() /*const*/;
+    sbfStiffMatrix *createLDLT();
     void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr);
+    void solve_L_D_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr);
     bool isValid();
     double *data() const { return data_; }
     void read_stream(std::ifstream &in);

@@ -47,7 +47,9 @@ public:
 
     virtual sbfStiffMatrix *createChol() /*const*/ { return nullptr; }
     virtual sbfStiffMatrix *createIncompleteChol() /*const*/ { return nullptr; }
+    virtual sbfStiffMatrix *createLDLT() { return nullptr; }
     virtual void solve_L_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr) { }
+    virtual void solve_L_D_LT_u_eq_f(double *u, double *f, sbfMatrixIterator *iterator = nullptr) { }
 
     virtual bool isValid() { return false; }
 

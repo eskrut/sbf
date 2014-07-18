@@ -1004,3 +1004,44 @@ void TestStiffMatrixes::case12_CGMwP_band6()
     qDebug() << numIterations << disp.data(mesh->numNodes()-1, 3) << forceAmp*xSide/mtr->propertyTable("shear module")->curValue()/mtr->propertyTable("area")->curValue();
     qDebug() << numIterations << disp.data(mesh->numNodes()-1, 1) << forceAmp*xSide*xSide*xSide/3/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("Iz")->curValue();
 }
+
+void TestStiffMatrixes::case13_LDLT_band6()
+{
+    CreateSmartAndRawPtr(sbfPropertiesSet, new sbfPropertiesSet, propSet);
+    propSet->read("test.prop");
+    CreateSmartAndRawPtr(sbfMesh, mesh);
+
+    float xSide = 1000;
+    float xPart = 100;
+    mesh->addNode(0, 0, 0, false);
+    for(int ct = 1; ct <= xPart; ct++)
+        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {ct-1, mesh->addNode(xSide/xPart*ct, 0, 0, false)}));
+    mesh->setMtr(1);
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, new sbfStiffMatrixBand6(mesh, propSet), stiff);
+
+    stiff->computeSequantially();
+    QVERIFY2(stiff->isValid(), "Not valid stiffness matrix");
+
+    NodesData<double, 6> force(mesh), disp(mesh);
+    force.null();
+    disp.null();
+    CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iter);
+
+    iter->setToRow(0);
+    iter->diagonal(0);
+    double *data = iter->data();
+    for(int ct = 0; ct < 6; ++ct) data[ct*(6+1)] *= 1e3;
+    double forceAmp = 1;
+    force.data(mesh->numNodes()-1, 0) = forceAmp;
+    force.data(mesh->numNodes()-1, 3) = forceAmp;
+    force.data(mesh->numNodes()-1, 1) = forceAmp;
+
+    CreateSmartAndRawPtr(sbfStiffMatrixBand6, reinterpret_cast<sbfStiffMatrixBand6*>(stiff->createLDLT()), LDLT);
+
+    LDLT->solve_L_D_LT_u_eq_f(disp.data(), force.data());
+
+    auto mtr = propSet->material(0);
+    qDebug() << disp.data(mesh->numNodes()-1, 0) << forceAmp*xSide/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("area")->curValue();
+    qDebug()  << disp.data(mesh->numNodes()-1, 3) << forceAmp*xSide/mtr->propertyTable("shear module")->curValue()/mtr->propertyTable("area")->curValue();
+    qDebug()  << disp.data(mesh->numNodes()-1, 1) << forceAmp*xSide*xSide*xSide/3/mtr->propertyTable("elastic module")->curValue()/mtr->propertyTable("Iz")->curValue();
+}

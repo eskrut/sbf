@@ -39,7 +39,8 @@ enum MatrixType : short {
     UP_TREANGLE_MATRIX = 4,
     DOWN_TREANGLE_MATRIX = 8,
     INCOMPLETE_CHOL = 16,
-    CHOL_FACTOR = 32
+    CHOL_FACTOR = 32,
+    LDLT_FACTOR = 64
 };
 inline MatrixType operator|(MatrixType first, MatrixType second) {
     return static_cast<MatrixType>(static_cast<short>(first) | static_cast<short>(second));
