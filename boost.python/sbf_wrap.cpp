@@ -93,6 +93,7 @@ BOOST_PYTHON_MODULE(libsbfpy)
             .def("addMesh", addMesh_ptr)
             .def("setMtr", &sbfMesh::setMtr)
             .def("increaseMtr", &sbfMesh::increaseMtr)
+            .def("nodeAt", &sbfMesh::nodeAt)
             ;
 
     class_<sbfPropertyTable>("sbfPropertyTable", init<const std::string &>())
