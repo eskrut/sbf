@@ -286,6 +286,11 @@ void TestMatrixIterator::case01_band6()
 
         CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
 
+        /*
+         *  0   1
+         *  2   3   4
+         *      5   6
+         */
         iterator->setToRow(0);
         QVERIFY2(iterator->haveNext() == true, "Failed to tell 'there are more blocks'");
         QVERIFY2(iterator->data() == stiff->data()+blockSize*0, "Failed to initialize row");
@@ -310,7 +315,18 @@ void TestMatrixIterator::case01_band6()
         QVERIFY2(iterator->data() == stiff->data()+blockSize*0, "Failed to initialize row");
         QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
         QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*2, "Failed to initialize row");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        iterator->setToColumn(1);
         QVERIFY2(iterator->data() == stiff->data()+blockSize*1, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*3, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*5, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
         QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
 
         iterator->setToRowInverse(1);
@@ -328,7 +344,7 @@ void TestMatrixIterator::case01_band6()
         QVERIFY2(iterator->row() == 2, "Failed to evaluate column index");
         QVERIFY2(iterator->data() == stiff->data()+blockSize*6, "Failed to initialize row");
         QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
-        QVERIFY2(iterator->data() == stiff->data()+blockSize*5, "Failed to initialize row");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*4, "Failed to initialize row");
         QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
     }
     {
@@ -338,6 +354,11 @@ void TestMatrixIterator::case01_band6()
 
         CreateSmartAndRawPtr(sbfMatrixIterator, stiff->createIterator(), iterator);
 
+        /*
+         *  0   1
+         *  1   2   3
+         *      3   4
+         */
         iterator->setToRow(0);
         QVERIFY2(iterator->haveNext() == true, "Failed to tell 'there are more blocks'");
         QVERIFY2(iterator->data() == stiff->data()+blockSize*0, "Failed to initialize row");
@@ -362,9 +383,20 @@ void TestMatrixIterator::case01_band6()
 
         iterator->setToColumn(0);
         QVERIFY2(iterator->data() == stiff->data()+blockSize*0, "Failed to initialize row");
-        QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
         QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
         QVERIFY2(iterator->data() == stiff->data()+blockSize*1, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
+
+        iterator->setToColumn(1);
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*1, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*2, "Failed to initialize row");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
+        QVERIFY2(iterator->data() == stiff->data()+blockSize*3, "Failed to initialize row");
         QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
         QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
 
@@ -380,12 +412,12 @@ void TestMatrixIterator::case01_band6()
         QVERIFY2(iterator->haveNext() == false, "Failed to tell 'there are more blocks'");
 
         iterator->setToColumnInverse(2);
-        QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
         QVERIFY2(iterator->row() == 2, "Failed to evaluate column index");
         QVERIFY2(iterator->data() == stiff->data()+blockSize*4, "Failed to initialize row");
         QVERIFY2(iterator->next() == true, "Failed to switch to the next existing block");
         QVERIFY2(iterator->data() == stiff->data()+blockSize*3, "Failed to initialize row");
-        QVERIFY2(iterator->isInNormal() == true, "Failed to evaluate normal/alter");
+        QVERIFY2(iterator->isInNormal() == false, "Failed to evaluate normal/alter");
         QVERIFY2(iterator->next() == false, "Failed to tell 'no more blocks'");
     }
 }

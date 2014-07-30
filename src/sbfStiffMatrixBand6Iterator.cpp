@@ -69,7 +69,16 @@ void sbfStiffMatrixBand6Iterator::setToColumn(const int columnIndex)
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnDirect;
 
-    if ( colIndsPtrsIter_+1 < colIndsPtrsEnd_ || colIndsPtrsAlterIter_ +1 < colIndsPtrsAlterEnd_ )
+//    if ( colIndsPtrsIter_+1 < colIndsPtrsEnd_ || colIndsPtrsAlterIter_ < colIndsPtrsAlterEnd_ )
+    if (
+            (
+                colIndsPtrsAlterIter_ == colIndsPtrsAlterEnd_ && colIndsPtrsIter_+1 < colIndsPtrsEnd_
+                ) || (
+                colIndsPtrsAlterIter_+1 == colIndsPtrsAlterEnd_ && colIndsPtrsIter_ < colIndsPtrsEnd_
+                ) || (
+                colIndsPtrsAlterIter_+1 < colIndsPtrsAlterEnd_ || colIndsPtrsIter_+1 < colIndsPtrsEnd_
+                )
+            )
         isHaveNext_ = true;
     else
         isHaveNext_ = false;
@@ -79,6 +88,8 @@ void sbfStiffMatrixBand6Iterator::setToColumn(const int columnIndex)
             isInNormal_ = false;
             curData_ = colIndsPtrsAlterIter_->second;
             isValid_ = true;
+            //To make increment in next()
+            --colIndsPtrsIter_;
         }
         else {
             curRowIndex_ = colIndsPtrsIter_->first;
@@ -179,7 +190,16 @@ void sbfStiffMatrixBand6Iterator::setToColumnInverse(const int columnIndex)
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnInvert;
 
-    if ( colIndsPtrsIterRev_+1 < colIndsPtrsEndRev_ || colIndsPtrsAlterIterRev_+1 < colIndsPtrsAlterEndRev_ )
+//    if ( colIndsPtrsIterRev_+1 < colIndsPtrsEndRev_ || colIndsPtrsAlterIterRev_+1 < colIndsPtrsAlterEndRev_ )
+    if (
+            (
+                colIndsPtrsAlterIterRev_ == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_+1 < colIndsPtrsEndRev_
+                ) || (
+                colIndsPtrsAlterIterRev_+1 == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_ < colIndsPtrsEndRev_
+                ) || (
+                colIndsPtrsAlterIterRev_+1 < colIndsPtrsAlterEndRev_ || colIndsPtrsIterRev_+1 < colIndsPtrsEndRev_
+                )
+            )
         isHaveNext_ = true;
     else
         isHaveNext_ = false;
@@ -189,6 +209,9 @@ void sbfStiffMatrixBand6Iterator::setToColumnInverse(const int columnIndex)
             isInNormal_ = true;
             curData_ = colIndsPtrsIterRev_->second;
             isValid_ = true;
+            //To make increment in next()
+            if(colIndsPtrsAlterIterRev_ != colIndsPtrsAlterEndRev_)
+                --colIndsPtrsAlterIterRev_;
         }
         else {
             curRowIndex_ = colIndsPtrsAlterIterRev_->first;
@@ -288,8 +311,7 @@ bool sbfStiffMatrixBand6Iterator::next()
                 isValid_ = true;
             }
             else if( colIndsPtrsIter_ +1 < colIndsPtrsEnd_ ) {
-                if (isInNormal_ == true)
-                    ++colIndsPtrsIter_;
+                ++colIndsPtrsIter_;
                 curRowIndex_ = colIndsPtrsIter_->first;
                 isInNormal_ = true;
                 curData_ = colIndsPtrsIter_->second;
@@ -343,8 +365,7 @@ bool sbfStiffMatrixBand6Iterator::next()
                 isValid_ = true;
             }
             else if( curColumnIndsPtrsAlter_->size() && colIndsPtrsAlterIterRev_ +1 < colIndsPtrsAlterEndRev_ ) {
-                if (isInNormal_ == false)
-                    ++colIndsPtrsAlterIterRev_;
+                ++colIndsPtrsAlterIterRev_;
                 curRowIndex_ = colIndsPtrsAlterIterRev_->first;
                 isInNormal_ = false;
                 curData_ = colIndsPtrsAlterIterRev_->second;
