@@ -16,7 +16,7 @@ private:
     std::vector<int> ind_;//Indexes of elements in SE layer
     int level_;//Layer index
     sbfSELevel *prevLayer_, *nextLayer_;
-    sbfMesh *mesh_;
+    const sbfMesh *mesh_;
 public:
     void setSize(int size);//Sets size of indexes vector should be same as number of elements at previous level
     int size();//Returns indexes vector size
@@ -26,7 +26,7 @@ public:
     int index(int seqNumber);
     int numSE();//Returns number of SE at this level
     std::vector<int> indexesOfSE(int seqNumber);//Returns vector of element indexes which belonges to SE seqNumber in this level
-    void setMesh(sbfMesh * mesh);//Sets base mesh
+    void setMesh(const sbfMesh * mesh);//Sets base mesh
     sbfSELevel * prev();//Returns pointer to previous SE layer
     sbfSELevel * next();//Returns pointer to next SE layer
     void writeToFile(const char * baseName = "level", int levelIndex = -1, int numDigits = 3);

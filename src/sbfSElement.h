@@ -10,10 +10,10 @@ class DECLSPEC sbfSElement
 {
 public:
     sbfSElement();
-    sbfSElement(sbfMesh * mesh, int index = -1);
+    sbfSElement(const sbfMesh *mesh, int index = -1);
     ~sbfSElement();
 private:
-    sbfMesh *mesh_;
+    const sbfMesh *mesh_;
     sbfSElement *parent_, **childrens_;
     int numChildren_;
     int seIndex_;//this SE index
@@ -33,8 +33,8 @@ public:
         if(childrens_ && index < numChildren_) rez = childrens_[index];
         return rez;
     }
-    void setMesh (sbfMesh * mesh) { mesh_ = mesh; }
-    sbfMesh * mesh () { return mesh_; }
+    void setMesh (const sbfMesh *mesh) { mesh_ = mesh; }
+    const sbfMesh *mesh () { return mesh_; }
     sbfSElement * parent () {return parent_;}
     void setParent (sbfSElement *parent) { parent_ = parent; }
 };
