@@ -501,18 +501,31 @@ sbfStiffMatrix *sbfStiffMatrixBand6::createLDLT()
             if (iteratorL->column() >= diagCt) break;
             blockCt = iteratorL->data();
             double *diag = iteratorL->diagonal(iteratorL->column());
+
+            //Assertion block
+            for(int ct1 = 0; ct1 < blockDim_; ++ct1)
+                assert(std::isnormal(diag[ct1*blockDim_+ct1]));
             for(int ct1 = 0; ct1 < blockDim_; ++ct1) for(int ct2 = 0; ct2 < blockDim_; ++ct2)
+                assert(std::isfinite(blockCt[ct1*blockDim_ + ct2]));
+
+            for(int ct1 = 0; ct1 < blockDim_; ++ct1) for(int ct2 = 0; ct2 < blockDim_; ++ct2) {
+                assert(std::isfinite(blockCt[ct1*blockDim_ + ct2]));
+                assert(std::isfinite(diag[ct2*(blockDim_+1)]));
                 sum[ct1] += blockCt[ct1*blockDim_ + ct2]*blockCt[ct1*blockDim_ + ct2]*diag[ct2*(blockDim_+1)];
+                assert(std::isfinite(sum[ct1]));
+            }
             for(int ct1 = 0; ct1 < blockDim_; ++ct1) for(int ct2 = ct1+1; ct2 < blockDim_; ++ct2) {
                 double tmp = 0;
                 for(int ct3 = 0; ct3 < blockDim_; ++ct3)
                     tmp += blockCt[ct1*blockDim_ + ct3]*blockCt[ct2*blockDim_ + ct3]*diag[ct3*(blockDim_+1)];
+                assert(std::isfinite(tmp));
                 sum[sumShift[ct1][ct2]] += tmp;
             }
             iteratorL->next();
         }//Loop on blocks in row
         int shift = blockDim_;
         for(int ct1 = 0; ct1 < blockDim_; ++ct1) {
+            assert(std::isnormal(blockDiag[ct1*(blockDim_+1)]));
             blockDiagTarget[ct1*(blockDim_+1)] = blockDiag[ct1*(blockDim_+1)] - sum[ct1];
             assert(std::isnormal(blockDiagTarget[ct1*blockDim_+ct1]));
             for(int ct2 = ct1+1; ct2 < blockDim_; ++ct2) {
@@ -563,7 +576,7 @@ sbfStiffMatrix *sbfStiffMatrixBand6::createLDLT()
             while(iteratorLRow0->isValid() && iteratorLRow1->isValid()) {
                 col0 = iteratorLRow0->column();
                 col1 = iteratorLRow1->column();
-                if (col0 >= diagCt) break;
+                if (col0 >= diagCt || col1 >= diagCt) break;
                 //TODO rewise this code for band matrix (copyed from block matrix)
                 if (col0 < col1) {
                     iteratorLRow0->next();
@@ -580,7 +593,7 @@ sbfStiffMatrix *sbfStiffMatrixBand6::createLDLT()
                 blockCt = iteratorLRow0->data();
                 blockCt1 = iteratorLRow1->data();
                 //collect sums
-//                report("collect summ", rowCt, iteratorCholRow0->column());
+//                report("collect summ", rowCt, iteratorLRow0->column());
                 for(int ctI = 0, shift = 0; ctI < blockDim_; ++ctI)
                     for(int ctJ = 0; ctJ < blockDim_; ++ctJ, ++shift)
                         for(int ct = 0; ct < blockDim_; ++ct)
