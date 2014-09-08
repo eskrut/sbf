@@ -5,7 +5,7 @@ sbfSElement::sbfSElement()
 {
     initialize();
 }
-sbfSElement::sbfSElement(sbfMesh * mesh, int index)
+sbfSElement::sbfSElement(const sbfMesh *mesh, int index)
 {
     initialize();
     mesh_ = mesh;

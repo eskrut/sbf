@@ -15,7 +15,7 @@ sbfSELevel::~sbfSELevel()
 {
     ind_.clear();
 }
-void sbfSELevel::setMesh(sbfMesh * mesh)
+void sbfSELevel::setMesh(const sbfMesh *mesh)
 {
     mesh_ = mesh;
 }
