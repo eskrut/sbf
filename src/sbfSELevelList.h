@@ -17,13 +17,13 @@ public:
     ~sbfSELevelList();
 private:
     std::list<sbfSELevel> list_;
-    sbfMesh * mesh_;
+    const sbfMesh *mesh_;
 public:
     int numLevels();//Returns number of SE layers
     sbfSELevel & level(int seqNumber);
     void writeToFiles(const char * baseName = "level", int numDigits = 3);
     int readFromFiles(const char * baseName = "level", int numDigits = 3);
-    void setMesh(sbfMesh * mesh);//Sets base mesh
+    void setMesh(const sbfMesh *mesh);//Sets base mesh
     std::vector< std::vector<sbfSElement *> > selevels (std::vector<sbfSElement *> * fakeSEs = nullptr);
 };
 
