@@ -43,7 +43,7 @@ int sbfSELevelList::readFromFiles(const char * baseName, int numDigits)
     }
     return 0;
 }
-void sbfSELevelList::setMesh(sbfMesh * mesh)
+void sbfSELevelList::setMesh(const sbfMesh *mesh)
 {
     mesh_ = mesh;
 }
