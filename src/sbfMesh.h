@@ -55,7 +55,8 @@ private:
     std::vector < NodesData<double, 1> * > nodesDSDataList_;
     std::vector < NodesData<float, 3> * > nodesFVDataList_;
     std::vector < NodesData<float, 1> * > nodesFSDataList_;
-    std::vector < SolutionBundle<double> * > solutionBundleList_;
+    std::vector < SolutionBundle<double> * > solutionBundleDList_;
+    std::vector < SolutionBundle<float> * > solutionBundleFList_;
 
     //Mesh read/write
 public:
@@ -135,16 +136,24 @@ public:
     void applyToAllNodes(std::function<void (sbfNode &)> lambda);
     void applyToAllElements(std::function<void (sbfElement &)> lambda);
 
+    int numDVData() const { return static_cast<int>(nodesDVDataList_.size()); }
     void addDVData(NodesData<double, 3> * data) {nodesDVDataList_.push_back(data);}
     NodesData<double, 3> * dVData(const int seqNumber) {return nodesDVDataList_[seqNumber];}
+    int numDSData() const { return static_cast<int>(nodesDSDataList_.size()); }
     void addDSData(NodesData<double, 1> * data) {nodesDSDataList_.push_back(data);}
     NodesData<double, 1> * dSData(const int seqNumber) {return nodesDSDataList_[seqNumber];}
+    int numFVData() const { return static_cast<int>(nodesFVDataList_.size()); }
     void addFVData(NodesData<float, 3> * data) {nodesFVDataList_.push_back(data);}
     NodesData<float, 3> * fVData(const int seqNumber) {return nodesFVDataList_[seqNumber];}
+    int numFSData() const { return static_cast<int>(nodesFSDataList_.size()); }
     void addFSData(NodesData<float, 1> * data) {nodesFSDataList_.push_back(data);}
     NodesData<float, 1> * fSData(const int seqNumber) {return nodesFSDataList_[seqNumber];}
-    void addSolutionBundle(SolutionBundle<double> * bundle) {solutionBundleList_.push_back(bundle);}
-    SolutionBundle<double> * solutionBundle(const int seqNumber) {return solutionBundleList_[seqNumber];}
+    int numSolDData() const { return static_cast<int>(solutionBundleDList_.size()); }
+    void addSolutionBundle(SolutionBundle<double> * bundle) {solutionBundleDList_.push_back(bundle);}
+    SolutionBundle<double> * solutionBundleD(const int seqNumber) {return solutionBundleDList_[seqNumber];}
+    int numSolFData() const { return static_cast<int>(solutionBundleFList_.size()); }
+    void addSolutionBundle(SolutionBundle<float> * bundle) {solutionBundleFList_.push_back(bundle);}
+    SolutionBundle<float> * solutionBundleF(const int seqNumber) {return solutionBundleFList_[seqNumber];}
 
     //Geometry modifications
 public:
@@ -225,8 +234,8 @@ public:
     void setNumDigits(int numDigits) {numDigits_ = numDigits;}
     Type type() {return type_;}
     void setType(Type type) {type_ = type;}
-    template <class StorageType = DefaultStorageDataType> int writeToFile(const char *name, int step, const char * extension = ".sba", int numDigits = 4);
-    template <class StorageType = DefaultStorageDataType> int readFromFile(const char * name, int step, const char * extension = ".sba", int numDigits = 4);
+    template <class StorageType = DefaultStorageDataType> int writeToFile(const char *name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
+    template <class StorageType = DefaultStorageDataType> int readFromFile(const char * name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
     template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
     template <class StorageType = DefaultStorageDataType> int readFromFile();
     template <class StorageType = DefaultStorageDataType, int numInOneFile> int writeToFileSplited();
@@ -291,10 +300,11 @@ std::string & NodesData<ArrayType, numComp>::name() { return name_; }
 
 template < class ArrayType, int numComp>
 template <class StorageType>
-int NodesData<ArrayType, numComp>::writeToFile(const char * name, int step, const char * extension, int numDigits)
+int NodesData<ArrayType, numComp>::writeToFile(const char * name, int step, const char * extension, int numDigits, const char *catalog)
 {
     name_ = name; stepToProceed_ = step; numDigits_ = numDigits; extension_ = extension;
     std::stringstream sstr;
+    if (catalog) sstr << catalog << "/";
     sstr << name << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
     if(!out.good()) {
@@ -327,10 +337,11 @@ int NodesData<ArrayType, numComp>::writeToFile(const char * name, int step, cons
 }
 template < class ArrayType, int numComp>
 template <class StorageType>
-int NodesData<ArrayType, numComp>::readFromFile(const char * name, int step, const char * extension, int numDigits)
+int NodesData<ArrayType, numComp>::readFromFile(const char * name, int step, const char * extension, int numDigits, const char *catalog)
 {
     name_ = name; stepToProceed_ = step; numDigits_ = numDigits; extension_ = extension;
     std::stringstream sstr;
+    if (catalog) sstr << catalog << "/";
     sstr << name << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
     if(!in.good()) {
@@ -425,8 +436,8 @@ public:
     void free(int index);
     void allocate();
     void allocate(int index);
-    template <class StorageType = DefaultStorageDataType> int writeToFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4);
-    template <class StorageType = DefaultStorageDataType> int readFromFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4);
+    template <class StorageType = DefaultStorageDataType> int writeToFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
+    template <class StorageType = DefaultStorageDataType> int readFromFile(const char * baseName, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
     template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
     template <class StorageType = DefaultStorageDataType> int readFromFile();
     int writeNames();
@@ -469,10 +480,11 @@ void SolutionBundle<ArrayType, numArrays>::setNumDigits(int numDigits) { numDigi
 
 template <class ArrayType, int numArrays>
 template <class StorageType>
-int SolutionBundle<ArrayType, numArrays>::writeToFile(const char * baseName, int step, const char * extension, int numDigits)
+int SolutionBundle<ArrayType, numArrays>::writeToFile(const char * baseName, int step, const char * extension, int numDigits, const char *catalog)
 {
     baseName_ = baseName; stepToProceed_ = step; numDigits_ = numDigits; extension_ = extension;
     std::stringstream sstr;
+    if (catalog) sstr << catalog << "/";
     sstr << baseName << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ofstream out(sstr.str().c_str(), std::ios_base::binary);
     if(!out.good()) {report.error("Error while opening file to write ", sstr.str()); return 1;}
@@ -496,11 +508,12 @@ int SolutionBundle<ArrayType, numArrays>::writeToFile(const char * baseName, int
 }
 template <class ArrayType, int numArrays>
 template <class StorageType>
-int SolutionBundle<ArrayType, numArrays>::readFromFile(const char * baseName, int step, const char * extension, int numDigits)
+int SolutionBundle<ArrayType, numArrays>::readFromFile(const char * baseName, int step, const char * extension, int numDigits, const char *catalog)
 {
     free();
     baseName_ = baseName; stepToProceed_ = step; numDigits_ = numDigits; extension_ = extension;
     std::stringstream sstr;
+    if (catalog) sstr << catalog << "/";
     sstr << baseName << std::setw(numDigits) << std::setfill('0') << step << extension;
     std::ifstream in(sstr.str().c_str(), std::ios_base::binary);
     if(!in.good()) {report.error("Error while reading file ", sstr.str()); return 1;}
