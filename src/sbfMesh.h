@@ -519,6 +519,16 @@ int SolutionBundle<ArrayType, numArrays>::readFromFile(const char * baseName, in
     if(!in.good()) {report.error("Error while reading file ", sstr.str()); return 1;}
     int flags[numArrays];
     in.read((char *)flags, sizeof(int)*numArrays);
+    int numValidArrays = 0;
+    for(int ct = 0; ct < numArrays; ++ct) if(flags[ct]) ++numValidArrays;
+    in.seekg(0, std::ios_base::end);
+    size_t length = in.tellg();
+    if(length != sizeof(int)*numArrays + sizeof(StorageType)*numNodes_*numValidArrays) {
+        report.error("Error! Data in file \"", sstr.str().c_str(), "\" not corresponds to data type, nodes number or array number", sstr.str());
+        return 2;
+    }
+    in.seekg(0, std::ios_base::beg);
+    in.read((char *)flags, sizeof(int)*numArrays);
     for(int ct = 0; ct < numArrays; ct++) if(flags[ct]) allocate(ct);
     for(int ct = 0; ct < numArrays; ct++) if(flags[ct]){
         //TODO implement compile time comparison
