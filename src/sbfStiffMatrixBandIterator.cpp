@@ -252,6 +252,7 @@ bool sbfStiffMatrixBandIterator<dim>::next()
                 isInNormal_ = true;
                 curData_ = colIndsPtrsIter_->second;
                 isValid_ = true;
+                if ( colIndsPtrsIter_ + 1 == colIndsPtrsEnd_ ) isHaveNext_ = false;
             }
             else {
                 curData_ = nullptr;
@@ -284,6 +285,8 @@ bool sbfStiffMatrixBandIterator<dim>::next()
                 isInNormal_ = true;
                 curData_ = colIndsPtrsIterRev_->second;
                 isValid_ = true;
+                if ( colIndsPtrsIterRev_ + 1 == colIndsPtrsEndRev_ && !curColumnIndsPtrsAlter_->size() )
+                    isHaveNext_ = false;
             }
             else if ( curColumnIndsPtrsAlter_->size() && colIndsPtrsAlterIterRev_ + 1 < colIndsPtrsAlterEndRev_ ) {
                 ++colIndsPtrsAlterIterRev_;
@@ -291,6 +294,7 @@ bool sbfStiffMatrixBandIterator<dim>::next()
                 isInNormal_ = false;
                 curData_ = colIndsPtrsAlterIterRev_->second;
                 isValid_ = true;
+                if ( colIndsPtrsAlterIterRev_ + 1 == colIndsPtrsAlterEndRev_ ) isHaveNext_ = false;
             }
             else {
                 curData_ = nullptr;
