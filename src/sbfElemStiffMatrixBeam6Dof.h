@@ -16,6 +16,7 @@ private:
 public:
     void computeSM();
     RowColData rowColData();
+    int numDOF() const { return numDOF_; }
 };
 
 #endif // SBFELEMSTIFFMATRIXBEAM6DOF_H

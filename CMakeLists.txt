@@ -43,7 +43,7 @@ source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})
 
 if(UNIX)
-    set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
 endif()
 
 

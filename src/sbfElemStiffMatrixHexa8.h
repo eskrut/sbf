@@ -33,6 +33,7 @@ public:
     void computeSM();
     double computeVolume();
     RowColData rowColData();
+    int numDOF() const { return numDOF_; }
 };
 
 #endif // SBFELEMSTIFFMATRIXHEXA8_H

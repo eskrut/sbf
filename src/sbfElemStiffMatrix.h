@@ -55,7 +55,10 @@ protected:
 private:
     virtual void init() = 0;
     virtual void clean() = 0;
+public:
+    virtual int numDOF() const = 0;
 
+private:
     //! @brief Compute values of form functions at natural coordinates (r, s, t).
     virtual void computeH(double r, double s = 0, double t = 0) {}
     //! @brief Compute values of form functions derivations over natural coordinates at natural coordinates (r, s, t).

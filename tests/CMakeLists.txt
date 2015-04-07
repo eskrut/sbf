@@ -2,7 +2,7 @@ project(sbfTests)
 cmake_minimum_required(VERSION 2.8)
 
 if(UNIX)
-    set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-std=c++1y -Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
 endif()
 #aux_source_directory(. SRC_LIST)
 set (SRC_LIST
