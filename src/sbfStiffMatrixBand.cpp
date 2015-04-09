@@ -282,6 +282,7 @@ void sbfStiffMatrixBand<dim>::updateColumnsIndsPtrs()
     }
 }
 
+//FIXME this method could be implemented in base class
 template <int dim>
 void sbfStiffMatrixBand<dim>::compute ( int startID, int stopID )
 {
@@ -298,12 +299,16 @@ void sbfStiffMatrixBand<dim>::compute ( int startID, int stopID )
         elem = mesh_->elemPtr ( ctElem );
         assert ( mapStiff.count ( elem->type() ) == 1 );
         elemStiff = mapStiff[elem->type()];
-        assert(elemStiff->numDOF() == dim);
+        assert ( elemStiff->numDOF() == dim );
         elemStiff->setElem ( elem );
         elemStiff->computeSM();
         auto listIDData = elemStiff->rowColData();
         iterator->setToRow ( listIDData.front().first.first );
         for ( auto idData : listIDData ) {
+            if ( type_ == DOWN_TREANGLE_MATRIX && idData.first.second > idData.first.first )
+                continue;
+            else if ( type_ == UP_TREANGLE_MATRIX && idData.first.second < idData.first.first )
+                continue;
             double *data = nullptr;
             if ( idData.first.first != iterator->row() ||
                  iterator->column() > idData.first.second )
@@ -326,7 +331,7 @@ void sbfStiffMatrixBand<dim>::compute ( int startID, int stopID )
 template <int dim>
 sbfMatrixIterator *sbfStiffMatrixBand<dim>::createIterator()
 {
-    return new sbfStiffMatrixBandIterator<dim>(this);
+    return new sbfStiffMatrixBandIterator<dim> ( this );
 }
 
 template <int dim>
@@ -767,63 +772,64 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
     //L u' = f
     int ctRow = 0;
     int ctColumn = 0;
-    for (int ctBlock = 0; ctBlock < numBlocks_; ctBlock++, ctColumn++) {//Loop on blocks
-        if( ctBlock == shiftInd_[ctRow+1] ) {
+    for ( int ctBlock = 0; ctBlock < numBlocks_; ctBlock++, ctColumn++ ) { //Loop on blocks
+        if ( ctBlock == shiftInd_[ctRow + 1] ) {
             ctRow++;
-            ctColumn = indJ_[ctRow*2];
+            ctColumn = indJ_[ctRow * 2];
             sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
         }
-        if( ctRow != ctColumn ){//process non diagonal block
+        if ( ctRow != ctColumn ) { //process non diagonal block
             //TODO this is not fatal, but still it should be implemented with iterator
-            block = blockPtr(ctRow, ctColumn);
-            if (!block) continue;
-            for(int ct1 = 0; ct1 < blockDim_; ++ct1) {
-                vecPart[ct1] = u[ctColumn*blockDim_ + ct1];
-                for(int ct2 = 0; ct2 < blockDim_; ++ct2)
-                    sum[ct2] += block[ct2*blockDim_ + ct1]*vecPart[ct1];
+            block = blockPtr ( ctRow, ctColumn );
+            if ( !block ) continue;
+            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) {
+                vecPart[ct1] = u[ctColumn * blockDim_ + ct1];
+                for ( int ct2 = 0; ct2 < blockDim_; ++ct2 )
+                    sum[ct2] += block[ct2 * blockDim_ + ct1] * vecPart[ct1];
             }
         }//process non diagonal block
         else {
-            block = blockPtr(ctRow, ctRow);
-            for(int ct1 = 0; ct1 < blockDim_; ++ct1) {
-                vecPart[ct1] = (f[ctRow*blockDim_ + ct1] - sum[ct1]) /*/ block[ct1*(blockDim_+1)]*/;
-                for(int ct2 = ct1+1; ct2 < blockDim_; ++ct2)
-                    sum[ct2] += block[ct2*blockDim_ + ct1]*vecPart[ct1];
-                u[ctRow*blockDim_ + ct1] = vecPart[ct1];
+            block = blockPtr ( ctRow, ctRow );
+            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) {
+                vecPart[ct1] = ( f[ctRow * blockDim_ + ct1] - sum[ct1] ) /*/ block[ct1*(blockDim_+1)]*/;
+                for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
+                    sum[ct2] += block[ct2 * blockDim_ + ct1] * vecPart[ct1];
+                u[ctRow * blockDim_ + ct1] = vecPart[ct1];
             }
         }
     }//Loop on blocks
     //D u'' = u'
-    for(int ct = 0; ct < numNodes_; ++ct) {
-        block = blockPtr(ct, ct);
-        for(int ct1 = 0; ct1 < 6; ++ct1)
-            u[ct*blockDim_ + ct1] = u[ct*blockDim_ + ct1]/block[ct1*(blockDim_+1)];
+    for ( int ct = 0; ct < numNodes_; ++ct ) {
+        block = blockPtr ( ct, ct );
+        for ( int ct1 = 0; ct1 < 6; ++ct1 )
+            u[ct * blockDim_ + ct1] = u[ct * blockDim_ + ct1] / block[ct1 * ( blockDim_ + 1 )];
     }
     //L^T u = u''
-    for (int ctRow = numNodes_ - 1; ctRow >= 0; ctRow--) {//Loop on rows
+    for ( int ctRow = numNodes_ - 1; ctRow >= 0; ctRow-- ) { //Loop on rows
         sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
-        iter->setToColumnInverse(ctRow);
-        while(!iter->isDiagonal()) {
+        iter->setToColumnInverse ( ctRow );
+        while ( !iter->isDiagonal() ) {
             block = iter->data();
             int ctColumn = iter->row();
-            for(int ct = 0; ct < blockDim_; ++ct)
-                vecPart[ct] = u[ctColumn*blockDim_ + ct];
+            for ( int ct = 0; ct < blockDim_; ++ct )
+                vecPart[ct] = u[ctColumn * blockDim_ + ct];
             //transposed indexing to block
-            for(int ct1 = 0; ct1 < blockDim_; ++ct1) for(int ct2 = 0; ct2 < blockDim_; ++ct2)
-                sum[ct1] += block[ct2*blockDim_ + ct1]*vecPart[ct2];
+            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = 0; ct2 < blockDim_; ++ct2 )
+                    sum[ct1] += block[ct2 * blockDim_ + ct1] * vecPart[ct2];
             iter->next();
         }//Loop on non diaonal blocks
-        block = iter->diagonal(ctRow);
-        for(int ct1 = blockDim_-1; ct1 >= 0; --ct1) {
-            vecPart[ct1] = (u[ctRow*blockDim_ + ct1] - sum[ct1]) /*/ block[ct1*(blockDim_+1)]*/;
-            for(int ct2 = ct1-1; ct2 >= 0; --ct2)
-                sum[ct2] += block[ct1*blockDim_+ct2]*vecPart[ct1];
+        block = iter->diagonal ( ctRow );
+        for ( int ct1 = blockDim_ - 1; ct1 >= 0; --ct1 ) {
+            vecPart[ct1] = ( u[ctRow * blockDim_ + ct1] - sum[ct1] ) /*/ block[ct1*(blockDim_+1)]*/;
+            for ( int ct2 = ct1 - 1; ct2 >= 0; --ct2 )
+                sum[ct2] += block[ct1 * blockDim_ + ct2] * vecPart[ct1];
         }
-        for(int ct = 0; ct < blockDim_; ++ct)
-            u[ctRow*blockDim_ + ct] = vecPart[ct];
+        for ( int ct = 0; ct < blockDim_; ++ct )
+            u[ctRow * blockDim_ + ct] = vecPart[ct];
     }//Loop on rows
 
     if ( !iterator ) delete iter;
 }
 
 template class sbfStiffMatrixBand<3>;
+template class sbfStiffMatrixBand<6>;

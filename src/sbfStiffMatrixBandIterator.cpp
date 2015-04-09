@@ -355,3 +355,4 @@ double *sbfStiffMatrixBandIterator<dim>::diagonal ( const int index ) const
 }
 
 template class sbfStiffMatrixBandIterator<3>;
+template class sbfStiffMatrixBandIterator<6>;

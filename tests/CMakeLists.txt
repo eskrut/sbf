@@ -8,6 +8,7 @@ endif()
 set (SRC_LIST
 main.cpp
 sbfStiffMatrixBandIterator.cpp
+sbfStiffMatrixBand.cpp
 )
 
 find_package(sbf REQUIRED)
