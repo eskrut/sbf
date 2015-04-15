@@ -17,6 +17,7 @@ template <int dim> class sbfStiffMatrixBlock;
 template <int dim>
 class sbfStiffMatrixBlock : public sbfStiffMatrix
 {
+    friend class sbfStiffMatrixBlockIterator<dim>;
 public:
     explicit sbfStiffMatrixBlock ( sbfMesh *mesh,
                                    sbfPropertiesSet *propSet,
@@ -83,13 +84,49 @@ private:
     //! Reimplementation for all elements in mesh
     void updateIndexesFromMesh();
     //@}
-    //! Set all blocks to null
-    void null();
     //! Updates pointers in alter storage
     void updataAlterPtr();
     //! Returns pointer to stiffness block with indexes indI, indJ.
     //! Search in regular storage ONLY
     double *blockPtr ( int indI, int indJ );
+
+public:
+
+    //Implementations of base pure virtual functions
+
+//    //! Implementation of stiff matrix compute and assembly
+//    virtual void compute ( int startID, int stopID );
+    //! Set all blocks to null
+    virtual void null();
+    //! Create new matrix iterator
+    virtual sbfMatrixIterator *createIterator() /*const*/;
+    //! Get number of DOF. @see blockDim_
+    virtual int numDof() const { return blockDim_; }
+
+    //Implementations of base virtual functions
+
+    //! Get type of matrix topology
+    MatrixStoreType storeType() const { return MatrixStoreType::FULL; }
+    //! Test matrix validness
+    bool isValid();
+    //! Get pointer to data
+    double *data() const { return data_; }
+    //! Read matrix from file stream
+    void read_stream ( std::ifstream &in );
+    //! Write matrix to file stream
+    void write_stream ( std::ofstream &out ) const;
+    //! Create incomplete Cholessky factor L LT
+    sbfStiffMatrix *createIncompleteChol() /*const*/;
+    //! Solve L*LT*u=f equation. Matrix should by L LT factor
+    /**
+     * @param u left side - displacements
+     * @param f right side - forces
+     * @param iterator matrix iterator to use in solution. If nullptr new
+     * iterator will be created and destroyed while solving.
+     */
+    void solve_L_LT_u_eq_f ( double *u,
+                             double *f,
+                             sbfMatrixIterator *iterator = nullptr );
 };
 
 #endif // SBFSTIFFMATRIXBLOCK_H

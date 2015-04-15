@@ -41,6 +41,10 @@ public:
     virtual bool isInNormal() const = 0;
     //!Get pointer to diagonal data of row (column) index
     virtual double * diagonal(const int index) const = 0;
+    //!Get dimention of single record in matrix
+    virtual int numDOF() const = 0;
+    //!Get size of single record in matrix
+    virtual int dataItemSize() const = 0;
 
 protected:
     enum class IterateDirection { RowDirect, RowInvert, ColumnDirect, ColumnInvert };

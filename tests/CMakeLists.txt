@@ -9,6 +9,7 @@ set (SRC_LIST
 main.cpp
 sbfStiffMatrixBandIterator.cpp
 sbfStiffMatrixBand.cpp
+sbfStiffMatrixBlockIterator.cpp
 )
 
 find_package(sbf REQUIRED)

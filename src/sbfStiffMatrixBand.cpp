@@ -1,13 +1,11 @@
 #include "sbfStiffMatrixBand.h"
+#include "sbfMesh.h"
+#include "sbfElement.h"
+#include "sbfAdditions.h"
 #include <cassert>
 #include <cmath>
 #include <vector>
 #include <set>
-
-#include "sbfAdditions.h"
-#include "sbfElement.h"
-#include "sbfElemStiffMatrixBeam6Dof.h"
-#include "sbfElemStiffMatrixHexa8.h"
 
 template <int dim>
 sbfStiffMatrixBand<dim>::sbfStiffMatrixBand ( sbfMesh *mesh,
@@ -224,13 +222,6 @@ void sbfStiffMatrixBand<dim>::updateIndexesFromMesh()
 }
 
 template <int dim>
-void sbfStiffMatrixBand<dim>::null()
-{
-    const int length = numBlocks_ * blockSize_;
-    for ( int ct = 0; ct < length; ct++ ) data_[ct] = 0.0;
-}
-
-template <int dim>
 void sbfStiffMatrixBand<dim>::updataAlterPtr()
 {
     if ( ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX )
@@ -282,50 +273,57 @@ void sbfStiffMatrixBand<dim>::updateColumnsIndsPtrs()
     }
 }
 
-//FIXME this method could be implemented in base class
+////FIXME this method could be implemented in base class
+//template <int dim>
+//void sbfStiffMatrixBand<dim>::compute ( int startID, int stopID )
+//{
+//    if ( !propSet_ ) throw std::runtime_error ( "nullptr in propSet" );
+//    null();
+//    sbfElement *elem = nullptr;
+//    sbfElemStiffMatrix *elemStiff = nullptr;
+//    std::map<ElementType, sbfElemStiffMatrix *> mapStiff;
+//    mapStiff[ElementType::BEAM_LINEAR_6DOF] = new sbfElemStiffMatrixBeam6Dof ( elem, propSet_ );
+//    mapStiff[ElementType::HEXAHEDRON_LINEAR] = new sbfElemStiffMatrixHexa8 ( elem, propSet_ );
+//    std::unique_ptr<sbfMatrixIterator> iteratorPtr ( createIterator() );
+//    sbfMatrixIterator *iterator = iteratorPtr.get();
+//    for ( int ctElem = startID; ctElem < stopID; ++ctElem ) { //Loop over elements
+//        elem = mesh_->elemPtr ( ctElem );
+//        assert ( mapStiff.count ( elem->type() ) == 1 );
+//        elemStiff = mapStiff[elem->type()];
+//        assert ( elemStiff->numDOF() == dim );
+//        elemStiff->setElem ( elem );
+//        elemStiff->computeSM();
+//        auto listIDData = elemStiff->rowColData();
+//        iterator->setToRow ( listIDData.front().first.first );
+//        for ( auto idData : listIDData ) {
+//            if ( type_ == DOWN_TREANGLE_MATRIX && idData.first.second > idData.first.first )
+//                continue;
+//            else if ( type_ == UP_TREANGLE_MATRIX && idData.first.second < idData.first.first )
+//                continue;
+//            double *data = nullptr;
+//            if ( idData.first.first != iterator->row() ||
+//                 iterator->column() > idData.first.second )
+//                iterator->setToRow ( idData.first.first );
+//            while ( iterator->isValid() )
+//                if ( iterator->column() == idData.first.second &&
+//                     iterator->isInNormal() ) {
+//                    data = const_cast<double *> ( iterator->data() );
+//                    break;
+//                }
+//                else iterator->next();
+//            if ( !data )
+//                throw std::runtime_error ( "Can't find target block in global stiffness matrix" );
+//            for ( int ct = 0; ct < blockSize_; ++ct )
+//                data[ct] += idData.second[ct];
+//        }
+//    }//Loop over elements
+//}
+
 template <int dim>
-void sbfStiffMatrixBand<dim>::compute ( int startID, int stopID )
+void sbfStiffMatrixBand<dim>::null()
 {
-    if ( !propSet_ ) throw std::runtime_error ( "nullptr in propSet" );
-    null();
-    sbfElement *elem = nullptr;
-    sbfElemStiffMatrix *elemStiff = nullptr;
-    std::map<ElementType, sbfElemStiffMatrix *> mapStiff;
-    mapStiff[ElementType::BEAM_LINEAR_6DOF] = new sbfElemStiffMatrixBeam6Dof ( elem, propSet_ );
-    mapStiff[ElementType::HEXAHEDRON_LINEAR] = new sbfElemStiffMatrixHexa8 ( elem, propSet_ );
-    std::unique_ptr<sbfMatrixIterator> iteratorPtr ( createIterator() );
-    sbfMatrixIterator *iterator = iteratorPtr.get();
-    for ( int ctElem = startID; ctElem < stopID; ++ctElem ) { //Loop over elements
-        elem = mesh_->elemPtr ( ctElem );
-        assert ( mapStiff.count ( elem->type() ) == 1 );
-        elemStiff = mapStiff[elem->type()];
-        assert ( elemStiff->numDOF() == dim );
-        elemStiff->setElem ( elem );
-        elemStiff->computeSM();
-        auto listIDData = elemStiff->rowColData();
-        iterator->setToRow ( listIDData.front().first.first );
-        for ( auto idData : listIDData ) {
-            if ( type_ == DOWN_TREANGLE_MATRIX && idData.first.second > idData.first.first )
-                continue;
-            else if ( type_ == UP_TREANGLE_MATRIX && idData.first.second < idData.first.first )
-                continue;
-            double *data = nullptr;
-            if ( idData.first.first != iterator->row() ||
-                 iterator->column() > idData.first.second )
-                iterator->setToRow ( idData.first.first );
-            while ( iterator->isValid() )
-                if ( iterator->column() == idData.first.second &&
-                     iterator->isInNormal() ) {
-                    data = const_cast<double *> ( iterator->data() );
-                    break;
-                }
-                else iterator->next();
-            if ( !data )
-                throw std::runtime_error ( "Can't find target block in global stiffness matrix" );
-            for ( int ct = 0; ct < blockSize_; ++ct )
-                data[ct] += idData.second[ct];
-        }
-    }//Loop over elements
+    const int length = numBlocks_ * blockSize_;
+    for ( int ct = 0; ct < length; ct++ ) data_[ct] = 0.0;
 }
 
 template <int dim>

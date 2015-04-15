@@ -95,8 +95,6 @@ private:
     //! Reimplementation for all elements in mesh
     void updateIndexesFromMesh();
     //@}
-    //! Set all blocks to null
-    void null();
     //! Updates pointers in alter storage
     void updataAlterPtr();
     //! Returns pointer to stiffness block with indexes indI, indJ.
@@ -109,8 +107,10 @@ public:
 
     //Implementations of base pure virtual functions
 
-    //! Implementation of stiff matrix compute and assembly
-    virtual void compute ( int startID, int stopID );
+//    //! Implementation of stiff matrix compute and assembly
+//    virtual void compute ( int startID, int stopID );
+    //! Set all blocks to null
+    virtual void null();
     //! Create new matrix iterator
     virtual sbfMatrixIterator *createIterator() /*const*/;
     //! Get number of DOF. @see blockDim_

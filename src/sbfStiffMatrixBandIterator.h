@@ -118,6 +118,10 @@ public:
     virtual bool isInNormal() const;
     //! Get pointer to diagonal data of row (column) index
     virtual double *diagonal ( const int index ) const;
+    //! Get dimention of single record in matrix
+    virtual int numDOF() const { return dim; }
+    //! Get size of single record in matrix
+    virtual int dataItemSize() const { return dim*dim; }
 };
 
 #endif // SBFSTIFFMATRIXBANDITERATOR_H

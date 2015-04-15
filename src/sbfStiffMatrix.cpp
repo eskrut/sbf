@@ -1,10 +1,12 @@
 #include "sbfStiffMatrix.h"
 #include "sbfElement.h"
-#include "sbfStiffMatrixBlock3x3.h"
-#include "sbfStiffMatrixBlock6x6.h"
+#include "sbfStiffMatrixBlock.h"
 #include "sbfStiffMatrixBand.h"
-#include <cassert>
 #include "sbfAdditions.h"
+#include "sbfElement.h"
+#include "sbfElemStiffMatrixBeam6Dof.h"
+#include "sbfElemStiffMatrixHexa8.h"
+#include <cassert>
 
 sbfStiffMatrix::sbfStiffMatrix(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType type) :
     mesh_(mesh),
@@ -51,6 +53,50 @@ void sbfStiffMatrix::computeSequantially()
     compute(0, mesh_->numElements());
 }
 
+void sbfStiffMatrix::compute(int startID, int stopID)
+{
+    if ( !propSet_ ) throw std::runtime_error ( "nullptr in propSet" );
+    null();
+    sbfElement *elem = nullptr;
+    sbfElemStiffMatrix *elemStiff = nullptr;
+    std::map<ElementType, sbfElemStiffMatrix *> mapStiff;
+    mapStiff[ElementType::BEAM_LINEAR_6DOF] = new sbfElemStiffMatrixBeam6Dof ( elem, propSet_ );
+    mapStiff[ElementType::HEXAHEDRON_LINEAR] = new sbfElemStiffMatrixHexa8 ( elem, propSet_ );
+    std::unique_ptr<sbfMatrixIterator> iteratorPtr ( createIterator() );
+    sbfMatrixIterator *iterator = iteratorPtr.get();
+    for ( int ctElem = startID; ctElem < stopID; ++ctElem ) { //Loop over elements
+        elem = mesh_->elemPtr ( ctElem );
+        assert ( mapStiff.count ( elem->type() ) == 1 );
+        elemStiff = mapStiff[elem->type()];
+        assert ( elemStiff->numDOF() == iterator->numDOF() );
+        elemStiff->setElem ( elem );
+        elemStiff->computeSM();
+        auto listIDData = elemStiff->rowColData();
+        iterator->setToRow ( listIDData.front().first.first );
+        for ( auto idData : listIDData ) {
+            if ( type_ == DOWN_TREANGLE_MATRIX && idData.first.second > idData.first.first )
+                continue;
+            else if ( type_ == UP_TREANGLE_MATRIX && idData.first.second < idData.first.first )
+                continue;
+            double *data = nullptr;
+            if ( idData.first.first != iterator->row() ||
+                 iterator->column() > idData.first.second )
+                iterator->setToRow ( idData.first.first );
+            while ( iterator->isValid() )
+                if ( iterator->column() == idData.first.second &&
+                     iterator->isInNormal() ) {
+                    data = const_cast<double *> ( iterator->data() );
+                    break;
+                }
+                else iterator->next();
+            if ( !data )
+                throw std::runtime_error ( "Can't find target block in global stiffness matrix" );
+            for ( int ct = 0; ct < iterator->dataItemSize(); ++ct )
+                data[ct] += idData.second[ct];
+        }
+    }//Loop over elements
+}
+
 sbfStiffMatrix *sbfStiffMatrix::New(sbfMesh *mesh, sbfPropertiesSet *propSet, MatrixType symType, MatrixStoreType storeType)
 {
     int nodeDofInMesh = 0;
@@ -58,13 +104,13 @@ sbfStiffMatrix *sbfStiffMatrix::New(sbfMesh *mesh, sbfPropertiesSet *propSet, Ma
 
     if (nodeDofInMesh == 3){
         if(storeType == MatrixStoreType::COMPACT)
-            return new sbfStiffMatrixBlock3x3(mesh, propSet, symType);
+            return new sbfStiffMatrixBlock<3>(mesh, propSet, symType);
         else
             return new sbfStiffMatrixBand<3>(mesh, propSet, symType);
     }
     else if (nodeDofInMesh == 6){
         if(storeType == MatrixStoreType::COMPACT)
-            return new sbfStiffMatrixBlock6x6(mesh, propSet, symType);
+            return new sbfStiffMatrixBlock<6>(mesh, propSet, symType);
         else
             return new sbfStiffMatrixBand<6>(mesh, propSet, symType);
     }
