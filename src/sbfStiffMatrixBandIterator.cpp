@@ -4,13 +4,13 @@ template <int dim>
 sbfStiffMatrixBandIterator<dim>::sbfStiffMatrixBandIterator ( const sbfStiffMatrixBand<dim> *matrix ) :
     sbfMatrixIterator ( matrix ),
     type_ ( matrix->type() ),
-    isInNormal_ ( false ),
-    isHaveNext_ ( false ),
-    isValid_ ( false ),
     columnsIndsPtrs_ ( matrix->columnsIndsPtrs_ ),
     columnsIndsPtrsAlter_ ( matrix->columnsIndsPtrsAlter_ ),
     curColumnIndsPtrs_ ( nullptr ),
-    curColumnIndsPtrsAlter_ ( nullptr )
+    curColumnIndsPtrsAlter_ ( nullptr ),
+    isInNormal_ ( false ),
+    isHaveNext_ ( false ),
+    isValid_ ( false )
 {
     columnsByRowsNormal_ = matrix->indJ_;
     shiftsRowNormal_ = matrix->shiftInd_;
@@ -23,6 +23,9 @@ sbfStiffMatrixBandIterator<dim>::sbfStiffMatrixBandIterator ( const sbfStiffMatr
 template <int dim>
 void sbfStiffMatrixBandIterator<dim>::setToRow ( const int rowIndex )
 {
+    //sbfStiffMatrixBlockIterator<dim>::setToRow and sbfStiffMatrixBandIterator<dim>::setToRow
+    //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
+    //keep this in mind during modifications
     curRowIndex_ = rowIndex;
     dir_ = IterateDirection::RowDirect;
     curShiftNormal_ = shiftsRowNormal_[curRowIndex_];
@@ -63,6 +66,9 @@ void sbfStiffMatrixBandIterator<dim>::setToRow ( const int rowIndex )
 template <int dim>
 void sbfStiffMatrixBandIterator<dim>::setToColumn ( const int columnIndex )
 {
+    //sbfStiffMatrixBlockIterator<dim>::setToColumn and sbfStiffMatrixBandIterator<dim>::setToColumn
+    //are SAME
+    //keep this in mind during modifications
     curColumnIndsPtrs_ = & ( columnsIndsPtrs_[columnIndex] );
     curColumnIndsPtrsAlter_ = & ( columnsIndsPtrsAlter_[columnIndex] );
     colIndsPtrsIter_ = curColumnIndsPtrs_->begin();
@@ -73,13 +79,9 @@ void sbfStiffMatrixBandIterator<dim>::setToColumn ( const int columnIndex )
     dir_ = IterateDirection::ColumnDirect;
 
     if (
-        (
-            colIndsPtrsAlterIter_ == colIndsPtrsAlterEnd_ && colIndsPtrsIter_ + 1 < colIndsPtrsEnd_
-        ) || (
-            colIndsPtrsAlterIter_ + 1 == colIndsPtrsAlterEnd_ && colIndsPtrsIter_ < colIndsPtrsEnd_
-        ) || (
-            colIndsPtrsAlterIter_ + 1 < colIndsPtrsAlterEnd_ || colIndsPtrsIter_ + 1 < colIndsPtrsEnd_
-        )
+        ( colIndsPtrsAlterIter_ == colIndsPtrsAlterEnd_ && colIndsPtrsIter_ + 1 < colIndsPtrsEnd_ ) ||
+        ( colIndsPtrsAlterIter_ + 1 == colIndsPtrsAlterEnd_ && colIndsPtrsIter_ < colIndsPtrsEnd_ ) ||
+        ( colIndsPtrsAlterIter_ + 1 < colIndsPtrsAlterEnd_ || colIndsPtrsIter_ + 1 < colIndsPtrsEnd_ )
     )
         isHaveNext_ = true;
     else
@@ -108,6 +110,9 @@ void sbfStiffMatrixBandIterator<dim>::setToColumn ( const int columnIndex )
 template <int dim>
 void sbfStiffMatrixBandIterator<dim>::setToRowInverse ( const int rowIndex )
 {
+    //sbfStiffMatrixBlockIterator<dim>::setToRowInverse and sbfStiffMatrixBandIterator<dim>::setToRowInverse
+    //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
+    //keep this in mind during modifications
     curRowIndex_ = rowIndex;
     dir_ = IterateDirection::RowInvert;
     curShiftNormal_ = shiftsRowNormal_[curRowIndex_ + 1] - 1;
@@ -150,6 +155,9 @@ void sbfStiffMatrixBandIterator<dim>::setToRowInverse ( const int rowIndex )
 template <int dim>
 void sbfStiffMatrixBandIterator<dim>::setToColumnInverse ( const int columnIndex )
 {
+    //sbfStiffMatrixBlockIterator<dim>::setToColumnInverse and sbfStiffMatrixBandIterator<dim>::setToColumnInverse
+    //are SAME
+    //keep this in mind during modifications
     curColumnIndsPtrs_ = & ( columnsIndsPtrs_[columnIndex] );
     curColumnIndsPtrsAlter_ = & ( columnsIndsPtrsAlter_[columnIndex] );
     colIndsPtrsIterRev_ = curColumnIndsPtrs_->rbegin();
@@ -159,15 +167,10 @@ void sbfStiffMatrixBandIterator<dim>::setToColumnInverse ( const int columnIndex
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnInvert;
 
-//    if ( colIndsPtrsIterRev_+1 < colIndsPtrsEndRev_ || colIndsPtrsAlterIterRev_+1 < colIndsPtrsAlterEndRev_ )
     if (
-        (
-            colIndsPtrsAlterIterRev_ == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_ + 1 < colIndsPtrsEndRev_
-        ) || (
-            colIndsPtrsAlterIterRev_ + 1 == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_ < colIndsPtrsEndRev_
-        ) || (
-            colIndsPtrsAlterIterRev_ + 1 < colIndsPtrsAlterEndRev_ || colIndsPtrsIterRev_ + 1 < colIndsPtrsEndRev_
-        )
+        ( colIndsPtrsAlterIterRev_ == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_ + 1 < colIndsPtrsEndRev_ ) ||
+        ( colIndsPtrsAlterIterRev_ + 1 == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_ < colIndsPtrsEndRev_ ) ||
+        ( colIndsPtrsAlterIterRev_ + 1 < colIndsPtrsAlterEndRev_ || colIndsPtrsIterRev_ + 1 < colIndsPtrsEndRev_ )
     )
         isHaveNext_ = true;
     else
@@ -209,6 +212,10 @@ bool sbfStiffMatrixBandIterator<dim>::haveNext() const
 template <int dim>
 bool sbfStiffMatrixBandIterator<dim>::next()
 {
+    //sbfStiffMatrixBlockIterator<dim>::next and sbfStiffMatrixBandIterator<dim>::next
+    //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_ in row cases and
+    //are SAME in column cases
+    //keep this in mind during modifications
     if ( !isHaveNext_ ) {
         isValid_ = false;
         return false;

@@ -39,6 +39,34 @@ private:
     //!Pointers to actual data.
     double **blocksByRowsAlter_;
 
+    //Column iteration indexation
+    using ColumnDataType = std::vector<std::pair<int /*rowId*/, double * /*ptr*/> /*column*/ >;
+    //! row ID and corresponding data pointer to indexating in columns
+    const std::vector<ColumnDataType> &columnsIndsPtrs_;
+    //! row ID and corresponding data pointer to indexating in columns in alter storage
+    const std::vector<ColumnDataType> &columnsIndsPtrsAlter_;
+
+    //! Pointer for current column
+    const ColumnDataType *curColumnIndsPtrs_;
+    //! Pointer for current column in alter storage
+    const ColumnDataType *curColumnIndsPtrsAlter_;
+    //! std iterator through column
+    ColumnDataType::const_iterator colIndsPtrsIter_;
+    //! std iterator through column in alter storage
+    ColumnDataType::const_iterator colIndsPtrsAlterIter_;
+    //! std iterator to column end
+    ColumnDataType::const_iterator colIndsPtrsEnd_;
+    //! std iterator to column end in alter storage
+    ColumnDataType::const_iterator colIndsPtrsAlterEnd_;
+    //! std reverce iterator through column
+    ColumnDataType::const_reverse_iterator colIndsPtrsIterRev_;
+    //! std reverce iterator through column in alter storage
+    ColumnDataType::const_reverse_iterator colIndsPtrsAlterIterRev_;
+    //! std reverce iterator to column end
+    ColumnDataType::const_reverse_iterator colIndsPtrsEndRev_;
+    //! std reverce iterator to column end in alter storage
+    ColumnDataType::const_reverse_iterator colIndsPtrsAlterEndRev_;
+
     //Some helpers
 
     //! Pointer to current block

@@ -60,9 +60,9 @@ public:
 
 private:
     //! @brief Compute values of form functions at natural coordinates (r, s, t).
-    virtual void computeH(double r, double s = 0, double t = 0) {}
+    virtual void computeH(double r, double s = 0, double t = 0) {(void)(r);(void)(s);(void)(t);}
     //! @brief Compute values of form functions derivations over natural coordinates at natural coordinates (r, s, t).
-    virtual void computeDHDN(double r, double s = 0, double t = 0) {}
+    virtual void computeDHDN(double r, double s = 0, double t = 0) {(void)(r);(void)(s);(void)(t);}
     //! @brief Compute values of form functions derivations over global coordinates at natural coordinates (r, s, t).
     virtual void computeDHDG() {}
     //! @brief Compute Jacobian, its determinant and inverse at natural coordinates (r, s, t).

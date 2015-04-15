@@ -349,6 +349,90 @@ BOOST_AUTO_TEST_CASE ( lowTriangle )
         BOOST_REQUIRE ( ! iter->next() );
         BOOST_REQUIRE ( ! iter->isValid() );
     }
+    {
+        iter->setToRow ( 1 );
+        BOOST_REQUIRE ( iter->isValid() );
+        BOOST_REQUIRE ( ! iter->isDiagonal() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->isDiagonal() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->isValid() );
+        BOOST_REQUIRE ( iter->column() == 4 );
+        BOOST_REQUIRE ( ( iter->data() - stiff->data() ) / std::pow ( stiff->numDof(), 2 ) == 11 );
+        BOOST_REQUIRE ( iter->row() == 1 );
+        BOOST_REQUIRE ( iter->haveNext() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->column() == 7 );
+        BOOST_REQUIRE ( ( iter->data() - stiff->data() ) / std::pow ( stiff->numDof(), 2 ) == 29 );
+        BOOST_REQUIRE ( iter->isValid() );
+        BOOST_REQUIRE ( ! iter->isInNormal() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( ! iter->haveNext() );
+        BOOST_REQUIRE ( ! iter->next() );
+        BOOST_REQUIRE ( ! iter->isValid() );
+    }
+    {
+        iter->setToColumn ( 0 );
+        BOOST_REQUIRE ( iter->row() == 0 );
+        BOOST_REQUIRE ( iter->isDiagonal() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( ( iter->data() - stiff->data() ) / std::pow ( stiff->numDof(), 2 ) == 0 );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( ! iter->isDiagonal() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( iter->row() == 7 );
+        BOOST_REQUIRE ( ( iter->data() - stiff->data() ) / std::pow ( stiff->numDof(), 2 ) == 28 );
+        BOOST_REQUIRE ( ! iter->haveNext() );
+        BOOST_REQUIRE ( iter->isValid() );
+        BOOST_REQUIRE ( ! iter->next() );
+        BOOST_REQUIRE ( ! iter->isValid() );
+    }
+    {
+        iter->setToColumn ( 1 );
+        BOOST_REQUIRE ( iter->row() == 0 );
+        BOOST_REQUIRE ( ! iter->isDiagonal() );
+        BOOST_REQUIRE ( ! iter->isInNormal() );
+        BOOST_REQUIRE ( ( iter->data() - stiff->data() ) / std::pow ( stiff->numDof(), 2 ) == 1 );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->isDiagonal() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( ( iter->data() - stiff->data() ) / std::pow ( stiff->numDof(), 2 ) == 2 );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( ! iter->isDiagonal() );
+        BOOST_REQUIRE ( iter->isInNormal() );
+        BOOST_REQUIRE ( iter->row() == 7 );
+        BOOST_REQUIRE ( ( iter->data() - stiff->data() ) / std::pow ( stiff->numDof(), 2 ) == 29 );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( iter->next() );
+        BOOST_REQUIRE ( ! iter->haveNext() );
+        BOOST_REQUIRE ( iter->isValid() );
+        BOOST_REQUIRE ( ! iter->next() );
+        BOOST_REQUIRE ( ! iter->isValid() );
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

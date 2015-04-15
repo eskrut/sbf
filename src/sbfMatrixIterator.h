@@ -30,6 +30,8 @@ public:
     virtual bool haveNext() const = 0;
     //!Switch to next. If there in no more blocks returns false.
     virtual bool next() = 0;
+    //!Switch to next count tumes.
+    bool next(int count) { bool rez; for(int ct = 0; ct < count; ++ct) rez = next(); return rez;}
     //!Get pointer to data.
     //TODO is it necessary to make template or deduce internal pointers type at compile-time?
     virtual double* data() const = 0;

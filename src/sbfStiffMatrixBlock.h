@@ -55,6 +55,14 @@ private:
     //! Array of pointers to data corresponded to alternative indexation
     //! ptrDataAlter_ != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
     double **ptrDataAlter_;
+    //! Column iteration indexation
+    std::vector<std::vector<
+    std::pair<int /*rowId*/, double * /*ptr*/> /*column*/
+    > > columnsIndsPtrs_;
+    //! Column iteration indexation in alter storage
+    std::vector<std::vector<
+    std::pair<int /*rowId*/, double * /*ptr*/> /*column*/
+    > > columnsIndsPtrsAlter_;
 
     //! Basic initialization function
     void init();
@@ -89,6 +97,8 @@ private:
     //! Returns pointer to stiffness block with indexes indI, indJ.
     //! Search in regular storage ONLY
     double *blockPtr ( int indI, int indJ );
+    //! Update columns indexing
+    void updateColumnsIndsPtrs();
 
 public:
 

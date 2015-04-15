@@ -4,6 +4,10 @@ template <int dim>
 sbfStiffMatrixBlockIterator<dim>::sbfStiffMatrixBlockIterator ( const sbfStiffMatrixBlock<dim> *matrix ) :
     sbfMatrixIterator ( matrix ),
     type_ ( matrix->type() ),
+    columnsIndsPtrs_ ( matrix->columnsIndsPtrs_ ),
+    columnsIndsPtrsAlter_ ( matrix->columnsIndsPtrsAlter_ ),
+    curColumnIndsPtrs_ ( nullptr ),
+    curColumnIndsPtrsAlter_ ( nullptr ),
     isInNormal_ ( false ),
     isHaveNext_ ( false ),
     isValid_ ( false )
@@ -19,6 +23,9 @@ sbfStiffMatrixBlockIterator<dim>::sbfStiffMatrixBlockIterator ( const sbfStiffMa
 template <int dim>
 void sbfStiffMatrixBlockIterator<dim>::setToRow ( const int rowIndex )
 {
+    //sbfStiffMatrixBlockIterator<dim>::setToRow and sbfStiffMatrixBandIterator<dim>::setToRow
+    //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
+    //keep this in mind during modifications
     curRowIndex_ = rowIndex;
     dir_ = IterateDirection::RowDirect;
     curShiftNormal_ = shiftsRowNormal_[curRowIndex_];
@@ -52,39 +59,46 @@ void sbfStiffMatrixBlockIterator<dim>::setToRow ( const int rowIndex )
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error ( "Not implemented yet :(" );
     }//type_ == UP_TREANGLE_MATRIX
+    curColumnIndsPtrs_ = nullptr;
+    curColumnIndsPtrsAlter_ = nullptr;
 }
 
 template <int dim>
 void sbfStiffMatrixBlockIterator<dim>::setToColumn ( const int columnIndex )
 {
-    //Since matrix have symmetry, this will actually iterate over row
+    //sbfStiffMatrixBlockIterator<dim>::setToColumn and sbfStiffMatrixBandIterator<dim>::setToColumn
+    //are SAME
+    //keep this in mind during modifications
+    curColumnIndsPtrs_ = & ( columnsIndsPtrs_[columnIndex] );
+    curColumnIndsPtrsAlter_ = & ( columnsIndsPtrsAlter_[columnIndex] );
+    colIndsPtrsIter_ = curColumnIndsPtrs_->begin();
+    colIndsPtrsAlterIter_ = curColumnIndsPtrsAlter_->begin();
+    colIndsPtrsEnd_ = curColumnIndsPtrs_->end();
+    colIndsPtrsAlterEnd_ = curColumnIndsPtrsAlter_->end();
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnDirect;
-    curShiftNormal_ = shiftsRowNormal_[curColumnIndex_];
-    shiftNormalLast_ = shiftsRowNormal_[curColumnIndex_ + 1];
-    if ( shiftsRowAlter_ ) {
-        curShiftAlter_ = shiftsRowAlter_[curColumnIndex_];
-        shiftAlterLast_ = shiftsRowAlter_[curColumnIndex_ + 1];
-    }
-    else {
-        curShiftAlter_ = shiftAlterLast_ = -1;
-    }
-    if ( curShiftNormal_ == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_ )
-        isHaveNext_ = false;
-    else
-        isHaveNext_ = true;
 
+    if (
+        ( colIndsPtrsAlterIter_ == colIndsPtrsAlterEnd_ && colIndsPtrsIter_ + 1 < colIndsPtrsEnd_ ) ||
+        ( colIndsPtrsAlterIter_ + 1 == colIndsPtrsAlterEnd_ && colIndsPtrsIter_ < colIndsPtrsEnd_ ) ||
+        ( colIndsPtrsAlterIter_ + 1 < colIndsPtrsAlterEnd_ || colIndsPtrsIter_ + 1 < colIndsPtrsEnd_ )
+    )
+        isHaveNext_ = true;
+    else
+        isHaveNext_ = false;
     if ( ! ( type_ & UP_TREANGLE_MATRIX ) ) {
-        if ( curShiftNormal_ != shiftNormalLast_ ) {
-            curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
+        if ( colIndsPtrsAlterIter_ != colIndsPtrsAlterEnd_ ) {
+            curRowIndex_ = colIndsPtrsAlterIter_->first;
             isInNormal_ = false;
-            curData_ = base_ + blockSize_ * curShiftNormal_;
+            curData_ = colIndsPtrsAlterIter_->second;
             isValid_ = true;
+            //To make increment in next()
+            --colIndsPtrsIter_;
         }
         else {
-            curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
+            curRowIndex_ = colIndsPtrsIter_->first;
             isInNormal_ = true;
-            curData_ = blocksByRowsAlter_[curShiftAlter_];
+            curData_ = colIndsPtrsIter_->second;
             isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
@@ -96,6 +110,9 @@ void sbfStiffMatrixBlockIterator<dim>::setToColumn ( const int columnIndex )
 template <int dim>
 void sbfStiffMatrixBlockIterator<dim>::setToRowInverse ( const int rowIndex )
 {
+    //sbfStiffMatrixBlockIterator<dim>::setToRowInverse and sbfStiffMatrixBandIterator<dim>::setToRowInverse
+    //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
+    //keep this in mind during modifications
     curRowIndex_ = rowIndex;
     dir_ = IterateDirection::RowInvert;
     curShiftNormal_ = shiftsRowNormal_[curRowIndex_ + 1] - 1;
@@ -131,41 +148,47 @@ void sbfStiffMatrixBlockIterator<dim>::setToRowInverse ( const int rowIndex )
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error ( "Not implemented yet :(" );
     }//type_ == UP_TREANGLE_MATRIX
+    curColumnIndsPtrs_ = nullptr;
+    curColumnIndsPtrsAlter_ = nullptr;
 }
 
 template <int dim>
 void sbfStiffMatrixBlockIterator<dim>::setToColumnInverse ( const int columnIndex )
 {
-    //Since matrix have symmetry, this will actually iterate over row
+    //sbfStiffMatrixBlockIterator<dim>::setToColumnInverse and sbfStiffMatrixBandIterator<dim>::setToColumnInverse
+    //are SAME
+    //keep this in mind during modifications
+    curColumnIndsPtrs_ = & ( columnsIndsPtrs_[columnIndex] );
+    curColumnIndsPtrsAlter_ = & ( columnsIndsPtrsAlter_[columnIndex] );
+    colIndsPtrsIterRev_ = curColumnIndsPtrs_->rbegin();
+    colIndsPtrsAlterIterRev_ = curColumnIndsPtrsAlter_->rbegin();
+    colIndsPtrsEndRev_ = curColumnIndsPtrs_->rend();
+    colIndsPtrsAlterEndRev_ = curColumnIndsPtrsAlter_->rend();
     curColumnIndex_ = columnIndex;
     dir_ = IterateDirection::ColumnInvert;
-    curShiftNormal_ = shiftsRowNormal_[curColumnIndex_ + 1] - 1;
-    shiftNormalLast_ = shiftsRowNormal_[curColumnIndex_];
-    if ( shiftsRowAlter_ ) {
-        curShiftAlter_ = shiftsRowAlter_[curColumnIndex_ + 1];
-        shiftAlterLast_ = shiftsRowAlter_[curColumnIndex_];
-    }
-    else {
-        curShiftAlter_ = shiftAlterLast_ = -1;
-    }
-    if ( curShiftNormal_ == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_ )
-        isHaveNext_ = false;
-    else
-        isHaveNext_ = true;
 
+    if (
+        ( colIndsPtrsAlterIterRev_ == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_ + 1 < colIndsPtrsEndRev_ ) ||
+        ( colIndsPtrsAlterIterRev_ + 1 == colIndsPtrsAlterEndRev_ && colIndsPtrsIterRev_ < colIndsPtrsEndRev_ ) ||
+        ( colIndsPtrsAlterIterRev_ + 1 < colIndsPtrsAlterEndRev_ || colIndsPtrsIterRev_ + 1 < colIndsPtrsEndRev_ )
+    )
+        isHaveNext_ = true;
+    else
+        isHaveNext_ = false;
     if ( ! ( type_ & UP_TREANGLE_MATRIX ) ) {
-        if ( --curShiftAlter_ >= shiftAlterLast_ ) {
-            curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
+        if ( colIndsPtrsIterRev_ != colIndsPtrsEndRev_ ) {
+            curRowIndex_ = colIndsPtrsIterRev_->first;
             isInNormal_ = true;
-            curData_ = blocksByRowsAlter_[curShiftAlter_];
+            curData_ = colIndsPtrsIterRev_->second;
             isValid_ = true;
-            //Litle hack to perform next()
-            curShiftNormal_++;
+            //To make increment in next()
+            if ( colIndsPtrsAlterIterRev_ != colIndsPtrsAlterEndRev_ )
+                --colIndsPtrsAlterIterRev_;
         }
         else {
-            curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
+            curRowIndex_ = colIndsPtrsAlterIterRev_->first;
             isInNormal_ = false;
-            curData_ = base_ + blockSize_ * curShiftNormal_;
+            curData_ = colIndsPtrsAlterIterRev_->second;
             isValid_ = true;
         }
     }//type_ != UP_TREANGLE_MATRIX
@@ -189,6 +212,10 @@ bool sbfStiffMatrixBlockIterator<dim>::haveNext() const
 template <int dim>
 bool sbfStiffMatrixBlockIterator<dim>::next()
 {
+    //sbfStiffMatrixBlockIterator<dim>::next and sbfStiffMatrixBandIterator<dim>::next
+    //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_ in row cases and
+    //are SAME in column cases
+    //keep this in mind during modifications
     if ( !isHaveNext_ ) {
         isValid_ = false;
         return false;
@@ -207,7 +234,7 @@ bool sbfStiffMatrixBlockIterator<dim>::next()
                     isInNormal_ = false;
                     curShiftAlter_--;//For first block only
                 }
-                curShiftAlter_++;
+                ++curShiftAlter_;
                 curColumnIndex_ = columnsByRowsAlter_[curShiftAlter_];
                 curData_ = blocksByRowsAlter_[curShiftAlter_];
                 if ( curShiftAlter_ + 1 == shiftAlterLast_ ) isHaveNext_ = false;
@@ -219,20 +246,20 @@ bool sbfStiffMatrixBlockIterator<dim>::next()
             }
             break;
         case IterateDirection::ColumnDirect:
-            if ( !isInNormal_ && ++curShiftNormal_ != shiftNormalLast_ ) {
-                curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
-                curData_ = base_ + blockSize_ * curShiftNormal_;
-                if ( curShiftNormal_ + 1 == shiftNormalLast_ && curShiftAlter_ == shiftAlterLast_ ) isHaveNext_ = false;
+            if ( curColumnIndsPtrsAlter_->size() && colIndsPtrsAlterIter_ + 1 < colIndsPtrsAlterEnd_ ) {
+                ++colIndsPtrsAlterIter_;
+                curRowIndex_ = colIndsPtrsAlterIter_->first;
+                isInNormal_ = false;
+                curData_ = colIndsPtrsAlterIter_->second;
+                isValid_ = true;
             }
-            else if ( curShiftAlter_ != shiftAlterLast_ ) {
-                if ( !isInNormal_ ) {
-                    isInNormal_ = true;
-                    curShiftAlter_--;//For first block only
-                }
-                curShiftAlter_++;
-                curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
-                curData_ = blocksByRowsAlter_[curShiftAlter_];
-                if ( curShiftAlter_ + 1 == shiftAlterLast_ ) isHaveNext_ = false;
+            else if ( colIndsPtrsIter_ + 1 < colIndsPtrsEnd_ ) {
+                ++colIndsPtrsIter_;
+                curRowIndex_ = colIndsPtrsIter_->first;
+                isInNormal_ = true;
+                curData_ = colIndsPtrsIter_->second;
+                isValid_ = true;
+                if ( colIndsPtrsIter_ + 1 == colIndsPtrsEnd_ ) isHaveNext_ = false;
             }
             else {
                 curData_ = nullptr;
@@ -259,16 +286,22 @@ bool sbfStiffMatrixBlockIterator<dim>::next()
             }
             break;
         case IterateDirection::ColumnInvert:
-            if ( isInNormal_ && --curShiftAlter_ >= shiftAlterLast_ ) {
-                curRowIndex_ = columnsByRowsAlter_[curShiftAlter_];
-                curData_ = blocksByRowsAlter_[curShiftAlter_];
+            if ( colIndsPtrsIterRev_ + 1 < colIndsPtrsEndRev_ ) {
+                ++colIndsPtrsIterRev_;
+                curRowIndex_ = colIndsPtrsIterRev_->first;
+                isInNormal_ = true;
+                curData_ = colIndsPtrsIterRev_->second;
+                isValid_ = true;
+                if ( colIndsPtrsIterRev_ + 1 == colIndsPtrsEndRev_ && !curColumnIndsPtrsAlter_->size() )
+                    isHaveNext_ = false;
             }
-            else if ( curShiftNormal_-- >= shiftNormalLast_ ) {
-                if ( isInNormal_ )
-                    isInNormal_ = false;
-                curRowIndex_ = columnsByRowsNormal_[curShiftNormal_];
-                curData_ = base_ + blockSize_ * curShiftNormal_;
-                if ( curShiftNormal_ == shiftNormalLast_ ) isHaveNext_ = false;
+            else if ( curColumnIndsPtrsAlter_->size() && colIndsPtrsAlterIterRev_ + 1 < colIndsPtrsAlterEndRev_ ) {
+                ++colIndsPtrsAlterIterRev_;
+                curRowIndex_ = colIndsPtrsAlterIterRev_->first;
+                isInNormal_ = false;
+                curData_ = colIndsPtrsAlterIterRev_->second;
+                isValid_ = true;
+                if ( colIndsPtrsAlterIterRev_ + 1 == colIndsPtrsAlterEndRev_ ) isHaveNext_ = false;
             }
             else {
                 curData_ = nullptr;

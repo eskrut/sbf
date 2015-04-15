@@ -37,6 +37,8 @@ void sbfStiffMatrixBlock<dim>::init()
     indJAlter_ = nullptr;
     shiftIndAlter_ = nullptr;
     ptrDataAlter_ = nullptr;
+    columnsIndsPtrs_.clear();
+    columnsIndsPtrsAlter_.clear();
 }
 
 template <int dim>
@@ -54,6 +56,8 @@ void sbfStiffMatrixBlock<dim>::clean()
     {delete [] shiftIndAlter_; shiftIndAlter_ = nullptr;}
     if ( ptrDataAlter_ != nullptr )
     {delete [] ptrDataAlter_; ptrDataAlter_ = nullptr;}
+    columnsIndsPtrs_.clear();
+    columnsIndsPtrsAlter_.clear();
 }
 
 template <int dim>
@@ -63,13 +67,17 @@ void sbfStiffMatrixBlock<dim>::allocate()
     data_ = new double [blockSize_ * numBlocks_];
     null();
     indJ_ = new int [numBlocks_];
-    shiftInd_ = new int [numNodes_ +
-                         1]; //+1 to allow unique iteration through rows, i.e. from shiftInd_[ct] to shiftInd_[ct+1]
+    //+1 to allow unique iteration through rows,
+    //i.e. from shiftInd_[ct] to shiftInd_[ct+1]
+    shiftInd_ = new int [numNodes_ + 1];
     if ( numBlocksAlter_ > 0 ) {
         indJAlter_ = new int [numBlocksAlter_];
         shiftIndAlter_ = new int [numNodes_ + 1];
         ptrDataAlter_ = new double * [numBlocksAlter_];
+        for ( int ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
     }
+    columnsIndsPtrs_.resize ( numNodes_ );
+    columnsIndsPtrsAlter_.resize ( numNodes_ );
 }
 
 template <int dim>
@@ -150,6 +158,7 @@ void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh ( int *begin, int *end )
     }//type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX
     else
         throw std::runtime_error ( "Not supported matrix type" );
+    updateColumnsIndsPtrs();
 }
 
 template <int dim>
@@ -193,6 +202,32 @@ double *sbfStiffMatrixBlock<dim>::blockPtr ( int indI, int indJ )
     }
 
     return nullptr;
+}
+
+template <int dim>
+void sbfStiffMatrixBlock<dim>::updateColumnsIndsPtrs()
+{
+    for ( auto &col : columnsIndsPtrs_ ) col.clear();
+    for ( auto &col : columnsIndsPtrsAlter_ ) col.clear();
+    for ( int indI = 0; indI < numNodes_; ++indI ) {
+        int shift = shiftInd_[indI];
+        double *base = data_ + shift * blockSize_;
+        int searchLength = shiftInd_[indI + 1] - shift;
+        for ( int ct = 0; ct < searchLength; ct++ ) {
+            columnsIndsPtrs_[indJ_[shift + ct]].push_back ( std::make_pair ( indI, base ) );
+            base += blockSize_;
+        }
+    }
+    if ( ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX ) &&
+         numBlocksAlter_ > 0 ) {
+        int count = 0;
+        for ( int indI = 0; indI < numNodes_; indI++ ) {
+            for ( int shift = shiftIndAlter_[indI]; shift < shiftIndAlter_[indI + 1]; shift++ )
+                columnsIndsPtrsAlter_[indJAlter_[shift]].push_back (
+                    std::make_pair ( indI, ptrDataAlter_[count++] )
+                );
+        }
+    }
 }
 
 //template <int dim>
@@ -291,7 +326,7 @@ template <int dim>
 sbfStiffMatrix *sbfStiffMatrixBlock<dim>::createIncompleteChol()
 {
     sbfStiffMatrixBlock<dim> *cholFactor = new sbfStiffMatrixBlock<dim> ( mesh_, nullptr,
-                                                                      MatrixType::DOWN_TREANGLE_MATRIX | MatrixType::INCOMPLETE_CHOL );
+                                                                          MatrixType::DOWN_TREANGLE_MATRIX | MatrixType::INCOMPLETE_CHOL );
 
     cholFactor->null();
 
@@ -430,7 +465,7 @@ void sbfStiffMatrixBlock<dim>::solve_L_LT_u_eq_f ( double *u, double *f, sbfMatr
     if ( !iterator ) iter = createIterator();
     double sum[blockDim_], vecPart[blockDim_];
     double *block = data_;
-    sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+    for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
 
     //L u' = f
     int ctRow = 0;
@@ -438,7 +473,7 @@ void sbfStiffMatrixBlock<dim>::solve_L_LT_u_eq_f ( double *u, double *f, sbfMatr
     for ( int ctBlock = 0; ctBlock < numBlocks_; ctBlock++ ) { //Loop on blocks
         if ( ctBlock == shiftInd_[ctRow + 1] ) {
             ctRow++;
-            sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+            for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
         }
         ctColumn = indJ_[ctBlock];
         if ( ctRow != ctColumn ) { //process non diagonal block
@@ -463,7 +498,7 @@ void sbfStiffMatrixBlock<dim>::solve_L_LT_u_eq_f ( double *u, double *f, sbfMatr
     }//Loop on blocks
     //L^T u = u'
     for ( int ctRow = numNodes_ - 1; ctRow >= 0; ctRow-- ) { //Loop on rows
-        sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+        for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
         iter->setToColumnInverse ( ctRow );
         while ( !iter->isDiagonal() ) {
             block = iter->data();

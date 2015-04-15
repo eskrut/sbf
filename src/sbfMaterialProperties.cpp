@@ -45,7 +45,7 @@ void sbfMaterialProperties::read(std::ifstream &in)
     size_t numTables;
     in >> numTables;
     in.ignore(10, '\n');
-    for(int ct = 0; ct < numTables; ct++) {
+    for(size_t ct = 0; ct < numTables; ct++) {
         std::string name;
         std::getline(in, name);
         auto table = new sbfPropertyTable(name);

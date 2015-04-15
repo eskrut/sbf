@@ -350,13 +350,13 @@ bool sbfStiffMatrixBand<dim>::isValid()
 template <int dim>
 void sbfStiffMatrixBand<dim>::read_stream ( std::ifstream &in )
 {
-
+    ( void ) ( in );
 }
 
 template <int dim>
 void sbfStiffMatrixBand<dim>::write_stream ( std::ofstream &out ) const
 {
-
+    ( void ) ( out );
 }
 
 template <int dim>
@@ -699,7 +699,7 @@ void sbfStiffMatrixBand<dim>::solve_L_LT_u_eq_f ( double *u, double *f,
     if ( !iterator ) iter = createIterator();
     double sum[blockDim_], vecPart[blockDim_];
     double *block = data_;
-    sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+    for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
 
     //L u' = f
     int ctRow = 0;
@@ -708,7 +708,7 @@ void sbfStiffMatrixBand<dim>::solve_L_LT_u_eq_f ( double *u, double *f,
         if ( ctBlock == shiftInd_[ctRow + 1] ) {
             ctRow++;
             ctColumn = indJ_[ctRow * 2];
-            sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+            for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
         }
         if ( ctRow != ctColumn ) { //process non diagonal block
             //TODO this is not fatal, but still it should be implemented with iterator
@@ -732,7 +732,7 @@ void sbfStiffMatrixBand<dim>::solve_L_LT_u_eq_f ( double *u, double *f,
     }//Loop on blocks
     //L^T u = u'
     for ( int ctRow = numNodes_ - 1; ctRow >= 0; ctRow-- ) { //Loop on rows
-        sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+        for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
         iter->setToColumnInverse ( ctRow );
         while ( !iter->isDiagonal() ) {
             block = iter->data();
@@ -765,7 +765,7 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
     if ( !iterator ) iter = createIterator();
     double sum[blockDim_], vecPart[blockDim_];
     double *block = data_;
-    sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+    for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
 
     //L u' = f
     int ctRow = 0;
@@ -774,7 +774,7 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
         if ( ctBlock == shiftInd_[ctRow + 1] ) {
             ctRow++;
             ctColumn = indJ_[ctRow * 2];
-            sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+            for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
         }
         if ( ctRow != ctColumn ) { //process non diagonal block
             //TODO this is not fatal, but still it should be implemented with iterator
@@ -804,7 +804,7 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
     }
     //L^T u = u''
     for ( int ctRow = numNodes_ - 1; ctRow >= 0; ctRow-- ) { //Loop on rows
-        sum[0] = sum[1] = sum[2] = sum[3] = sum[4] = sum[5] = 0.0;
+        for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
         iter->setToColumnInverse ( ctRow );
         while ( !iter->isDiagonal() ) {
             block = iter->data();
