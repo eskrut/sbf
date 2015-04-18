@@ -135,6 +135,7 @@ public:
 
     void applyToAllNodes(std::function<void (sbfNode &)> lambda);
     void applyToAllElements(std::function<void (sbfElement &)> lambda);
+    void applyToAllElements(std::function<void (const sbfElement &)> lambda) const;
 
     int numDVData() const { return static_cast<int>(nodesDVDataList_.size()); }
     void addDVData(NodesData<double, 3> * data) {nodesDVDataList_.push_back(data);}

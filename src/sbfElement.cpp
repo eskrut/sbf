@@ -277,9 +277,33 @@ int numDof(const ElementType type)
     case ElementType::TETRAHEDRON_LINEAR:
     case ElementType::TETRAHEDRON_QUADRATIC:
         return 3;
+        break;
     case ElementType::BEAM_LINEAR_6DOF:
     case ElementType::BEAM_QUADRATIC_6DOF:
         return 6;
+        break;
+    default:
+        break;
+    }
+    return -1;
+}
+
+
+int elemOrder(const ElementType type)
+{
+    switch (type) {
+    case ElementType::BEAM_LINEAR_3DOF:
+    case ElementType::BEAM_LINEAR_6DOF:
+    case ElementType::HEXAHEDRON_LINEAR:
+    case ElementType::RECTANGLE_LINEAR:
+    case ElementType::TETRAHEDRON_LINEAR:
+        return 1;
+        break;
+    case ElementType::BEAM_QUADRATIC_3DOF:
+    case ElementType::BEAM_QUADRATIC_6DOF:
+    case ElementType::HEXAHEDRON_QUADRATIC:
+    case ElementType::TETRAHEDRON_QUADRATIC:
+        return 2;
         break;
     default:
         break;

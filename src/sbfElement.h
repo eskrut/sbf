@@ -75,5 +75,6 @@ public:
 
 DECLSPEC int numNodesInElement(const ElementType type);
 DECLSPEC int numDof(const ElementType type);
+DECLSPEC int elemOrder(const ElementType type);
 
 #endif // SBFELEMENT_H

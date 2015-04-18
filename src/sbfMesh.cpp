@@ -8,6 +8,10 @@
 #include "sbfNodeGroup.h"
 #include "sbfReporter.h"
 
+#include "sbfthreadpool.hpp"
+#include <atomic>
+#include <array>
+
 void computeGraph(sbfMesh * mesh, int *** graph);
 void computeGraphAlter(sbfMesh * mesh, int *** graph);
 size_t computeProfileSize(int ** graph, int numNodes, bool * flagOwerFlow = nullptr);
@@ -519,11 +523,36 @@ int sbfMesh::addNode(const sbfNode &node, bool checkExisted, float tol)
     /*	return index of new created node or already existed node with tolerance	*/
     int nNodes = numNodes();
     if(checkExisted){
-        for(int ct = nNodes-1; ct >= 0; ct--)
-        {
-            if(nodes_[ct].isSame(node, tol))
-                return ct;
-        }
+        const int numThreads = 8;
+        sbfThreadPool pool(numThreads);
+        std::array<int, numThreads> ids;
+        std::array<std::future<int>, numThreads> futures;
+        std::atomic<bool> found(false);
+        auto findExisting = [&](int start){
+            int foundID = -1;
+            for(int ct = start; ct >= 0 && !found.load(); ct -= numThreads)
+            {
+                if(nodes_[ct].isSame(node, tol)) {
+                    foundID = ct;
+                    found.store(true);
+                    break;
+                }
+            }
+            return foundID;
+        };
+        for(int ct = 0; ct < numThreads; ++ct)
+            futures[ct] = pool.enqueue(findExisting, nNodes-1-ct);
+        for(int ct = 0; ct < numThreads; ++ct)
+            ids[ct] = futures[ct].get();
+        for(int ct = 0; ct < numThreads; ++ct)
+            if(ids[ct] != -1) return ids[ct];
+
+//        for(int ct = nNodes-1; ct >= 0; ct--)
+//        {
+//            if(nodes_[ct].isSame(node, tol))
+//                return ct;
+//        }
+
         nodes_.push_back(node);
         return nNodes;
     }
@@ -961,6 +990,11 @@ void sbfMesh::applyToAllNodes(std::function<void (sbfNode &)> lambda)
 }
 
 void sbfMesh::applyToAllElements(std::function<void (sbfElement &)> lambda)
+{
+    for(auto & elem : elems_) lambda(elem);
+}
+
+void sbfMesh::applyToAllElements(std::function<void (const sbfElement &)> lambda) const
 {
     for(auto & elem : elems_) lambda(elem);
 }
