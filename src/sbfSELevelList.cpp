@@ -53,25 +53,26 @@ std::vector< std::vector<sbfSElement *> > sbfSELevelList::selevels (std::vector<
     selements.resize(numLevels());
 
     for(int ctLevel = 0; ctLevel < numLevels(); ctLevel++){
-        selements[ctLevel].reserve(level(ctLevel).numSE());
-        for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++) selements[ctLevel].push_back(new sbfSElement(mesh_, ctSe));
+        int ctLevelNumSE = level(ctLevel).numSE();
+        selements[ctLevel].reserve(ctLevelNumSE);
+        for(int ctSe = 0; ctSe < ctLevelNumSE; ctSe++) selements[ctLevel].push_back(new sbfSElement(mesh_, ctSe));
         std::vector< std::vector<int> > indexesPerSEs;
-        indexesPerSEs.resize(level(ctLevel).numSE());
-        for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++) indexesPerSEs[ctSe] = level(ctLevel).indexesOfSE(ctSe);
+        indexesPerSEs.resize(ctLevelNumSE);
+        for(int ctSe = 0; ctSe < ctLevelNumSE; ctSe++) indexesPerSEs[ctSe] = level(ctLevel).indexesOfSE(ctSe);
         if(ctLevel == 0){
-            for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++)
+            for(int ctSe = 0; ctSe < ctLevelNumSE; ctSe++)
                 selements[ctLevel][ctSe]->setRegElemIndexes(indexesPerSEs[ctSe]);
             if(fakeSEs && mesh_){
                 fakeSEs->reserve(mesh_->numElements());
                 for(int ctElem = 0; ctElem < mesh_->numElements(); ctElem++)
                     fakeSEs->push_back(new sbfSElement(mesh_, ctElem));
-                for(int ctSe = 0; ctSe < level(0).numSE(); ctSe++)
+                for(int ctSe = 0; ctSe < ctLevelNumSE; ctSe++)
                     for(size_t ct = 0; ct < indexesPerSEs[ctSe].size(); ct++)
                         (*fakeSEs)[indexesPerSEs[ctSe][ct]]->setParent(selements[ctLevel][ctSe]);
             }
         }
         else{
-            for(int ctSe = 0; ctSe < level(ctLevel).numSE(); ctSe++){
+            for(int ctSe = 0; ctSe < ctLevelNumSE; ctSe++){
                 for(size_t ct = 0; ct < indexesPerSEs[ctSe].size(); ct++){
                     selements[ctLevel][ctSe]->addChildren(selements[ctLevel-1][indexesPerSEs[ctSe][ct]]);
                     selements[ctLevel-1][indexesPerSEs[ctSe][ct]]->setParent(selements[ctLevel][ctSe]);

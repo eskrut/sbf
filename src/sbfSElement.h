@@ -6,6 +6,7 @@
 #include <set>
 #include <array>
 #include <random>
+#include <algorithm>
 #include "sbfDeclspec.h"
 #include "sbfAdditions.h"
 
