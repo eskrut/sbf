@@ -72,34 +72,36 @@ bool sbfGroupFilter::isPass(sbfElement &elem)
 {
     if(mesh_ == nullptr)
         return false;
-    if(mtrF_ && mtr_ == elem.mtr())
-        return true;
-    else if(typeF_ && type_ == elem.type())
-        return true;
-    else if(xMaxF_ || yMaxF_ || zMaxF_ || xMinF_ || yMinF_ || zMinF_){
+    bool passMtr = true;
+    bool passType = true;
+    bool passCrd = true;
+    if(mtrF_ && mtr_ != elem.mtr())
+        passMtr = false;
+    if(passMtr && typeF_ && type_ != elem.type())
+        passType = false;
+    if(passMtr && passType && (xMaxF_ || yMaxF_ || zMaxF_ || xMinF_ || yMinF_ || zMinF_)){
         sbfNode node = elem.centreOfMass();
         if(xMaxF_)
             if(xMax_ <= node.x())
-                return false;
-        if(yMaxF_)
+                passCrd = false;
+        if(yMaxF_ && passCrd)
             if(yMax_ <= node.y())
-                return false;
-        if(zMaxF_)
+                passCrd = false;
+        if(zMaxF_ && passCrd)
             if(zMax_ <= node.z())
-                return false;
-        if(xMinF_)
+                passCrd = false;
+        if(xMinF_ && passCrd)
             if(xMin_ >= node.x())
-                return false;
-        if(yMinF_)
+                passCrd = false;
+        if(yMinF_ && passCrd)
             if(yMin_ >= node.y())
-                return false;
-        if(zMinF_)
+                passCrd = false;
+        if(zMinF_ && passCrd)
             if(zMin_ >= node.z())
-                return false;
-        return true;
+                passCrd = false;
     }
     //else
-        return false;
+        return passMtr && passCrd && passType;
 }
 bool sbfGroupFilter::isPass(sbfNode &node)
 {

@@ -24,7 +24,7 @@ sbfSELevel & sbfSELevelList::level(int seqNumber)
 void sbfSELevelList::writeToFiles(const char * baseName, int numDigits)
 {
     for(std::list<sbfSELevel>::iterator it = list_.begin(); it != list_.end(); it++)
-        (*it).writeToFile(baseName, (*it).levelIndex(), numDigits);
+        (*it).writeToFile(baseName, (*it).levelIndex() + 1, numDigits);
 }
 int sbfSELevelList::readFromFiles(const char * baseName, int numDigits)
 {

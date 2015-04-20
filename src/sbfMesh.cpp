@@ -512,6 +512,14 @@ void sbfMesh::insertElement(const sbfElement & elem, int position)
     else{/*throw exception*/}
 }
 
+void sbfMesh::deleteElement(int elemID)
+{
+    if(elemID < (int)elems_.size()){
+        elems_.erase(elems_.begin() + elemID);
+    }
+    else{/*throw exception*/}
+}
+
 int sbfMesh::addNode(float x, float y, float z, bool checkExisted, float tol)
 {
     /*	return index of new created node or already existed node with tolerance	*/
@@ -566,13 +574,27 @@ void sbfMesh::deleteNode(int nodeIndex, bool renumberElemIndexes)
     if(nodeIndex < static_cast<int>(nodes_.size())){
         if(renumberElemIndexes){
             //Process elements indexes
-            std::vector<int> indexes;
-            for(size_t elemCt = 0; elemCt < static_cast<size_t>(numElements()); elemCt++){
-                indexes = elems_[elemCt].indexes();
-                for(size_t nodeCt = 0; nodeCt < indexes.size(); nodeCt++)
-                    if(indexes[nodeCt] >= nodeIndex)
-                        indexes[nodeCt]--;
-            }
+            const int numThreads = 8;
+            sbfThreadPool pool(numThreads);
+            std::array<std::future<int>, numThreads> futures;
+            for(int ct = 0; ct < numThreads; ++ct)
+                futures[ct] = pool.enqueue([&](int start){
+                    std::vector<int> indexes;
+                    for(size_t elemCt = start; elemCt < static_cast<size_t>(numElements()); elemCt += numThreads){
+                        indexes = elems_[elemCt].indexes();
+                        bool mod = false;
+                        for(size_t nodeCt = 0; nodeCt < indexes.size(); nodeCt++)
+                            if(indexes[nodeCt] >= nodeIndex) {
+                                indexes[nodeCt]--;
+                                mod = true;
+                            }
+                        if(mod)
+                            elems_[elemCt].setNodes(indexes);
+                    }
+                    return 0;
+                }, ct);
+            for(int ct = 0; ct < numThreads; ++ct)
+                futures[ct].get();
         }
         std::vector<sbfNode>::iterator eraceIterator = nodes_.begin() + nodeIndex;
         nodes_.erase(eraceIterator);

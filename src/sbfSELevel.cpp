@@ -1,5 +1,6 @@
 #include "sbfSELevel.h"
 #include <list>
+#include <set>
 #include <fstream>
 #include <sstream>
 #include "sbfMesh.h"
@@ -45,18 +46,9 @@ int sbfSELevel::index(int seqNumber)
 }
 int sbfSELevel::numSE()
 {
-    std::list<int> seList;
+    std::set<int> seList;
     for(std::vector<int>::iterator it = ind_.begin(); it != ind_.end(); it++)
-    {
-        int seInd = *it;
-        bool flagExist = false;
-        for(std::list<int>::iterator itL = seList.begin(); itL != seList.end(); itL++)
-            if(seInd == *itL)
-            {flagExist = true; break;}
-        if(!flagExist)
-            seList.push_back(seInd);
-    }
-    seList.sort();
+        seList.insert(*it);
     return (int) seList.size();
 }
 std::vector<int> sbfSELevel::indexesOfSE(int seqNumber)

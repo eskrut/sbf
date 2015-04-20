@@ -101,8 +101,9 @@ public:
     //Mesh modifications
 public:
     int addElement(const sbfElement & elem);
-    //Add node (x, y, z) to mesh. If flag checkExisted = true the mesh will be scaned for existed node with tolerance tol. Returns index of new or existed node.
     void insertElement(const sbfElement & elem, int position);
+    void deleteElement(int elemID);
+    //Add node (x, y, z) to mesh. If flag checkExisted = true the mesh will be scaned for existed node with tolerance tol. Returns index of new or existed node.
     int addNode(float x, float y, float z, bool checkExisted = true, float tol = 0.001);
     //Add sbfNode node to mesh. Similar as previous.
     int addNode(const sbfNode &node, bool checkExisted = true, float tol = 0.001);
