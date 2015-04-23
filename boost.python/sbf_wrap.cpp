@@ -1,4 +1,5 @@
 #include <boost/python.hpp>
+#include <boost/python/scope.hpp>
 #include <boost/python/stl_iterator.hpp>
 
 #include "class_sbfNode.h"
@@ -13,6 +14,8 @@
 
 BOOST_PYTHON_MODULE(libsbfpy)
 {
+    boost::python::scope().attr("__doc__") = "Python bindings for sbf library";
+
     // Register interable conversions.
     iterable_converter()
             // Build-in type.

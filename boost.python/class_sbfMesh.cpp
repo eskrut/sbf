@@ -22,8 +22,8 @@ void class_sbfMesh_object()
             .value("NOT_DEFINED_FORMAT", FileVersion::NOT_DEFINED_FORMAT)
             ;
 
-    class_<sbfMesh>("Mesh", init<>())
-            .def(init<const sbfMesh &>())
+    class_<sbfMesh>("Mesh", "Class for representing FE meshes", init<>())
+            .def(init<const sbfMesh &>()/*, "Copy existing mesh"*/)
             .def("read", &sbfMesh::readMeshFromFiles)
             .def("readInd", &sbfMesh::readIndFromFile)
             .def("readCrd", &sbfMesh::readCrdFromFile)

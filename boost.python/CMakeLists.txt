@@ -13,6 +13,9 @@ sbf_wrap.cpp
 class_sbfNode.cpp
 class_sbfElement.cpp
 class_sbfMesh.cpp
+class_sbfGroupFilter.cpp
+class_sbfSELevel.cpp
+class_sbfSELevelList.cpp
 )
 set_target_properties( sbfpy
     PROPERTIES
