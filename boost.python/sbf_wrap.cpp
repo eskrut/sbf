@@ -12,6 +12,24 @@
 #include <list>
 #include <string>
 
+template<typename T>
+struct Vector_to_python_list
+{
+
+    static PyObject* convert(std::vector<T> const& v)
+    {
+        using namespace std;
+        using namespace boost::python;
+        using boost::python::list;
+        list l;
+        typename vector<T>::const_iterator p;
+        for(p=v.begin();p!=v.end();++p){
+            l.append(object(*p));
+        }
+        return incref(l.ptr());
+    }
+};
+
 BOOST_PYTHON_MODULE(libsbfpy)
 {
     boost::python::scope().attr("__doc__") = "Python bindings for sbf library";
@@ -27,6 +45,7 @@ BOOST_PYTHON_MODULE(libsbfpy)
             .from_python<std::vector<std::string>>()
             .from_python<std::vector<std::vector<std::string>>>()
             ;
+    boost::python::to_python_converter<std::vector<int>, Vector_to_python_list<int>>();
 
     class_sbfNode_object();
     class_sbfElement_object();
