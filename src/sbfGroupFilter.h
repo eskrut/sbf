@@ -33,8 +33,8 @@ public:
     void setCrdZF(float zMin = -std::numeric_limits<float>::max(), float zMax = std::numeric_limits<float>::max());
     void unsetCrdF();
     void setMesh(sbfMesh *mesh);
-    bool isPass(sbfElement & elem);
-    bool isPass(sbfNode & node);
+    bool isPass(const sbfElement & elem);
+    bool isPass(const sbfNode & node);
 };
 
 #endif // SBFGROUPFILTER_H

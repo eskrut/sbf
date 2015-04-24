@@ -68,7 +68,7 @@ void sbfGroupFilter::setMesh(sbfMesh *mesh)
 {
     mesh_ = mesh;
 }
-bool sbfGroupFilter::isPass(sbfElement &elem)
+bool sbfGroupFilter::isPass(const sbfElement &elem)
 {
     if(mesh_ == nullptr)
         return false;
@@ -103,7 +103,7 @@ bool sbfGroupFilter::isPass(sbfElement &elem)
     //else
         return passMtr && passCrd && passType;
 }
-bool sbfGroupFilter::isPass(sbfNode &node)
+bool sbfGroupFilter::isPass(const sbfNode &node)
 {
     if(mesh_ == nullptr)
         return false;
