@@ -62,6 +62,11 @@ std::vector<int> sbfSELevel::indexesOfSE(int seqNumber)
         if(ind_[ct] == seqNumber) indexes.push_back(ct);
     return indexes;
 }
+
+void sbfSELevel::addIndexes(const std::vector<int> &indexes)
+{
+    ind_.insert(ind_.end(), indexes.begin(), indexes.end());
+}
 sbfSELevel * sbfSELevel::prev()
 {
     return prevLayer_;

@@ -26,6 +26,7 @@ public:
     int index(int seqNumber);
     int numSE();//Returns number of SE at this level
     std::vector<int> indexesOfSE(int seqNumber);//Returns vector of element indexes which belonges to SE seqNumber in this level
+    void addIndexes(const std::vector<int> &indexes);
     void setMesh(const sbfMesh * mesh);//Sets base mesh
     sbfSELevel * prev();//Returns pointer to previous SE layer
     sbfSELevel * next();//Returns pointer to next SE layer
