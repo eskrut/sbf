@@ -9,6 +9,8 @@
 #include "sbfMesh.h"
 #include "sbfNode.h"
 #include "sbfElement.h"
+#include "sbfGroupFilter.h"
+#include "sbfElementGroup.h"
 
 void class_sbfMesh_object()
 {
@@ -46,6 +48,12 @@ void class_sbfMesh_object()
             .def("scale", static_cast<void (sbfMesh::*)(float, float, float)>(&sbfMesh::scale))
             .def("translate", &sbfMesh::translate)
             .def("rotate", &sbfMesh::rotate)
+            .def("addElementGroup",
+                 static_cast<sbfElementGroup * (sbfMesh::*)(sbfGroupFilter)>(&sbfMesh::addElementGroup),
+                 return_internal_reference<>())
+            .def("elementGroup", &sbfMesh::group, return_internal_reference<>())
+            .def("clearElementGroups", &sbfMesh::clearGroups)
+            .def("processGroups", &sbfMesh::processGroups)
             .def("makeBlock",
                  static_cast<sbfMesh *(*)(vf &, vf &, vf &, ElementType)>(&sbfMesh::makeBlock),
                  return_value_policy<manage_new_object>())

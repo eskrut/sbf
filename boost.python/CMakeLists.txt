@@ -16,6 +16,8 @@ class_sbfMesh.cpp
 class_sbfGroupFilter.cpp
 class_sbfSELevel.cpp
 class_sbfSELevelList.cpp
+class_sbfGroupFilter.cpp
+class_sbfElementGroup.cpp
 )
 set_target_properties( sbfpy
     PROPERTIES

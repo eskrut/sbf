@@ -5,6 +5,10 @@
 #include "class_sbfNode.h"
 #include "class_sbfElement.h"
 #include "class_sbfMesh.h"
+#include "class_sbfSELevel.h"
+#include "class_sbfSELevelList.h"
+#include "class_sbfGroupFilter.h"
+#include "class_sbfElementGroup.h"
 
 #include "iterable_converter.hpp"
 
@@ -13,41 +17,44 @@
 #include <string>
 
 template<typename T>
-struct Vector_to_python_list
-{
+struct Vector_to_python_list {
 
-    static PyObject* convert(std::vector<T> const& v)
+    static PyObject *convert ( std::vector<T> const &v )
     {
         using namespace std;
         using namespace boost::python;
         using boost::python::list;
         list l;
         typename vector<T>::const_iterator p;
-        for(p=v.begin();p!=v.end();++p){
-            l.append(object(*p));
+        for ( p = v.begin(); p != v.end(); ++p ) {
+            l.append ( object ( *p ) );
         }
-        return incref(l.ptr());
+        return incref ( l.ptr() );
     }
 };
 
-BOOST_PYTHON_MODULE(libsbfpy)
+BOOST_PYTHON_MODULE ( libsbfpy )
 {
-    boost::python::scope().attr("__doc__") = "Python bindings for sbf library";
+    boost::python::scope().attr ( "__doc__" ) = "Python bindings for sbf library";
 
     // Register interable conversions.
     iterable_converter()
-            // Build-in type.
-            .from_python<std::vector<int>>()
-            .from_python<std::vector<float>>()
-            .from_python<std::vector<double>>()
-            .from_python<std::list<int>>()
-            // Each dimension needs to be convertable.
-            .from_python<std::vector<std::string>>()
-            .from_python<std::vector<std::vector<std::string>>>()
-            ;
+    // Build-in type.
+    .from_python<std::vector<int>>()
+    .from_python<std::vector<float>>()
+    .from_python<std::vector<double>>()
+    .from_python<std::list<int>>()
+    // Each dimension needs to be convertable.
+    .from_python<std::vector<std::string>>()
+    .from_python<std::vector<std::vector<std::string>>>()
+    ;
     boost::python::to_python_converter<std::vector<int>, Vector_to_python_list<int>>();
 
     class_sbfNode_object();
     class_sbfElement_object();
     class_sbfMesh_object();
+    class_sbfSELevel_object();
+    class_sbfSELevelList_object();
+    class_sbfGroupFilter_object();
+    class_sbfElementGroup_object();
 }
