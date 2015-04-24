@@ -8,7 +8,12 @@ link_directories(${Boost_LIBRARY_DIRS})
 include_directories(${PYTHON_INCLUDE_DIRS})
 link_directories(${PYTHON_LIBRARY_DIRS})
 
-add_library(sbfpy SHARED sbf_wrap.cpp)
+add_library(sbfpy SHARED
+sbf_wrap.cpp
+class_sbfNode.cpp
+class_sbfElement.cpp
+class_sbfMesh.cpp
+)
 set_target_properties( sbfpy
     PROPERTIES
     SUFFIX ".so"
