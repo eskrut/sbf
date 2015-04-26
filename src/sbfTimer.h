@@ -63,7 +63,7 @@ std::string sbfTimer<clock_type, duration_type>::timeSpanStr()
     sstr << std::setw(4) << duration_cast<hours>(span).count() << ":" <<
             std::setw(2) << std::setfill('0') << duration_cast<minutes>(span).count() % 60 << ":" <<
             std::setw(2) << std::setfill('0') << duration_cast<seconds>(span).count() % 60 << "." <<
-            std::setw(6) << std::setfill('0') << duration_cast<microseconds>(span).count() % 1000000;
+            std::setw(3) << std::setfill('0') << duration_cast<milliseconds>(span).count() % 1000;
     return sstr.str();
 }
 

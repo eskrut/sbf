@@ -75,20 +75,35 @@ template <int dim>
 void sbfStiffMatrixBand<dim>::allocate()
 {
     clean();
-    data_ = new double [blockSize_ * numBlocks_];
-    null();
-    indJ_ = new int [numNodes_ * 2];
-    //+1 to allow unique iteration through rows,
-    //i.e. from shiftInd_[ct] to shiftInd_[ct+1]
-    shiftInd_ = new int [numNodes_ + 1];
-    if ( numBlocksAlter_ > 0 ) {
-        indJAlter_ = new int [numNodes_ * 2];
-        shiftIndAlter_ = new int [numNodes_ + 1];
-        ptrDataAlter_ = new double * [numBlocksAlter_];
-        for ( int ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
+    try {
+        data_ = new double [blockSize_ * numBlocks_];
+        null();
+        indJ_ = new int [numNodes_ * 2];
+        //+1 to allow unique iteration through rows,
+        //i.e. from shiftInd_[ct] to shiftInd_[ct+1]
+        shiftInd_ = new int [numNodes_ + 1];
+        if ( numBlocksAlter_ > 0 ) {
+            indJAlter_ = new int [numNodes_ * 2];
+            shiftIndAlter_ = new int [numNodes_ + 1];
+            ptrDataAlter_ = new double * [numBlocksAlter_];
+            for ( int ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
+        }
+        columnsIndsPtrs_.resize ( numNodes_ );
+        columnsIndsPtrsAlter_.resize ( numNodes_ );
     }
-    columnsIndsPtrs_.resize ( numNodes_ );
-    columnsIndsPtrsAlter_.resize ( numNodes_ );
+    catch ( std::bad_alloc &e ) {
+        std::string err = "Cant allocate enough memory for band stiffness matrix. Required memory is ";
+        err += std::to_string ( ( ( blockSize_ * numBlocks_ ) * sizeof ( double ) +
+                                  ( numNodes_ * 2 + numNodes_ + 1 + numNodes_ * 2 + numNodes_ + 1 ) * sizeof ( int ) +
+                                  ( numBlocksAlter_ ) * ( sizeof ( double * ) ) ) / 1024.0 / 1024.0 / 1024.0 ) + "Gb";
+        report.error ( err );
+        throw e;
+    }
+    catch ( ... ) {
+        std::string err = "Unknown error during stiffness matrix allocation";
+        report.error ( err );
+        throw std::runtime_error ( err );
+    }
 }
 
 template <int dim>
@@ -104,8 +119,9 @@ void sbfStiffMatrixBand<dim>::setNumBlocksNodes ( int numBlocks,
 }
 
 template <int dim>
-void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int *begin, int *end )
+void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int *begin, int *end , bool makeReport )
 {
+    if ( makeReport ) report.createNewProgress ( "Update stiff indexes" );
     std::vector<std::set<int>> indexes;
     std::vector<int> elementIDs ( begin, end );
     numNodes_ = mesh_->numNodes();
@@ -128,6 +144,9 @@ void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int *begin, int *end )
             indJ_[ct++] = *row.rbegin();
             shiftInd_[count] = shiftInd_[count - 1] + indJ_[ct - 1] - indJ_[ct - 2] + 1;
             ++count;
+            if ( makeReport &&
+                 ( &row - & ( indexes.front() ) ) % ( indexes.size() / 10 ) == 0 ) report.updateProgress ( 0, indexes.size(),
+                             &row - & ( indexes.front() ) );
         }
     }//MatrixType::FULL_MATRIX
     else if ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX ) {
@@ -173,6 +192,7 @@ void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int *begin, int *end )
                 shiftIndAlter_[countAlter] = shiftIndAlter_[countAlter - 1] + indJAlter_[ctAlter - 1] -
                                              indJAlter_[ctAlter - 2] + 1;
                 ++countAlter;
+                if ( makeReport && ct % ( size / 10 ) == 0 ) report.updateProgress ( 0, size, ct );
             }
             updataAlterPtr();
         }
@@ -197,28 +217,38 @@ void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int *begin, int *end )
                 }
                 shiftInd_[countNorm] = shiftInd_[countNorm - 1] + indJ_[ctNorm - 1] - indJ_[ctNorm - 2] + 1;
                 ++countNorm;
+                if ( makeReport && ct % ( size / 10 ) == 0 ) report.updateProgress ( 0, size, ct );
             }
         }
     }//type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX
     else
         throw std::runtime_error ( "Not supported matrix type" );
-    updateColumnsIndsPtrs();
+    try {
+        updateColumnsIndsPtrs();
+    }
+    catch ( std::exception &e ) {
+        std::string err = "Cought exception during update of stiffness matrix columns indexing.";
+        report.error ( err );
+        throw std::runtime_error ( err );
+    }
+    if ( makeReport ) report.finalizeProgress();
 }
 
 template <int dim>
 void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int startElemIndex,
-                                                      int stopElemIndex )
+                                                      int stopElemIndex ,
+                                                      bool makeReport )
 {
     std::vector<int> indexes;
     indexes.resize ( stopElemIndex - startElemIndex );
     for ( int ct = startElemIndex; ct < stopElemIndex; ++ct ) indexes[ct] = ct;
-    updateIndexesFromMesh ( indexes.data(), indexes.data() + indexes.size() );
+    updateIndexesFromMesh ( indexes.data(), indexes.data() + indexes.size(), makeReport );
 }
 
 template <int dim>
-void sbfStiffMatrixBand<dim>::updateIndexesFromMesh()
+void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( bool makeReport )
 {
-    updateIndexesFromMesh ( 0, mesh_->numElements() );
+    updateIndexesFromMesh ( 0, mesh_->numElements(), makeReport );
 }
 
 template <int dim>
@@ -360,8 +390,9 @@ void sbfStiffMatrixBand<dim>::write_stream ( std::ofstream &out ) const
 }
 
 template <int dim>
-sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol()
+sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol ( bool makeReport )
 {
+    if ( makeReport ) report.createNewProgress ( "Computing chol factor" );
     assert ( this->isValid() );
     sbfStiffMatrixBand<dim> *cholFactor = new sbfStiffMatrixBand<dim> ( mesh_, nullptr,
                                                                         MatrixType::DOWN_TREANGLE_MATRIX |
@@ -506,8 +537,12 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol()
             iteratorThis->next();
         }//Loop on blocks under current diagonal block
 
+        if ( makeReport && diagCt % ( numNodes_ / 20 ) == 0 ) report.updateProgress ( 0, diagCt, numNodes_ );
+
         //Process blocks under diagonal - END
     }//Loop on block rows
+
+    if ( makeReport ) report.finalizeProgress();
 
     return cholFactor;
 }

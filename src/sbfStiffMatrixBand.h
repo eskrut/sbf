@@ -89,11 +89,11 @@ private:
      * @param begin pointer to first element in array of processing elements IDs
      * @param end pointer to end (last+1) of processing elements IDs
      */
-    void updateIndexesFromMesh ( int *begin, int *end );
+    void updateIndexesFromMesh ( int *begin, int *end, bool makeReport = true );
     //! Reimplementation for continious sequence of elements
-    void updateIndexesFromMesh ( int startElemIndex, int stopElemIndex );
+    void updateIndexesFromMesh ( int startElemIndex, int stopElemIndex, bool makeReport = true );
     //! Reimplementation for all elements in mesh
-    void updateIndexesFromMesh();
+    void updateIndexesFromMesh ( bool makeReport = true );
     //@}
     //! Updates pointers in alter storage
     void updataAlterPtr();
@@ -129,7 +129,7 @@ public:
     //! Write matrix to file stream
     void write_stream ( std::ofstream &out ) const;
     //! Create Cholessky factor L LT
-    sbfStiffMatrix *createChol();
+    sbfStiffMatrix *createChol(bool makeReport = true);
     //! Create L D LT factor
     sbfStiffMatrix *createLDLT();
     //! Solve L*LT*u=f equation. Matrix should by L LT factor

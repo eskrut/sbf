@@ -37,6 +37,7 @@ public:
     void setAllowOtput(bool allowOtput);
     int progressBarWidth() const;
     void setProgressBarWidth(int progressBarWidth);
+    //TODO meke nested progresses
     void createNewProgress(std::string title, int percantage = 0);
 private:
     std::string progressLine(int progress);
