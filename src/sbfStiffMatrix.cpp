@@ -71,8 +71,8 @@ void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )
         std::map<ElementType, sbfElemStiffMatrix *> mapStiff;
         mapStiff[ElementType::BEAM_LINEAR_6DOF] = new sbfElemStiffMatrixBeam6Dof ( elem, propSet_ );
         mapStiff[ElementType::HEXAHEDRON_LINEAR] = new sbfElemStiffMatrixHexa8 ( elem, propSet_ );
-        int localStart = startID + ( stopID - startID ) / numComputors * computorID;
-        int localStop = startID + ( stopID - startID ) / numComputors * ( computorID + 1 );
+        int localStart = startID + ( stopID - startID ) * computorID / numComputors;
+        int localStop = startID + ( stopID - startID ) * ( computorID + 1 ) / numComputors;
         if ( localStop > stopID ) localStop = stopID;
         for ( int ctElem = localStart; ctElem < localStop; ++ctElem ) { //Loop over elements
             elem = mesh_->elemPtr ( ctElem );
@@ -114,9 +114,6 @@ void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )
         }//Loop over elements
         return 0;
     };
-
-//    //Start one thread
-//    computer(0, 1);
 
     for ( int ct = 1; ct < sbfNumThreads; ++ct )
         futures[ct] = pool.enqueue ( computer, ct, sbfNumThreads, this->mesh()->numNodes() );

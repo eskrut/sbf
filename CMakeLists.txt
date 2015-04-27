@@ -100,6 +100,9 @@ if(USE_STD_THREADS)
     add_definitions(-DTHREAD_MODEL_STD)
 endif()
 
+set(SBF_NUM_THREADS "8" CACHE STRING "Number of threads to lounch parallel routines")
+add_definitions(-DSBF_NUM_THREADS=${SBF_NUM_THREADS})
+
 option(BUILD_TESTS "Build tests" ON)
 if(BUILD_TESTS)
     add_subdirectory(tests)

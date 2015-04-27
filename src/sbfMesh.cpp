@@ -1100,7 +1100,7 @@ void computeGraphAlter(sbfMesh * mesh, int *** graph)
     int curElem;
     for(curElem = 0; curElem < numElems; curElem++){//Loop on elements
         if(curElem % (numElems/4 > 0 ? numElems/4 : 1) == 0)
-            report.updateProgress(0, numElems-1, curElem);
+            report.updateProgress(0, numElems, curElem);
         sbfElement * elem = mesh->elemPtr(curElem);
         std::vector<int> indexes = elem->indexes();
         int numElemNodes = (int)indexes.size();
@@ -1113,7 +1113,7 @@ void computeGraphAlter(sbfMesh * mesh, int *** graph)
     int curNode;
     for(curNode = 0; curNode < numNodes; curNode++){//Loop on nodes
         if(curNode % (numNodes/4 > 0 ? numNodes/4 : 1) == 0)
-            report.updateProgress(0, numNodes-1, curNode);
+            report.updateProgress(0, numNodes, curNode);
         neighbors.clear();
         std::list<int>::iterator it, itStart, itStop;
         itStart = elemInd[curNode].begin();

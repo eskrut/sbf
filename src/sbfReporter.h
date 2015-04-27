@@ -62,6 +62,8 @@ public:
     void error(First && first, Rest&&... rest);
     bool placeDelimeterAtOutput() const;
     void setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput);
+    char delemeter() const;
+    void setDelemeter(char delemeter);
 };
 
 

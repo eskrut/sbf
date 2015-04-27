@@ -26,8 +26,11 @@
 #endif //USE_OMP
 
 
-//#define SBF_NUM_THREADS 8
+#ifndef SBF_NUM_THREADS
 const int sbfNumThreads = 8;
+#else
+const int sbfNumThreads = SBF_NUM_THREADS;
+#endif
 
 #if defined(THREAD_MODEL_WIN32)
  #include <windows.h>

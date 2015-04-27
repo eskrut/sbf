@@ -29,6 +29,7 @@ sbfReporter::~sbfReporter()
     critSecDestroy(lockOut_);
     delete lockOut_;
 }
+
 bool sbfReporter::placeDelimeterAtOutput() const
 {
     return placeDelimeterAtOutput_;
@@ -39,6 +40,15 @@ void sbfReporter::setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput)
     placeDelimeterAtOutput_ = placeDelimeterAtOutput;
 }
 
+char sbfReporter::delemeter() const
+{
+    return delemeter_;
+}
+
+void sbfReporter::setDelemeter(char delemeter)
+{
+    delemeter_ = delemeter;
+}
 
 bool sbfReporter::allowOtput() const
 {

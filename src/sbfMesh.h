@@ -399,6 +399,7 @@ int NodesData<ArrayType, numComp>::writeToFileSplited()
     for(int ct = 0;ct < numInOneFile; ct++)
         for(int ct1 = 0; ct1 < numNodes_; ct1++) tmp.data(ct1, ct) = data(ct1, ct);
     tmp.writeToFile();
+    return 0;
 }
 template < class ArrayType, int numComp>
 bool NodesData<ArrayType, numComp>::exist()
