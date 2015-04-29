@@ -12,8 +12,8 @@
 #include <atomic>
 #include <array>
 
-void computeGraph(sbfMesh * mesh, int *** graph);
-void computeGraphAlter(sbfMesh * mesh, int *** graph);
+void computeGraph(sbfMesh * mesh, int *** graph, bool makeReport);
+void computeGraphAlter(sbfMesh * mesh, int *** graph, bool makeReport);
 size_t computeProfileSize(int ** graph, int numNodes, bool * flagOwerFlow = nullptr);
 int computeBandwidth(int ** graph, int numNodes);
 void findUnnumberedNeighbors(int ** graph, int * mask, int * tmp, /*I do not know better name*/ int & temp, int * deg, int nodeCt);
@@ -959,7 +959,7 @@ void sbfMesh::reserveElementsNumber(const int newElemsNumber)
     elems_.reserve(newElemsNumber);
 }
 
-void sbfMesh::optimizeNodesNumbering(RenumberOptimizationType type)
+void sbfMesh::optimizeNodesNumbering(RenumberOptimizationType type, bool makeReport)
 {
     /*
      * This code based on procedures from RCMW2.cpp of sbfv_2011
@@ -975,9 +975,9 @@ void sbfMesh::optimizeNodesNumbering(RenumberOptimizationType type)
     oldToNew = new int [numNodes];
 
     graph = nullptr;
-    computeGraphAlter(this, &graph);
+    computeGraphAlter(this, &graph, makeReport);
     size = computeProfileSize(graph, numNodes);
-    report("Until number optimization: size = ", size, " bandwidth = ", computeBandwidth(graph, numNodes));
+    if ( makeReport ) report("Until number optimization: size = ", size, " bandwidth = ", computeBandwidth(graph, numNodes));
 
     switch(type){
     default:
@@ -995,9 +995,9 @@ void sbfMesh::optimizeNodesNumbering(RenumberOptimizationType type)
     for(int ct = 0; ct < numNodes; ct++) delete [] graph[ct];
     delete [] graph;
 
-    computeGraphAlter(this, &graph);
+    computeGraphAlter(this, &graph, makeReport);
     size = computeProfileSize(graph, numNodes);
-    report("After number optimization: size = ", size, " bandwidth = ", computeBandwidth(graph, numNodes));
+    if ( makeReport ) report("After number optimization: size = ", size, " bandwidth = ", computeBandwidth(graph, numNodes));
 
     for(int ct = 0; ct < numNodes; ct++) delete [] graph[ct];
     delete [] graph;
@@ -1020,7 +1020,7 @@ void sbfMesh::applyToAllElements(std::function<void (const sbfElement &)> lambda
 {
     for(auto & elem : elems_) lambda(elem);
 }
-void computeGraph(sbfMesh * mesh, int *** graph)
+void computeGraph(sbfMesh * mesh, int *** graph, bool makeReport)
 {
     std::list<int> neighbors;
     int * mask;
@@ -1035,9 +1035,9 @@ void computeGraph(sbfMesh * mesh, int *** graph)
     numMask = 0;
 
     //Graph computing
-    report.createNewProgress("Computing graph");
+    if ( makeReport ) report.createNewProgress("Computing graph");
     for(int curNode = 0; curNode < numNodes; curNode++){//Loop on nodes
-        if(curNode % (numNodes/20 > 0 ? numNodes/20 : 1) == 0)
+        if ( makeReport && curNode % (numNodes/20 > 0 ? numNodes/20 : 1) == 0)
             report.updateProgress(0, numNodes-1, curNode);
         numMask = 0;
         //Find elements which contains node "curNode"
@@ -1072,13 +1072,13 @@ void computeGraph(sbfMesh * mesh, int *** graph)
         int count = 1;
         for(std::list<int>::iterator it = neighbors.begin(); it != neighbors.end(); it++) localGraph[curNode][count++] = *it;
     }//Loop on nodes
-    report.finalizeProgress();
+    if ( makeReport ) report.finalizeProgress();
 
     neighbors.clear();
     delete [] mask;
     *graph = localGraph;
 }
-void computeGraphAlter(sbfMesh * mesh, int *** graph)
+void computeGraphAlter(sbfMesh * mesh, int *** graph, bool makeReport)
 {
     std::list<int> neighbors;
     std::vector<std::list<int>> elemInd;
@@ -1096,10 +1096,10 @@ void computeGraphAlter(sbfMesh * mesh, int *** graph)
     //numNeighbors = 0;
 
     //Graph computing
-    report.createNewProgress("Computing graph: Pass I:");
+    if ( makeReport ) report.createNewProgress("Computing graph: Pass I:");
     int curElem;
     for(curElem = 0; curElem < numElems; curElem++){//Loop on elements
-        if(curElem % (numElems/4 > 0 ? numElems/4 : 1) == 0)
+        if ( makeReport && curElem % (numElems/4 > 0 ? numElems/4 : 1) == 0)
             report.updateProgress(0, numElems, curElem);
         sbfElement * elem = mesh->elemPtr(curElem);
         std::vector<int> indexes = elem->indexes();
@@ -1108,11 +1108,11 @@ void computeGraphAlter(sbfMesh * mesh, int *** graph)
             elemInd[indexes[ct]].push_back(curElem);
         }//Loop on nodes in element
     }//Loop on elements
-    report.finalizeProgress();
-    report.createNewProgress("Computing graph: Pass II:");
+    if ( makeReport ) report.finalizeProgress();
+    if ( makeReport ) report.createNewProgress("Computing graph: Pass II:");
     int curNode;
     for(curNode = 0; curNode < numNodes; curNode++){//Loop on nodes
-        if(curNode % (numNodes/4 > 0 ? numNodes/4 : 1) == 0)
+        if ( makeReport && curNode % (numNodes/4 > 0 ? numNodes/4 : 1) == 0)
             report.updateProgress(0, numNodes, curNode);
         neighbors.clear();
         std::list<int>::iterator it, itStart, itStop;
@@ -1133,7 +1133,7 @@ void computeGraphAlter(sbfMesh * mesh, int *** graph)
         int count = 1;
         for(std::list<int>::iterator it = neighbors.begin(); it != neighbors.end(); it++) localGraph[curNode][count++] = *it;
     }//Loop on nodes
-    report.finalizeProgress();
+    if ( makeReport ) report.finalizeProgress();
 
     neighbors.clear();
     delete [] mask;

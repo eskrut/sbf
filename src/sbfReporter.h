@@ -29,6 +29,7 @@ private:
     bool isOnProgress_;
     bool flagTrackExeTime_;
     sbfTimer<> timer_;
+    double lastProgressDuration_;
     bool flagExclusiveOut_;
     CritSecType * lockOut_;
     std::list<std::string> errors_;
@@ -64,6 +65,7 @@ public:
     void setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput);
     char delemeter() const;
     void setDelemeter(char delemeter);
+    double lastProgressDuration() const { return lastProgressDuration_; }
 };
 
 

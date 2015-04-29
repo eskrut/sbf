@@ -130,7 +130,6 @@ public:
     void write_stream ( std::ofstream &out ) const;
     //! Create Cholessky factor L LT
     sbfStiffMatrix *createChol(bool makeReport = true);
-    sbfStiffMatrix *createCholParallel(bool makeReport = true);
     //! Create L D LT factor
     sbfStiffMatrix *createLDLT();
     //! Solve L*LT*u=f equation. Matrix should by L LT factor

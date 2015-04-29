@@ -132,7 +132,7 @@ public:
     //Reserve memory
     void reserveNodesNumber(const int newNodesNumber);
     void reserveElementsNumber(const int newElementNumber);
-    void optimizeNodesNumbering(RenumberOptimizationType type = RenumberOptimizationType::SIMPLE);//Make nodes numbering optimization
+    void optimizeNodesNumbering(RenumberOptimizationType type = RenumberOptimizationType::SIMPLE, bool makeReport = true);//Make nodes numbering optimization
 
     void applyToAllNodes(std::function<void (sbfNode &)> lambda);
     void applyToAllElements(std::function<void (sbfElement &)> lambda);
