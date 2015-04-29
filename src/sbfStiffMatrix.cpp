@@ -108,7 +108,7 @@ void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )
                         data[ct] += idData.second[ct];
                 }
             }
-            if ( makeReport && computorID == 0 &&
+            if ( makeReport && computorID == 0 && ( localStop - localStart ) > 10 &&
                  ( ctElem - localStart ) % ( ( localStop - localStart ) / 10 ) == 0 )
                 report.updateProgress ( localStart, localStop, ctElem );
         }//Loop over elements

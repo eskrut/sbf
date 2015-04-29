@@ -7,6 +7,7 @@
 #include <cmath>
 #include <vector>
 #include <set>
+#include <array>
 
 template <int dim>
 sbfStiffMatrixBand<dim>::sbfStiffMatrixBand ( sbfMesh *mesh,
@@ -653,6 +654,7 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createCholParallel(bool makeReport)
                             blockTarget[ctI * blockDim_ + ctJ] = ( blockData[ctI * blockDim_ + ctJ] -
                                                                    rowSum[ctI * blockDim_ + ctJ] ) /
                                                                  blockDiagTarget[ctJ * blockDim_ + ctJ];
+                            report(curRow*3 + ctI, ctCol*3 + ctJ, blockTarget[ctI * blockDim_ + ctJ]);
                             assert ( std::isfinite ( blockTarget[ctI * blockDim_ + ctJ] ) );
                             if ( ctJ != blockDim_ - 1 ) for ( int ct1 = 0; ct1 <= ctJ; ++ct1 )
                                     rowSum[ctI * blockDim_ + ctJ + 1] += blockTarget[ctI * blockDim_ + ct1] *
@@ -694,10 +696,12 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createCholParallel(bool makeReport)
 
                 for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) {
                     blockDiagTarget[ct1 * ( blockDim_ + 1 )] = std::sqrt ( blockDiag[ct1 * ( blockDim_ + 1 )] - sum[ct1] );
+                    report(curRow*3 + ct1, curRow*3 + ct1, blockDiagTarget[ct1 * ( blockDim_ + 1 )]);
                     assert ( std::isfinite ( blockDiagTarget[ct1 * ( blockDim_ + 1 )] ) );
                     for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) {
                         blockDiagTarget[ct2 * blockDim_ + ct1] = ( blockDiag[ct2 * blockDim_ + ct1] - sum[sumShift[ct1][ct2]] ) /
                                 blockDiagTarget[ct1 * ( blockDim_ + 1 )];
+                        report(curRow*3 + ct2, curRow*3 + ct1, blockDiagTarget[ct2 * blockDim_ + ct1]);
                         assert ( std::isfinite ( blockDiagTarget[ct2 * blockDim_ + ct1] ) );
                         sum[ct2] += blockDiagTarget[ct2 * blockDim_ + ct1] * blockDiagTarget[ct2 * blockDim_ + ct1];
                     }
