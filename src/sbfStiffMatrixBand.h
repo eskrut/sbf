@@ -131,7 +131,7 @@ public:
     //! Create Cholessky factor L LT
     sbfStiffMatrix *createChol(bool makeReport = true);
     //! Create L D LT factor
-    sbfStiffMatrix *createLDLT();
+    sbfStiffMatrix *createLDLT(bool makeReport = true);
     //! Solve L*LT*u=f equation. Matrix should by L LT factor
     /**
      * @param u left side - displacements

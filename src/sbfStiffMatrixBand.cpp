@@ -130,14 +130,15 @@ void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int *begin, int *end , boo
     sbfThreadPool pool ( sbfNumThreads );
     std::array<std::mutex, sbfNumThreads> indexesPartLocks;
     std::array<std::future<int>, sbfNumThreads> futures;
-    auto computer = [&] ( int computorID, int numComputors, int numAllRows) -> int {
+    auto computer = [&] ( int computorID, int numComputors, int numAllRows ) -> int {
         int *localStart = begin + ( end - begin ) * computorID / numComputors ;
         int *localStop = begin + ( end - begin ) * ( computorID + 1 ) / numComputors;
         if ( localStop > end ) localStop = end;
-        for ( int *ind = localStart; ind < localStop; ++ind ) {
+        for ( int *ind = localStart; ind < localStop; ++ind )
+        {
             std::vector<int> nodeIDs = mesh_->elemPtr ( *ind )->indexes();
             for ( auto node1 : nodeIDs ) {
-                std::unique_lock<std::mutex> lock(indexesPartLocks[node1 * numComputors / numAllRows]);
+                std::unique_lock<std::mutex> lock ( indexesPartLocks[node1 * numComputors / numAllRows] );
                 indexes[node1].insert ( nodeIDs.begin(), nodeIDs.end() );
             }
         }
@@ -145,7 +146,7 @@ void sbfStiffMatrixBand<dim>::updateIndexesFromMesh ( int *begin, int *end , boo
     };
     for ( int ct = 1; ct < sbfNumThreads; ++ct )
         futures[ct] = pool.enqueue ( computer, ct, sbfNumThreads, numNodes_ );
-    computer(0, sbfNumThreads, numNodes_);
+    computer ( 0, sbfNumThreads, numNodes_ );
     for ( int ct = 1; ct < sbfNumThreads; ++ct )
         futures[ct].get();
     int indLength = 0;
@@ -391,6 +392,9 @@ bool sbfStiffMatrixBand<dim>::isValid()
             )
                 return false;
     }
+    const size_t length = numBlocks_ * blockDim_;
+    for ( size_t ct = 0; ct < length; ++ct )
+        assert ( std::isfinite ( data_[ct] ) );
     return true;
 }
 
@@ -407,23 +411,25 @@ void sbfStiffMatrixBand<dim>::write_stream ( std::ofstream &out ) const
 }
 
 template <int dim>
-sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
+sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol ( bool makeReport )
 {
     assert ( this->isValid() );
     sbfStiffMatrixBand<dim> *cholFactor = new sbfStiffMatrixBand<dim> ( mesh_, nullptr,
                                                                         MatrixType::DOWN_TREANGLE_MATRIX |
                                                                         MatrixType::CHOL_FACTOR );
 
-    const int usingNumThreads = sbfNumThreads*1;
-    if ( makeReport ) report.createNewProgress ( "Computing chol factor in parallel " + std::to_string(usingNumThreads) );
+    const int usingNumThreads = sbfNumThreads * 1;
+    if ( makeReport )
+        report.createNewProgress ( "Computing chol factor in parallel " + std::to_string ( usingNumThreads ) );
     cholFactor->null();
 
-    std::atomic<int> diagProcessed(-1);
+    std::atomic<int> diagProcessed ( -1 );
 
     sbfThreadPool pool ( usingNumThreads );
-    std::array<std::future<int>, usingNumThreads> futures;
+    //One computing function will be called from this thread
+    std::array < std::future<int>, usingNumThreads - 1 > futures;
 
-    auto computer = [&](int computerID, int numComputors) -> int {
+    auto computer = [&] ( int computerID, int numComputors ) -> int {
         std::unique_ptr<sbfMatrixIterator> iteratorThis ( createIterator() );
         std::unique_ptr<sbfMatrixIterator> iteratorChol ( cholFactor->createIterator() );
         std::unique_ptr<sbfMatrixIterator> iteratorCholRow0 ( cholFactor->createIterator() );
@@ -434,11 +440,13 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
             for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
                     sumShift[ct1][ct2] = shift++;
         }
-        for(int curRow = 0 + computerID; curRow < numNodes_; curRow += numComputors){
+        for ( int curRow = 0 + computerID; curRow < numNodes_; curRow += numComputors )
+        {
             //Process blocks in this row until diagonal block
             iteratorChol->setToRow ( curRow );
             iteratorThis->setToRow ( curRow );
-            for(int ctCol = std::min(iteratorChol->column(), iteratorThis->column()); ctCol < curRow;){
+            int safeToProcess = diagProcessed;
+            for ( int ctCol = std::min ( iteratorChol->column(), iteratorThis->column() ); ctCol < curRow; ) {
                 double rowSum[blockSize_];
                 double blockData[blockSize_];
                 bool isDirect;
@@ -451,7 +459,7 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
                     if ( cChol < ctCol ) iteratorChol->next();
                     if ( cThis < ctCol ) iteratorThis->next();
                 }
-                blockThis = iteratorThis->data( &isDirect );
+                blockThis = iteratorThis->data ( &isDirect );
                 assert ( isDirect );
                 blockTarget = iteratorChol->data();
                 if ( isDirect ) for ( int ct = 0; ct < blockSize_; ct++ ) blockData[ct] = blockThis[ct];
@@ -460,8 +468,8 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
                 for ( int ct = 0; ct < blockSize_; ct++ ) rowSum[ct] = 0.0;
                 //This is checking for atomic variable
                 bool processed = false;
-                while(!processed) {
-                    if(ctCol <= diagProcessed) {
+                while ( !processed ) {
+                    if ( ctCol <= safeToProcess || ctCol <= diagProcessed ) {
                         //OK diagonal of column ctCol is already processed
                         iteratorCholRow0->setToRow ( curRow );
                         iteratorCholRow1->setToRow ( ctCol );
@@ -499,12 +507,12 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
                         for ( int ctJ = 0; ctJ < blockDim_; ++ctJ ) {
                             for ( int ctI = 0; ctI < blockDim_; ++ctI ) {
                                 blockTarget[ctI * blockDim_ + ctJ] = ( blockData[ctI * blockDim_ + ctJ] -
-                                        rowSum[ctI * blockDim_ + ctJ] ) /
-                                        blockDiagTarget[ctJ * blockDim_ + ctJ];
+                                                                       rowSum[ctI * blockDim_ + ctJ] ) /
+                                                                     blockDiagTarget[ctJ * blockDim_ + ctJ];
                                 assert ( std::isfinite ( blockTarget[ctI * blockDim_ + ctJ] ) );
                                 if ( ctJ != blockDim_ - 1 ) for ( int ct1 = 0; ct1 <= ctJ; ++ct1 )
-                                    rowSum[ctI * blockDim_ + ctJ + 1] += blockTarget[ctI * blockDim_ + ct1] *
-                                            blockDiagTarget[ ( ctJ + 1 ) * blockDim_ + ct1];
+                                        rowSum[ctI * blockDim_ + ctJ + 1] += blockTarget[ctI * blockDim_ + ct1] *
+                                                                             blockDiagTarget[ ( ctJ + 1 ) * blockDim_ + ct1];
                             }
                         }
                         ++ctCol;
@@ -521,7 +529,7 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
 
                 //Nulling above diagonal elements
                 for ( int ctI = 0; ctI < blockDim_; ++ctI ) for ( int ctJ = ctI + 1; ctJ < blockDim_; ++ctJ )
-                    blockDiagTarget[ctI * blockDim_ + ctJ] = 0;
+                        blockDiagTarget[ctI * blockDim_ + ctJ] = 0;
 
                 const int sumLength = ( blockSize_ - blockDim_ ) / 2 + blockDim_;
                 double sum[sumLength];// 00 11 22 33 44 55 66 01 02 ... 12 13 ... - regular and cross sums
@@ -532,13 +540,13 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
                     if ( iteratorChol->column() >= curRow ) break;
                     double *blockCt = iteratorChol->data();
                     for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = 0; ct2 < blockDim_; ++ct2 )
-                        sum[ct1] += blockCt[ct1 * blockDim_ + ct2] * blockCt[ct1 * blockDim_ + ct2];
+                            sum[ct1] += blockCt[ct1 * blockDim_ + ct2] * blockCt[ct1 * blockDim_ + ct2];
                     for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) {
-                        double tmp = 0;
-                        for ( int ct3 = 0; ct3 < blockDim_; ++ct3 )
-                            tmp += blockCt[ct1 * blockDim_ + ct3] * blockCt[ct2 * blockDim_ + ct3];
-                        sum[sumShift[ct1][ct2]] += tmp;
-                    }
+                            double tmp = 0;
+                            for ( int ct3 = 0; ct3 < blockDim_; ++ct3 )
+                                tmp += blockCt[ct1 * blockDim_ + ct3] * blockCt[ct2 * blockDim_ + ct3];
+                            sum[sumShift[ct1][ct2]] += tmp;
+                        }
                     iteratorChol->next();
                 }//Loop on blocks in row
 
@@ -547,29 +555,29 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
                     assert ( std::isfinite ( blockDiagTarget[ct1 * ( blockDim_ + 1 )] ) );
                     for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) {
                         blockDiagTarget[ct2 * blockDim_ + ct1] = ( blockDiag[ct2 * blockDim_ + ct1] - sum[sumShift[ct1][ct2]] ) /
-                                blockDiagTarget[ct1 * ( blockDim_ + 1 )];
+                                                                 blockDiagTarget[ct1 * ( blockDim_ + 1 )];
                         assert ( std::isfinite ( blockDiagTarget[ct2 * blockDim_ + ct1] ) );
                         sum[ct2] += blockDiagTarget[ct2 * blockDim_ + ct1] * blockDiagTarget[ct2 * blockDim_ + ct1];
                     }
                     for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) for ( int ct3 = ct2 + 1; ct3 < blockDim_; ++ct3 )
-                        sum[sumShift[ct2][ct3]] += blockDiagTarget[ct2 * blockDim_ + ct1] *
-                                blockDiagTarget[ct3 * blockDim_ + ct1];
+                            sum[sumShift[ct2][ct3]] += blockDiagTarget[ct2 * blockDim_ + ct1] *
+                                                       blockDiagTarget[ct3 * blockDim_ + ct1];
                 }
             }
             //OK update diagProcessed
             diagProcessed = curRow;
 
-            if ( makeReport && computerID == 0 && curRow > (numNodes_ / 40) && curRow % (numNodes_ / 40) == 0)
-                report.updateProgress(0, numNodes_, curRow);
+            if ( makeReport && computerID == 0 && curRow > ( numNodes_ / 40 ) && curRow % ( numNodes_ / 40 ) == 0 )
+                report.updateProgress ( 0, numNodes_, curRow );
         }
         return 0;
     };
 
 
-    for ( int ct = 1; ct < usingNumThreads; ++ct )
+    for ( int ct = 0; ct < usingNumThreads - 1; ++ct )
         futures[ct] = pool.enqueue ( computer, ct, usingNumThreads );
-    computer(0, usingNumThreads);
-    for ( int ct = 1; ct < usingNumThreads; ++ct )
+    computer ( usingNumThreads - 1, usingNumThreads );
+    for ( int ct = 0; ct < usingNumThreads - 1; ++ct )
         futures[ct].get();
 
     if ( makeReport ) report.finalizeProgress();
@@ -578,182 +586,186 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol(bool makeReport)
 }
 
 template <int dim>
-sbfStiffMatrix *sbfStiffMatrixBand<dim>::createLDLT()
+sbfStiffMatrix *sbfStiffMatrixBand<dim>::createLDLT ( bool makeReport )
 {
     assert ( this->isValid() );
-    sbfStiffMatrixBand<dim> *LDFactor = new sbfStiffMatrixBand<dim> ( mesh_, nullptr,
-                                                                      MatrixType::DOWN_TREANGLE_MATRIX |
-                                                                      MatrixType::LDLT_FACTOR );
+    sbfStiffMatrixBand<dim> *ldltFactor = new sbfStiffMatrixBand<dim> ( mesh_, nullptr,
+                                                                        MatrixType::DOWN_TREANGLE_MATRIX |
+                                                                        MatrixType::LDLT_FACTOR );
 
-    LDFactor->null();
+    const int usingNumThreads = sbfNumThreads * 1;
+    if ( makeReport ) report.createNewProgress ( "Computing LDLT factor in parallel " + std::to_string (
+                                                         usingNumThreads ) );
+    ldltFactor->null();
 
-    std::unique_ptr<sbfMatrixIterator> iteratorThis ( createIterator() );
-    std::unique_ptr<sbfMatrixIterator> iteratorL ( LDFactor->createIterator() );
-    std::unique_ptr<sbfMatrixIterator> iteratorLRow0 ( LDFactor->createIterator() );
-    std::unique_ptr<sbfMatrixIterator> iteratorLRow1 ( LDFactor->createIterator() );
+    std::atomic<int> diagProcessed ( -1 );
 
-    double *blockDiag, *blockCt, *blockCt1, *block;
-    double *blockDiagTarget, *blockTarget;
-    bool isDirect;
-    int sumShift[blockDim_][blockDim_];
-    {
-        int shift = blockDim_;
-        for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
-                sumShift[ct1][ct2] = shift++;
-    }
-    for ( int diagCt = 0; diagCt < numNodes_; diagCt++ ) { //Loop on block rows
-        //Process diagonal block
+    sbfThreadPool pool ( usingNumThreads );
+    //One computing function will be called from this thread
+    std::array < std::future<int>, usingNumThreads - 1 > futures;
 
-        blockDiag = iteratorThis->diagonal ( diagCt );
-        blockDiagTarget = iteratorL->diagonal ( diagCt );
-
-        //Nulling above diagonal elements
-        for ( int ctI = 0; ctI < blockDim_; ++ctI ) for ( int ctJ = ctI + 1; ctJ < blockDim_; ++ctJ )
-                blockDiagTarget[ctI * blockDim_ + ctJ] = 0;
-
-        const int sumLength = ( blockSize_ - blockDim_ ) / 2 + blockDim_;
-        double sum[sumLength];// 00 11 22 33 44 55 66 01 02 ... 12 13 ... - regular and cross sums
-        for ( int ct = 0; ct < sumLength; ++ct ) sum[ct] = 0.0;
-
-        iteratorL->setToRow ( diagCt );
-        while ( iteratorL->isValid() ) {
-            if ( iteratorL->column() >= diagCt ) break;
-            blockCt = iteratorL->data();
-            double *diag = iteratorL->diagonal ( iteratorL->column() );
-
-            //Assertion block
-            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 )
-                assert ( std::isnormal ( diag[ct1 * blockDim_ + ct1] ) );
-            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = 0; ct2 < blockDim_; ++ct2 )
-                    assert ( std::isfinite ( blockCt[ct1 * blockDim_ + ct2] ) );
-
-            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = 0; ct2 < blockDim_; ++ct2 ) {
-                    assert ( std::isfinite ( blockCt[ct1 * blockDim_ + ct2] ) );
-                    assert ( std::isfinite ( diag[ct2 * ( blockDim_ + 1 )] ) );
-                    sum[ct1] += blockCt[ct1 * blockDim_ + ct2] *
-                                blockCt[ct1 * blockDim_ + ct2] *
-                                diag[ct2 * ( blockDim_ + 1 )];
-                    assert ( std::isfinite ( sum[ct1] ) );
-                }
-            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) {
-                    double tmp = 0;
-                    for ( int ct3 = 0; ct3 < blockDim_; ++ct3 )
-                        tmp += blockCt[ct1 * blockDim_ + ct3] *
-                               blockCt[ct2 * blockDim_ + ct3] *
-                               diag[ct3 * ( blockDim_ + 1 )];
-                    assert ( std::isfinite ( tmp ) );
-                    sum[sumShift[ct1][ct2]] += tmp;
-                }
-            iteratorL->next();
-        }//Loop on blocks in row
-
-        for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) {
-            assert ( std::isnormal ( blockDiag[ct1 * ( blockDim_ + 1 )] ) );
-            blockDiagTarget[ct1 * ( blockDim_ + 1 )] = blockDiag[ct1 * ( blockDim_ + 1 )] - sum[ct1];
-            assert ( std::isnormal ( blockDiagTarget[ct1 * blockDim_ + ct1] ) );
-            for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) {
-                blockDiagTarget[ct2 * blockDim_ + ct1] = ( blockDiag[ct2 * blockDim_ + ct1] -
-                                                           sum[sumShift[ct1][ct2]] ) /
-                                                         blockDiagTarget[ct1 * ( blockDim_ + 1 )];
-                assert ( std::isfinite ( blockDiagTarget[ct2 * blockDim_ + ct1] ) );
-                sum[ct2] += blockDiagTarget[ct2 * blockDim_ + ct1] *
-                            blockDiagTarget[ct2 * blockDim_ + ct1] *
-                            blockDiagTarget[ct1 * ( blockDim_ + 1 )];
-            }
-            for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) for ( int ct3 = ct2 + 1; ct3 < blockDim_; ++ct3 )
-                    sum[sumShift[ct2][ct3]] += blockDiagTarget[ct2 * blockDim_ + ct1] *
-                                               blockDiagTarget[ct3 * blockDim_ + ct1] *
-                                               blockDiagTarget[ct1 * ( blockDim_ + 1 )];
+    auto computer = [&] ( int computerID, int numComputors ) -> int {
+        std::unique_ptr<sbfMatrixIterator> iteratorThis ( createIterator() );
+        std::unique_ptr<sbfMatrixIterator> iteratorL ( ldltFactor->createIterator() );
+        std::unique_ptr<sbfMatrixIterator> iteratorLRow0 ( ldltFactor->createIterator() );
+        std::unique_ptr<sbfMatrixIterator> iteratorLRow1 ( ldltFactor->createIterator() );
+        int sumShift[blockDim_][blockDim_];
+        {
+            int shift = blockDim_;
+            for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
+                    sumShift[ct1][ct2] = shift++;
         }
-        //Process diagonal block - END
-
-        //Process blocks under current diagonal
-
-        double rowSum[blockSize_];
-        double blockData[blockSize_];
-
-        iteratorL->setToColumn ( diagCt );
-        iteratorThis->setToColumn ( diagCt );
-        while ( iteratorL->isValid() && iteratorThis->isValid() ) { //Loop on blocks under current diagonal block
-            int rowCt = iteratorL->row();
-            if ( rowCt <= diagCt ) {
-                iteratorL->next();
-                continue; //Skip abowe rows
-            }
-            int rowCtThis = iteratorThis->row();
-            if ( rowCtThis < rowCt ) {
-                iteratorThis->next();
-                continue; //Skip abowe rows
-            }
-            assert ( rowCt == rowCtThis );
-
-            blockTarget = iteratorL->data();
-
-            //May be at alternative storage
-            block = iteratorThis->data ( &isDirect );
-
-            assert ( isDirect );
-
-            if ( isDirect ) for ( int ct = 0; ct < blockSize_; ct++ ) blockData[ct] = block[ct];
-            else for ( int ctI = 0; ctI < blockDim_; ctI++ ) for ( int ctJ = 0; ctJ < blockDim_; ctJ++ )
-                        blockData[ctI * blockDim_ + ctJ] = block[ctJ * blockDim_ + ctI];
-            for ( int ct = 0; ct < blockSize_; ct++ ) rowSum[ct] = 0.0;
-
-            iteratorLRow0->setToRow ( rowCt );
-            iteratorLRow1->setToRow ( diagCt );
-            int col0 = iteratorLRow0->column();
-            int col1 = iteratorLRow1->column();
-            while ( iteratorLRow0->isValid() && iteratorLRow1->isValid() ) {
-                col0 = iteratorLRow0->column();
-                col1 = iteratorLRow1->column();
-                if ( col0 >= diagCt || col1 >= diagCt ) break;
-                //TODO rewise this code for band matrix (copyed from block matrix)
-                if ( col0 < col1 ) {
-                    iteratorLRow0->next();
-                    col0 = iteratorLRow0->column();
-                    continue;
+        for ( int curRow = 0 + computerID; curRow < numNodes_; curRow += numComputors )
+        {
+            //Process blocks in this row until diagonal block
+            iteratorL->setToRow ( curRow );
+            iteratorThis->setToRow ( curRow );
+            int safeToProcess = diagProcessed;
+            for ( int ctCol = std::min ( iteratorL->column(), iteratorThis->column() ); ctCol < curRow; ) {
+                double rowSum[blockSize_];
+                double blockData[blockSize_];
+                bool isDirect;
+                double *blockThis, *blockTarget;
+                //Find pointers to source and target blocks to factorize
+                while ( iteratorL->isValid() && iteratorThis->isValid() ) {
+                    int cChol = iteratorL->column();
+                    int cThis = iteratorThis->column();
+                    if ( cChol == ctCol && cThis == ctCol ) break;
+                    if ( cChol < ctCol ) iteratorL->next();
+                    if ( cThis < ctCol ) iteratorThis->next();
                 }
-                if ( col0 > col1 ) {
-                    iteratorLRow1->next();
-                    col1 = iteratorLRow1->column();
-                    continue;
+                blockThis = iteratorThis->data ( &isDirect );
+                assert ( isDirect );
+                blockTarget = iteratorL->data();
+                if ( isDirect ) for ( int ct = 0; ct < blockSize_; ct++ ) blockData[ct] = blockThis[ct];
+                else for ( int ctI = 0; ctI < blockDim_; ctI++ ) for ( int ctJ = 0; ctJ < blockDim_; ctJ++ )
+                            blockData[ctI * blockDim_ + ctJ] = blockThis[ctJ * blockDim_ + ctI];
+                for ( int ct = 0; ct < blockSize_; ct++ ) rowSum[ct] = 0.0;
+                //This is checking for atomic variable
+                bool processed = false;
+                while ( !processed ) {
+                    if ( ctCol <= safeToProcess || ctCol <= diagProcessed ) {
+                        //OK diagonal of column ctCol is already processed
+                        iteratorLRow0->setToRow ( curRow );
+                        iteratorLRow1->setToRow ( ctCol );
+                        int col0 = iteratorLRow0->column();
+                        int col1 = iteratorLRow1->column();
+                        while ( iteratorLRow0->isValid() && iteratorLRow1->isValid() ) {
+                            col0 = iteratorLRow0->column();
+                            col1 = iteratorLRow1->column();
+                            if ( col0 >= ctCol ) break;
+                            //TODO rewise this code for band matrix (copyed from block matrix)
+                            if ( col0 < col1 ) {
+                                iteratorLRow0->next();
+                                col0 = iteratorLRow0->column();
+                                continue;
+                            }
+                            if ( col0 > col1 ) {
+                                iteratorLRow1->next();
+                                col1 = iteratorLRow1->column();
+                                continue;
+                            }
+                            assert ( iteratorLRow0->column() == iteratorLRow1->column() );
+                            //OK, found equal columns ID
+                            double *blockCt = iteratorLRow0->data();
+                            double *blockCt1 = iteratorLRow1->data();
+                            double *diagonal = iteratorL->diagonal ( col0 );
+                            for ( int ctI = 0, shift = 0; ctI < blockDim_; ++ctI )
+                                for ( int ctJ = 0; ctJ < blockDim_; ++ctJ, ++shift )
+                                    for ( int ct = 0; ct < blockDim_; ++ct )
+                                        rowSum[shift] += blockCt[ctI * blockDim_ + ct] * blockCt1[ctJ * blockDim_ + ct] *
+                                                         diagonal[ct * ( blockDim_ + 1 )];
+                            iteratorLRow0->next();
+                            iteratorLRow1->next();
+                        }//Loop on blocks in row
+
+                        double *blockDiagTarget = iteratorL->diagonal ( ctCol );
+
+                        for ( int ctJ = 0; ctJ < blockDim_; ++ctJ ) {
+                            for ( int ctI = 0; ctI < blockDim_; ++ctI ) {
+                                blockTarget[ctI * blockDim_ + ctJ] = ( blockData[ctI * blockDim_ + ctJ] -
+                                                                       rowSum[ctI * blockDim_ + ctJ] ) /
+                                                                     blockDiagTarget[ctJ * blockDim_ + ctJ];
+                                assert ( std::isfinite ( blockTarget[ctI * blockDim_ + ctJ] ) );
+                                if ( ctJ != blockDim_ - 1 ) for ( int ct1 = 0; ct1 <= ctJ; ++ct1 )
+                                        rowSum[ctI * blockDim_ + ctJ + 1] += blockTarget[ctI * blockDim_ + ct1] *
+                                                                             blockDiagTarget[ ( ctJ + 1 ) * blockDim_ + ct1] *
+                                                                             blockDiagTarget[ct1 * ( blockDim_ + 1 )];
+                            }
+                        }
+                        ++ctCol;
+                        processed = true;
+                    }
+                    else
+                        std::this_thread::yield();
                 }
-                assert ( iteratorLRow0->column() == iteratorLRow1->column() );
-                //OK, found equal columns ID
-                blockCt = iteratorLRow0->data();
-                blockCt1 = iteratorLRow1->data();
-                //collect sums
+            }
+            //Process diagonal block
+            {
+                double *blockDiag = iteratorThis->diagonal ( curRow );
+                double *blockDiagTarget = iteratorL->diagonal ( curRow );
 
-                for ( int ctI = 0, shift = 0; ctI < blockDim_; ++ctI )
-                    for ( int ctJ = 0; ctJ < blockDim_; ++ctJ, ++shift )
-                        for ( int ct = 0; ct < blockDim_; ++ct )
-                            rowSum[shift] += blockCt[ctI * blockDim_ + ct] *
-                                             blockCt1[ctJ * blockDim_ + ct] *
-                                             blockDiagTarget[ct * ( blockDim_ + 1 )];
-                iteratorLRow0->next();
-                iteratorLRow1->next();
-            }//Loop on blocks in row
+                //Nulling above diagonal elements
+                for ( int ctI = 0; ctI < blockDim_; ++ctI ) for ( int ctJ = ctI + 1; ctJ < blockDim_; ++ctJ )
+                        blockDiagTarget[ctI * blockDim_ + ctJ] = 0;
 
-            for ( int ctJ = 0; ctJ < blockDim_; ++ctJ ) {
-                for ( int ctI = 0; ctI < blockDim_; ++ctI ) {
-                    blockTarget[ctI * blockDim_ + ctJ] = ( blockData[ctI * blockDim_ + ctJ] -
-                                                           rowSum[ctI * blockDim_ + ctJ] ) /
-                                                         blockDiagTarget[ctJ * blockDim_ + ctJ];
-                    assert ( std::isfinite ( blockTarget[ctI * blockDim_ + ctJ] ) );
-                    if ( ctJ != blockDim_ - 1 ) for ( int ct1 = 0; ct1 <= ctJ; ++ct1 )
-                            rowSum[ctI * blockDim_ + ctJ + 1] += blockTarget[ctI * blockDim_ + ct1] *
-                                                                 blockDiagTarget[ ( ctJ + 1 ) * blockDim_ + ct1] *
+                const int sumLength = ( blockSize_ - blockDim_ ) / 2 + blockDim_;
+                double sum[sumLength];// 00 11 22 33 44 55 66 01 02 ... 12 13 ... - regular and cross sums
+                for ( int ct = 0; ct < sumLength; ++ct ) sum[ct] = 0.0;
+
+                iteratorL->setToRow ( curRow );
+                while ( iteratorL->isValid() ) {
+                    if ( iteratorL->column() >= curRow ) break;
+                    double *blockCt = iteratorL->data();
+                    double *diagonal = iteratorL->diagonal ( iteratorL->column() );
+                    for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = 0; ct2 < blockDim_; ++ct2 )
+                            sum[ct1] += blockCt[ct1 * blockDim_ + ct2] * blockCt[ct1 * blockDim_ + ct2] *
+                                        diagonal[ct2 * ( blockDim_ + 1 )];
+                    for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) {
+                            double tmp = 0;
+                            for ( int ct3 = 0; ct3 < blockDim_; ++ct3 )
+                                tmp += blockCt[ct1 * blockDim_ + ct3] * blockCt[ct2 * blockDim_ + ct3] *
+                                       diagonal[ct3 * ( blockDim_ + 1 )];
+                            sum[sumShift[ct1][ct2]] += tmp;
+                        }
+                    iteratorL->next();
+                }//Loop on blocks in row
+
+                for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) {
+                    blockDiagTarget[ct1 * ( blockDim_ + 1 )] = blockDiag[ct1 * ( blockDim_ + 1 )] - sum[ct1];
+                    assert ( std::isfinite ( blockDiagTarget[ct1 * ( blockDim_ + 1 )] ) );
+                    for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) {
+                        blockDiagTarget[ct2 * blockDim_ + ct1] = ( blockDiag[ct2 * blockDim_ + ct1] - sum[sumShift[ct1][ct2]] ) /
                                                                  blockDiagTarget[ct1 * ( blockDim_ + 1 )];
+                        assert ( std::isfinite ( blockDiagTarget[ct2 * blockDim_ + ct1] ) );
+                        sum[ct2] += blockDiagTarget[ct2 * blockDim_ + ct1] * blockDiagTarget[ct2 * blockDim_ + ct1] *
+                                    blockDiagTarget[ct1 * ( blockDim_ + 1 )];
+                    }
+                    for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 ) for ( int ct3 = ct2 + 1; ct3 < blockDim_; ++ct3 )
+                            sum[sumShift[ct2][ct3]] += blockDiagTarget[ct2 * blockDim_ + ct1] *
+                                                       blockDiagTarget[ct3 * blockDim_ + ct1] *
+                                                       blockDiagTarget[ct1 * ( blockDim_ + 1 )];
                 }
             }
-            iteratorL->next();
-            iteratorThis->next();
-        }//Loop on blocks under current diagonal block
+            //OK update diagProcessed
+            diagProcessed = curRow;
 
-        //Process blocks under diagonal - END
-    }//Loop on block rows
+            if ( makeReport && computerID == 0 && curRow > ( numNodes_ / 40 ) && curRow % ( numNodes_ / 40 ) == 0 )
+                report.updateProgress ( 0, numNodes_, curRow );
+        }
+        return 0;
+    };
 
-    return LDFactor;
+
+    for ( int ct = 0; ct < usingNumThreads - 1; ++ct )
+        futures[ct] = pool.enqueue ( computer, ct, usingNumThreads );
+    computer ( usingNumThreads - 1, usingNumThreads );
+    for ( int ct = 0; ct < usingNumThreads - 1; ++ct )
+        futures[ct].get();
+
+    if ( makeReport ) report.finalizeProgress();
+
+    return ldltFactor;
 }
 
 template <int dim>
@@ -858,14 +870,17 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
                 for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
                     sum[ct2] += block[ct2 * blockDim_ + ct1] * vecPart[ct1];
                 u[ctRow * blockDim_ + ct1] = vecPart[ct1];
+                assert ( std::isnormal ( u[ctRow * blockDim_ + ct1] ) );
             }
         }
     }//Loop on blocks
     //D u'' = u'
     for ( int ct = 0; ct < numNodes_; ++ct ) {
         block = blockPtr ( ct, ct );
-        for ( int ct1 = 0; ct1 < 6; ++ct1 )
+        for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) {
             u[ct * blockDim_ + ct1] = u[ct * blockDim_ + ct1] / block[ct1 * ( blockDim_ + 1 )];
+            assert ( std::isfinite ( u[ct * blockDim_ + ct1] ) );
+        }
     }
     //L^T u = u''
     for ( int ctRow = numNodes_ - 1; ctRow >= 0; ctRow-- ) { //Loop on rows
@@ -887,8 +902,10 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
             for ( int ct2 = ct1 - 1; ct2 >= 0; --ct2 )
                 sum[ct2] += block[ct1 * blockDim_ + ct2] * vecPart[ct1];
         }
-        for ( int ct = 0; ct < blockDim_; ++ct )
+        for ( int ct = 0; ct < blockDim_; ++ct ) {
             u[ctRow * blockDim_ + ct] = vecPart[ct];
+            assert ( std::isnormal ( u[ctRow * blockDim_ + ct] ) );
+        }
     }//Loop on rows
 
     if ( !iterator ) delete iter;

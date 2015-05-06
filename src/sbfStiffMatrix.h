@@ -51,7 +51,7 @@ public:
 
     virtual sbfStiffMatrix *createChol ( bool makeReport = true ) /*const*/ { ( void ) makeReport; return nullptr; }
     virtual sbfStiffMatrix *createIncompleteChol() /*const*/ { return nullptr; }
-    virtual sbfStiffMatrix *createLDLT() { return nullptr; }
+    virtual sbfStiffMatrix *createLDLT( bool makeReport = true ) { ( void ) makeReport; return nullptr; }
     virtual void solve_L_LT_u_eq_f ( double *u, double *f, sbfMatrixIterator *iterator = nullptr ) { ( void ) ( u ); ( void ) ( f ); ( void ) ( iterator );}
     virtual void solve_L_D_LT_u_eq_f ( double *u, double *f, sbfMatrixIterator *iterator = nullptr ) { ( void ) ( u ); ( void ) ( f ); ( void ) ( iterator );}
 
