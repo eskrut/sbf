@@ -21,6 +21,14 @@ sbfStiffMatrixBand<dim>::sbfStiffMatrixBand ( sbfMesh *mesh,
 }
 
 template <int dim>
+sbfStiffMatrixBand<dim>::sbfStiffMatrixBand ( sbfStiffMatrixConstructData *constrData ) :
+    sbfStiffMatrix ( nullptr, nullptr, constrData->type )
+{
+    init();
+    construct ( constrData );
+}
+
+template <int dim>
 sbfStiffMatrixBand<dim>::~sbfStiffMatrixBand()
 {
     clean();
@@ -301,71 +309,27 @@ void sbfStiffMatrixBand<dim>::updateColumnsIndsPtrs()
     for ( auto &col : columnsIndsPtrs_ ) col.clear();
     for ( auto &col : columnsIndsPtrsAlter_ ) col.clear();
     for ( int indI = 0; indI < numNodes_; ++indI ) {
-        for ( int indJ = indJ_[indI * 2]; indJ <= indJ_[indI * 2 + 1]; ++indJ )
-            columnsIndsPtrs_[indJ].push_back (
-                std::make_pair ( indI,
-                                 data_ + ( shiftInd_[indI] + indJ - indJ_[indI * 2] ) *blockSize_ )
-            );
+        if ( shiftInd_[indI + 1] - shiftInd_[indI] > 0 )
+            for ( int indJ = indJ_[indI * 2]; indJ <= indJ_[indI * 2 + 1]; ++indJ )
+                columnsIndsPtrs_[indJ].push_back (
+                    std::make_pair ( indI,
+                                     data_ + ( shiftInd_[indI] + indJ - indJ_[indI * 2] ) *blockSize_ )
+                );
     }
     if ( ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX ) &&
          numBlocksAlter_ > 0 ) {
         int count = 0;
         for ( int indI = 0; indI < numNodes_; ++indI ) {
-            for ( int indJ = indJAlter_[indI * 2];
-                  indJ <= indJAlter_[indI * 2 + 1];
-                  ++indJ )
-                columnsIndsPtrsAlter_[indJ].push_back (
-                    std::make_pair ( indI, ptrDataAlter_[count++] )
-                );
+            if ( shiftIndAlter_[indI + 1] - shiftIndAlter_[indI] > 0 )
+                for ( int indJ = indJAlter_[indI * 2];
+                      indJ <= indJAlter_[indI * 2 + 1];
+                      ++indJ )
+                    columnsIndsPtrsAlter_[indJ].push_back (
+                        std::make_pair ( indI, ptrDataAlter_[count++] )
+                    );
         }
     }
 }
-
-////FIXME this method could be implemented in base class
-//template <int dim>
-//void sbfStiffMatrixBand<dim>::compute ( int startID, int stopID )
-//{
-//    if ( !propSet_ ) throw std::runtime_error ( "nullptr in propSet" );
-//    null();
-//    sbfElement *elem = nullptr;
-//    sbfElemStiffMatrix *elemStiff = nullptr;
-//    std::map<ElementType, sbfElemStiffMatrix *> mapStiff;
-//    mapStiff[ElementType::BEAM_LINEAR_6DOF] = new sbfElemStiffMatrixBeam6Dof ( elem, propSet_ );
-//    mapStiff[ElementType::HEXAHEDRON_LINEAR] = new sbfElemStiffMatrixHexa8 ( elem, propSet_ );
-//    std::unique_ptr<sbfMatrixIterator> iteratorPtr ( createIterator() );
-//    sbfMatrixIterator *iterator = iteratorPtr.get();
-//    for ( int ctElem = startID; ctElem < stopID; ++ctElem ) { //Loop over elements
-//        elem = mesh_->elemPtr ( ctElem );
-//        assert ( mapStiff.count ( elem->type() ) == 1 );
-//        elemStiff = mapStiff[elem->type()];
-//        assert ( elemStiff->numDOF() == dim );
-//        elemStiff->setElem ( elem );
-//        elemStiff->computeSM();
-//        auto listIDData = elemStiff->rowColData();
-//        iterator->setToRow ( listIDData.front().first.first );
-//        for ( auto idData : listIDData ) {
-//            if ( type_ == DOWN_TREANGLE_MATRIX && idData.first.second > idData.first.first )
-//                continue;
-//            else if ( type_ == UP_TREANGLE_MATRIX && idData.first.second < idData.first.first )
-//                continue;
-//            double *data = nullptr;
-//            if ( idData.first.first != iterator->row() ||
-//                 iterator->column() > idData.first.second )
-//                iterator->setToRow ( idData.first.first );
-//            while ( iterator->isValid() )
-//                if ( iterator->column() == idData.first.second &&
-//                     iterator->isInNormal() ) {
-//                    data = const_cast<double *> ( iterator->data() );
-//                    break;
-//                }
-//                else iterator->next();
-//            if ( !data )
-//                throw std::runtime_error ( "Can't find target block in global stiffness matrix" );
-//            for ( int ct = 0; ct < blockSize_; ++ct )
-//                data[ct] += idData.second[ct];
-//        }
-//    }//Loop over elements
-//}
 
 template <int dim>
 void sbfStiffMatrixBand<dim>::null()
@@ -909,6 +873,53 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
     }//Loop on rows
 
     if ( !iterator ) delete iter;
+}
+
+template <int dim>
+sbfStiffMatrixConstructData *sbfStiffMatrixBand<dim>::constructData() const
+{
+    sbfStiffMatrixBandConstructData<dim> *constrData = new sbfStiffMatrixBandConstructData<dim>;
+    constrData->numNodes = numNodes_;
+    constrData->numBlocks = numBlocks_;
+    constrData->numBlocksAlter = numBlocksAlter_;
+    constrData->data = data_;
+    constrData->indJ = indJ_;
+    constrData->shiftInd = shiftInd_;
+    constrData->indJAlter = indJAlter_;
+    constrData->shiftIndAlter = shiftIndAlter_;
+    constrData->ptrDataAlter = ptrDataAlter_;
+
+    return constrData;
+}
+
+template <int dim>
+void sbfStiffMatrixBand<dim>::construct ( sbfStiffMatrixConstructData *constrData )
+{
+    clean();
+    sbfStiffMatrix::construct ( constrData );
+    sbfStiffMatrixBandConstructData<dim> *cData = reinterpret_cast<sbfStiffMatrixBandConstructData<dim> *> ( constrData );
+    numNodes_ = cData->numNodes;
+    numBlocks_ = cData->numBlocks;
+    numBlocksAlter_ = cData->numBlocksAlter;
+    data_ = cData->data;
+    indJ_ = cData->indJ;
+    shiftInd_ = cData->shiftInd;
+    indJAlter_ = cData->indJAlter;
+    shiftIndAlter_ = cData->shiftIndAlter;
+    ptrDataAlter_ = cData->ptrDataAlter;
+    int minColID = std::numeric_limits<int>::max();
+    int maxColID = std::numeric_limits<int>::min();
+    for ( int ct = 0; ct < numNodes_; ++ct ) {
+        int s0 = shiftInd_[ct];
+        int s1 = shiftInd_[ct + 1];
+        if ( s0 != s1 ) {
+            minColID = std::min ( minColID, indJ_[2 * ct] );
+            maxColID = std::max ( maxColID, indJ_[2 * ct + 1] );
+        }
+    }
+    columnsIndsPtrs_.resize ( maxColID - minColID + 1 );
+    columnsIndsPtrsAlter_.resize ( maxColID - minColID + 1 );
+    updateColumnsIndsPtrs();
 }
 
 template class sbfStiffMatrixBand<3>;

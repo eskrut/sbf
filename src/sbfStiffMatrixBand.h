@@ -6,6 +6,9 @@ template <int dim> class sbfStiffMatrixBand;
 #include "sbfStiffMatrix.h"
 #include "sbfStiffMatrixBandIterator.h"
 
+template <int dim>
+struct sbfStiffMatrixBandConstructData;
+
 /**
  * @brief The sbfStiffMatrixBand class is a template class for storing and
  * processing stiffness matrices as rows of bands with band width specified in
@@ -23,6 +26,7 @@ public:
     explicit sbfStiffMatrixBand ( sbfMesh *mesh,
                                   sbfPropertiesSet *propSet,
                                   MatrixType type = MatrixType::FULL_MATRIX );
+    explicit sbfStiffMatrixBand (sbfStiffMatrixConstructData *constrData );
     //! Destroy object, clean arrays
     ~sbfStiffMatrixBand();
 private:
@@ -129,9 +133,9 @@ public:
     //! Write matrix to file stream
     void write_stream ( std::ofstream &out ) const;
     //! Create Cholessky factor L LT
-    sbfStiffMatrix *createChol(bool makeReport = true);
+    sbfStiffMatrix *createChol ( bool makeReport = true );
     //! Create L D LT factor
-    sbfStiffMatrix *createLDLT(bool makeReport = true);
+    sbfStiffMatrix *createLDLT ( bool makeReport = true );
     //! Solve L*LT*u=f equation. Matrix should by L LT factor
     /**
      * @param u left side - displacements
@@ -152,6 +156,24 @@ public:
     void solve_L_D_LT_u_eq_f ( double *u,
                                double *f,
                                sbfMatrixIterator *iterator = nullptr );
+
+    sbfStiffMatrixConstructData *constructData() const;
+    void construct ( sbfStiffMatrixConstructData *constrData );
+};
+
+template <int dim>
+struct sbfStiffMatrixBandConstructData : public sbfStiffMatrixConstructData {
+    static const int blockDim = dim;
+    static const int blockSize = blockDim * blockDim;
+    int numNodes;
+    int numBlocks;
+    int numBlocksAlter;
+    double *data;
+    int *indJ;
+    int *shiftInd;
+    int *indJAlter;
+    int *shiftIndAlter;
+    double **ptrDataAlter;
 };
 
 #endif // SBFSTIFFMATRIXBAND_H

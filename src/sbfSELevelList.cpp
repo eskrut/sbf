@@ -21,6 +21,11 @@ sbfSELevel & sbfSELevelList::level(int seqNumber)
     for(int ct = 0; ct < seqNumber; ct++) it++;
     return *it;
 }
+
+void sbfSELevelList::addLevel(const sbfSELevel &level)
+{
+    list_.push_back(level);
+}
 void sbfSELevelList::writeToFiles(const char * baseName, int numDigits)
 {
     for(std::list<sbfSELevel>::iterator it = list_.begin(); it != list_.end(); it++)

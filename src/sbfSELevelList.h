@@ -21,6 +21,7 @@ private:
 public:
     int numLevels();//Returns number of SE layers
     sbfSELevel & level(int seqNumber);
+    void addLevel(const sbfSELevel &level);
     void writeToFiles(const char * baseName = "level", int numDigits = 3);
     int readFromFiles(const char * baseName = "level", int numDigits = 3);
     void setMesh(const sbfMesh *mesh);//Sets base mesh

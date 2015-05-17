@@ -10,6 +10,7 @@ main.cpp
 #sbfStiffMatrixBandIterator.cpp
 sbfStiffMatrixBand.cpp
 #sbfStiffMatrixBlockIterator.cpp
+sbfSElement.cpp
 )
 
 find_package(sbf REQUIRED)

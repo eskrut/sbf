@@ -49,12 +49,14 @@ void sbfStiffMatrixBandIterator<dim>::setToRow ( const int rowIndex )
             curData_ = base_ + blockSize_ * curShiftNormal_;
             isValid_ = true;
         }
-        else {
+        else if ( curShiftAlter_ != shiftAlterLast_ ) {
             curColumnIndex_ = columnsByRowsAlter_[rowIndex * 2];
             isInNormal_ = false;
             curData_ = blocksByRowsAlter_[curShiftAlter_];
             isValid_ = true;
         }
+        else
+            isValid_ = false;
     }//type_ != UP_TREANGLE_MATRIX
     else {//type_ == UP_TREANGLE_MATRIX
         throw std::runtime_error ( "Not implemented yet :(" );

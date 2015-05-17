@@ -63,7 +63,7 @@ void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )
     std::array<std::mutex, sbfNumThreads> stiffPartLocks;
     std::array<std::future<int>, sbfNumThreads> futures;
     if ( makeReport ) report.createNewProgress ( "Computing stiffness matrix" );
-    auto computer = [&] ( int computorID, int numComputors, int numAllRows) -> int {
+    auto computer = [&] ( int computorID, int numComputors, int numAllRows ) -> int {
         sbfElement *elem = nullptr;
         sbfElemStiffMatrix *elemStiff = nullptr;
         std::unique_ptr<sbfMatrixIterator> iteratorPtr ( createIterator() );
@@ -74,7 +74,8 @@ void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )
         int localStart = startID + ( stopID - startID ) * computorID / numComputors;
         int localStop = startID + ( stopID - startID ) * ( computorID + 1 ) / numComputors;
         if ( localStop > stopID ) localStop = stopID;
-        for ( int ctElem = localStart; ctElem < localStop; ++ctElem ) { //Loop over elements
+        for ( int ctElem = localStart; ctElem < localStop; ++ctElem )   //Loop over elements
+        {
             elem = mesh_->elemPtr ( ctElem );
             assert ( mapStiff.count ( elem->type() ) == 1 );
             elemStiff = mapStiff[elem->type()];
@@ -90,11 +91,11 @@ void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )
                     continue;
                 double *data = nullptr;
                 if ( idData.first.first != iterator->row() ||
-                     iterator->column() > idData.first.second )
+                iterator->column() > idData.first.second )
                     iterator->setToRow ( idData.first.first );
                 while ( iterator->isValid() )
                     if ( iterator->column() == idData.first.second &&
-                         iterator->isInNormal() ) {
+                    iterator->isInNormal() ) {
                         data = const_cast<double *> ( iterator->data() );
                         break;
                     }
@@ -117,7 +118,7 @@ void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )
 
     for ( int ct = 1; ct < sbfNumThreads; ++ct )
         futures[ct] = pool.enqueue ( computer, ct, sbfNumThreads, this->mesh()->numNodes() );
-    computer(0, sbfNumThreads, this->mesh()->numNodes());
+    computer ( 0, sbfNumThreads, this->mesh()->numNodes() );
     for ( int ct = 1; ct < sbfNumThreads; ++ct )
         futures[ct].get();
 
@@ -144,6 +145,18 @@ sbfStiffMatrix *sbfStiffMatrix::New ( sbfMesh *mesh, sbfPropertiesSet *propSet, 
     }
 
     return nullptr;
+}
+
+sbfStiffMatrixConstructData *sbfStiffMatrix::constructData() const
+{
+    sbfStiffMatrixConstructData *cData = new sbfStiffMatrixConstructData;
+    cData->type = type_;
+    return cData;
+}
+
+void sbfStiffMatrix::construct(sbfStiffMatrixConstructData *constrData)
+{
+    type_ = constrData->type;
 }
 
 void sbfStiffMatrix::multiplyByVector ( double *vector, double *result, sbfMatrixIterator *iterator )

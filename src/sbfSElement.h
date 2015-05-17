@@ -36,7 +36,7 @@ public:
     void setRegElemIndexes (std::vector<int> regElemIndexes);
     void setChildrens (std::vector<sbfSElement *> selems);
     void addChildren(sbfSElement * selem);
-    sbfSElement * children(int index) {
+    sbfSElement * children(int index) const {
         sbfSElement * rez = nullptr;
         if(childrens_ && index < numChildren_) rez = childrens_[index];
         return rez;
@@ -45,6 +45,8 @@ public:
     const sbfMesh *mesh () { return mesh_; }
     sbfSElement * parent () {return parent_;}
     void setParent (sbfSElement *parent) { parent_ = parent; }
+    int numInnerNodes() const { return innerNodes_.size(); }
+    int numOuterNodes() const { return outerNodes_.size(); }
 public:
     struct SEStat {
         int numSEelements;

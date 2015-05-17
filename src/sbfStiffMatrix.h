@@ -6,6 +6,8 @@
 #include "sbfPropertiesSet.h"
 #include "sbfMatrixIterator.h"
 
+struct sbfStiffMatrixConstructData;
+
 /**
  * @brief The sbfStiffMatrix class is an abstract base class for stiffness matrices
  */
@@ -59,9 +61,16 @@ public:
 
     virtual double *data() const { return nullptr; }
 
+    virtual sbfStiffMatrixConstructData *constructData() const;
+    virtual void construct(sbfStiffMatrixConstructData *constrdata);
+
     void multiplyByVector ( double *vector, double *result, sbfMatrixIterator *iterator = nullptr );
 
     void lockDof ( int nodeIndex, int dofIndex, double value, double *force, LockType lockType );
+};
+
+struct sbfStiffMatrixConstructData{
+    MatrixType type;
 };
 
 #endif // SBFSTIFFMATRIX_H
