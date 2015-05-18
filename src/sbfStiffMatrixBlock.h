@@ -30,38 +30,39 @@ private:
     //! Length of single block stored in matrix
     static const int blockSize_ = blockDim_ * blockDim_;
 
+    //TODO consider types of numNodes, numBlocks, numBlocksAlter
     //! Number of nodes used to construct stiffness matrix (nodes in FE mesh)
-    int numNodes_;
+    size_t numNodes_;
     //! Number of stiffness blocks in matrix
-    int numBlocks_;
+    size_t numBlocks_;
     //! Number of stiffness blocks in alternative storage. To deal with symetry
-    int numBlocksAlter_;
+    size_t numBlocksAlter_;
     //! Linear storage array for stiffness data by blocks
     //! Length is [blockDim_^2*numBlocks_]
     double *data_;
     //! Indexes of stiffness blocks in data_.
     //! Length is [numBlocks_] : [indJ0(of indI0), indJ1(of indI0), ... indJN(on indIN)].
-    int *indJ_;
+    size_t *indJ_;
     //! Array for indexing to certain stiff block row
     //! Length is [numNodes_+1]
-    int *shiftInd_;
+    size_t *shiftInd_;
     //! Indexes of stiffness blocks with alternative storage
     //! shiftInd_ != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
-    int *indJAlter_;
+    size_t *indJAlter_;
     //! Array for indexing to certain stiff block row with alternative storage
     //! shiftIndAlter_ != nullptr when UP_TREANGLE_MATRIX or
     //! DOWN_TREANGLE_MATRIX
-    int *shiftIndAlter_;
+    size_t *shiftIndAlter_;
     //! Array of pointers to data corresponded to alternative indexation
     //! ptrDataAlter_ != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
     double **ptrDataAlter_;
     //! Column iteration indexation
     std::vector<std::vector<
-    std::pair<int /*rowId*/, double * /*ptr*/> /*column*/
+    std::pair<size_t /*rowId*/, double * /*ptr*/> /*column*/
     > > columnsIndsPtrs_;
     //! Column iteration indexation in alter storage
     std::vector<std::vector<
-    std::pair<int /*rowId*/, double * /*ptr*/> /*column*/
+    std::pair<size_t /*rowId*/, double * /*ptr*/> /*column*/
     > > columnsIndsPtrsAlter_;
 
     //! Basic initialization function
@@ -77,7 +78,7 @@ private:
      * @param numNodes number of nodes
      * @param numBlocksAlter number of blocks in alter storage
      */
-    void setNumBlocksNodes ( int numBlocks, int numNodes, int numBlocksAlter = 0 );
+    void setNumBlocksNodes ( size_t numBlocks, size_t numNodes, size_t numBlocksAlter = 0 );
     //! Calculate indexes and shift arrays by sbfMesh mesh topology and target
     //! matrix topology for specific elements indexes
     //@{
@@ -86,17 +87,17 @@ private:
      * @param begin pointer to first element in array of processing elements IDs
      * @param end pointer to end (last+1) of processing elements IDs
      */
-    void updateIndexesFromMesh ( int *begin, int *end );
+    void updateIndexesFromMesh (unsigned int *begin, unsigned int *end , bool makeReport = true);
     //! Reimplementation for continious sequence of elements
-    void updateIndexesFromMesh ( int startElemIndex, int stopElemIndex );
+    void updateIndexesFromMesh ( unsigned int startElemIndex, unsigned int stopElemIndex, bool makeReportu = true );
     //! Reimplementation for all elements in mesh
-    void updateIndexesFromMesh();
+    void updateIndexesFromMesh(bool makeReport = true);
     //@}
     //! Updates pointers in alter storage
     void updataAlterPtr();
     //! Returns pointer to stiffness block with indexes indI, indJ.
     //! Search in regular storage ONLY
-    double *blockPtr ( int indI, int indJ );
+    double *blockPtr (unsigned int indI, unsigned int indJ );
     //! Update columns indexing
     void updateColumnsIndsPtrs();
 

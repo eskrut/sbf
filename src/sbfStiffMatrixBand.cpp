@@ -88,13 +88,13 @@ void sbfStiffMatrixBand<dim>::allocate()
     try {
         data_ = new double [blockSize_ * numBlocks_];
         null();
-        indJ_ = new int [numNodes_ * 2];
+        indJ_ = new size_t [numNodes_ * 2];
         //+1 to allow unique iteration through rows,
         //i.e. from shiftInd_[ct] to shiftInd_[ct+1]
-        shiftInd_ = new int [numNodes_ + 1];
+        shiftInd_ = new size_t [numNodes_ + 1];
         if ( numBlocksAlter_ > 0 ) {
-            indJAlter_ = new int [numNodes_ * 2];
-            shiftIndAlter_ = new int [numNodes_ + 1];
+            indJAlter_ = new size_t [numNodes_ * 2];
+            shiftIndAlter_ = new size_t [numNodes_ + 1];
             ptrDataAlter_ = new double * [numBlocksAlter_];
             for ( int ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
         }
@@ -907,8 +907,8 @@ void sbfStiffMatrixBand<dim>::construct ( sbfStiffMatrixConstructData *constrDat
     indJAlter_ = cData->indJAlter;
     shiftIndAlter_ = cData->shiftIndAlter;
     ptrDataAlter_ = cData->ptrDataAlter;
-    int minColID = std::numeric_limits<int>::max();
-    int maxColID = std::numeric_limits<int>::min();
+    size_t minColID = std::numeric_limits<size_t>::max();
+    size_t maxColID = std::numeric_limits<size_t>::min();
     for ( int ct = 0; ct < numNodes_; ++ct ) {
         int s0 = shiftInd_[ct];
         int s1 = shiftInd_[ct + 1];

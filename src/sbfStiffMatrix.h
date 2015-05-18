@@ -31,7 +31,7 @@ public:
     bool write ( const char *name ) const;
     MatrixType type() const { return type_; }
     virtual MatrixStoreType storeType() const { return MatrixStoreType::NO_DEFINED_STORE_TYPE; }
-    void computeSequantially();
+    void compute();
     void compute ( int startID, int stopID, bool makeReport = true );
 
     //! Create new instance of stiff matrix of specific type
@@ -66,7 +66,7 @@ public:
 
     void multiplyByVector ( double *vector, double *result, sbfMatrixIterator *iterator = nullptr );
 
-    void lockDof ( int nodeIndex, int dofIndex, double value, double *force, LockType lockType );
+    void lockDof (unsigned int nodeIndex, unsigned int dofIndex, double value, double *force, LockType lockType );
 };
 
 struct sbfStiffMatrixConstructData{

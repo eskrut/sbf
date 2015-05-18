@@ -13,36 +13,36 @@ BOOST_AUTO_TEST_SUITE ( sbfStiffMatrixBandTest )
 
 BOOST_AUTO_TEST_CASE ( construct )
 {
-        sbfStiffMatrixBandConstructData<6> constrData;
-        std::vector<int> indJ ( {0, 6, 2, 6, 5, 6, -1, -1} );
-        std::vector<int> shiftInd ( {0, 7, 12, 14, 14, 14} );
-        int numNodes = 4;
-        int numBlocks = 14;
-        std::vector<double> data;
-        data.resize ( constrData.blockSize * numBlocks, 0 );
-        constrData.indJ = indJ.data();
-        constrData.shiftInd = shiftInd.data();
-        constrData.indJAlter = nullptr;
-        constrData.shiftIndAlter = nullptr;
-        constrData.numBlocks = numBlocks;
-        constrData.numNodes = numNodes;
-        constrData.numBlocksAlter = 0;
-        constrData.type = MatrixType::FULL_MATRIX;
-        constrData.data = data.data();
-        constrData.ptrDataAlter = nullptr;
+    sbfStiffMatrixBandConstructData<6> constrData;
+    std::vector<size_t> indJ ( {0, 6, 2, 6, 5, 6, 0, 0} );
+    std::vector<size_t> shiftInd ( {0, 7, 12, 14, 14, 14} );
+    int numNodes = 4;
+    int numBlocks = 14;
+    std::vector<double> data;
+    data.resize ( constrData.blockSize * numBlocks, 0 );
+    constrData.indJ = indJ.data();
+    constrData.shiftInd = shiftInd.data();
+    constrData.indJAlter = nullptr;
+    constrData.shiftIndAlter = nullptr;
+    constrData.numBlocks = numBlocks;
+    constrData.numNodes = numNodes;
+    constrData.numBlocksAlter = 0;
+    constrData.type = MatrixType::FULL_MATRIX;
+    constrData.data = data.data();
+    constrData.ptrDataAlter = nullptr;
 
-        //Do not delete this object - internal memory will be freed by vectors
-        sbfStiffMatrixBand<6> *st = new sbfStiffMatrixBand<6> ( &constrData );
-        auto it = st->createIterator();
+    //Do not delete this object - internal memory will be freed by vectors
+    sbfStiffMatrixBand<6> *st = new sbfStiffMatrixBand<6> ( &constrData );
+    auto it = st->createIterator();
 
-        it->setToRow ( 0 );
-        BOOST_REQUIRE ( it->column() == 0 );
-        BOOST_REQUIRE ( it->next ( 6 ) );
-        BOOST_REQUIRE ( it->column() == 6 );
-        BOOST_REQUIRE ( ! it->next() );
+    it->setToRow ( 0 );
+    BOOST_REQUIRE ( it->column() == 0 );
+    BOOST_REQUIRE ( it->next ( 6 ) );
+    BOOST_REQUIRE ( it->column() == 6 );
+    BOOST_REQUIRE ( ! it->next() );
 
-        it->setToRow ( 3 );
-        BOOST_REQUIRE ( ! it->isValid() );
+    it->setToRow ( 3 );
+    BOOST_REQUIRE ( ! it->isValid() );
 }
 
 BOOST_AUTO_TEST_CASE ( simpleBrickLoad )
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE ( simpleBrickLoad )
                                                           MatrixType::FULL_MATRIX ) );
     sbfStiffMatrixBand<3> *stiff = stiff_up.get();
 
-    stiff->computeSequantially();
+    stiff->compute();
 
     sbfGroupFilter lockFilt;
     lockFilt.setCrdXF ( -0.001, 0.001 );
