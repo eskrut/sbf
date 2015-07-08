@@ -104,7 +104,7 @@ private:
     void updataAlterPtr();
     //! Returns pointer to stiffness block with indexes indI, indJ.
     //! Search in regular storage ONLY
-    double *blockPtr ( int indI, int indJ );
+    double *blockPtr (size_t indI, size_t indJ );
     //! Update columns indexing
     void updateColumnsIndsPtrs();
 

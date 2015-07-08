@@ -19,7 +19,7 @@ public:
     //!Setup iterations ower columns data in row rowIndex
     virtual void setToRow(const unsigned int rowIndex) = 0;
     //!Setup iterations ower rows data in column columnIndex
-    virtual void setToColumn(const int unsigned columnIndex) = 0;
+    virtual void setToColumn(const unsigned int columnIndex) = 0;
     //!Setup iterations ower columns data in row rowIndex from end to gegin
     virtual void setToRowInverse(const unsigned int rowIndex) = 0;
     //!Setup iterations ower rows data in column columnIndex from end to gegin

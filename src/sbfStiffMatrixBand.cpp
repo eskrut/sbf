@@ -96,7 +96,7 @@ void sbfStiffMatrixBand<dim>::allocate()
             indJAlter_ = new size_t [numNodes_ * 2];
             shiftIndAlter_ = new size_t [numNodes_ + 1];
             ptrDataAlter_ = new double * [numBlocksAlter_];
-            for ( int ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
+            for ( size_t ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
         }
         columnsIndsPtrs_.resize ( numNodes_ );
         columnsIndsPtrsAlter_.resize ( numNodes_ );
@@ -283,8 +283,8 @@ void sbfStiffMatrixBand<dim>::updataAlterPtr()
     if ( ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX )
          && numBlocksAlter_ > 0 ) {
         int count = 0;
-        for ( int ctIndI = 0; ctIndI < numNodes_; ctIndI++ ) {
-            for ( int ctIndJ = indJAlter_[ctIndI * 2];
+        for ( size_t ctIndI = 0; ctIndI < numNodes_; ctIndI++ ) {
+            for ( size_t ctIndJ = indJAlter_[ctIndI * 2];
                   ctIndJ <= indJAlter_[ctIndI * 2 + 1];
                   ctIndJ++ )
                 ptrDataAlter_[count++] = blockPtr ( ctIndJ, ctIndI );
@@ -293,10 +293,10 @@ void sbfStiffMatrixBand<dim>::updataAlterPtr()
 }
 
 template <int dim>
-double *sbfStiffMatrixBand<dim>::blockPtr ( int indI, int indJ )
+double *sbfStiffMatrixBand<dim>::blockPtr ( size_t indI, size_t indJ )
 {
     //Search in regular storage ONLY
-    int shift = shiftInd_[indI];
+    size_t shift = shiftInd_[indI];
     double *base = data_ + shift * blockSize_;
     if ( indJ < indJ_[indI * 2] || indJ > indJ_[indI * 2 + 1] )
         return nullptr;
@@ -308,9 +308,9 @@ void sbfStiffMatrixBand<dim>::updateColumnsIndsPtrs()
 {
     for ( auto &col : columnsIndsPtrs_ ) col.clear();
     for ( auto &col : columnsIndsPtrsAlter_ ) col.clear();
-    for ( int indI = 0; indI < numNodes_; ++indI ) {
+    for ( size_t indI = 0; indI < numNodes_; ++indI ) {
         if ( shiftInd_[indI + 1] - shiftInd_[indI] > 0 )
-            for ( int indJ = indJ_[indI * 2]; indJ <= indJ_[indI * 2 + 1]; ++indJ )
+            for ( size_t indJ = indJ_[indI * 2]; indJ <= indJ_[indI * 2 + 1]; ++indJ )
                 columnsIndsPtrs_[indJ].push_back (
                     std::make_pair ( indI,
                                      data_ + ( shiftInd_[indI] + indJ - indJ_[indI * 2] ) *blockSize_ )
@@ -319,9 +319,9 @@ void sbfStiffMatrixBand<dim>::updateColumnsIndsPtrs()
     if ( ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX ) &&
          numBlocksAlter_ > 0 ) {
         int count = 0;
-        for ( int indI = 0; indI < numNodes_; ++indI ) {
+        for ( size_t indI = 0; indI < numNodes_; ++indI ) {
             if ( shiftIndAlter_[indI + 1] - shiftIndAlter_[indI] > 0 )
-                for ( int indJ = indJAlter_[indI * 2];
+                for ( size_t indJ = indJAlter_[indI * 2];
                       indJ <= indJAlter_[indI * 2 + 1];
                       ++indJ )
                     columnsIndsPtrsAlter_[indJ].push_back (
@@ -347,7 +347,7 @@ sbfMatrixIterator *sbfStiffMatrixBand<dim>::createIterator()
 template <int dim>
 bool sbfStiffMatrixBand<dim>::isValid()
 {
-    for ( int ct = 0; ct < numNodes_; ++ct ) {
+    for ( size_t ct = 0; ct < numNodes_; ++ct ) {
         double *data = data_ + ( shiftInd_[ct] + ct - indJ_[ct * 2] ) * blockSize_;
         for ( int ctDof = 0; ctDof < blockDim_; ctDof++ )
             if (
@@ -387,7 +387,7 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol ( bool makeReport )
         report.createNewProgress ( "Computing chol factor in parallel " + std::to_string ( usingNumThreads ) );
     cholFactor->null();
 
-    std::atomic<int> diagProcessed ( -1 );
+    std::atomic<long int> diagProcessed ( -1 );
 
     sbfThreadPool pool ( usingNumThreads );
     //One computing function will be called from this thread
@@ -404,21 +404,21 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol ( bool makeReport )
             for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
                     sumShift[ct1][ct2] = shift++;
         }
-        for ( int curRow = 0 + computerID; curRow < numNodes_; curRow += numComputors )
+        for ( size_t curRow = 0 + computerID; curRow < numNodes_; curRow += numComputors )
         {
             //Process blocks in this row until diagonal block
             iteratorChol->setToRow ( curRow );
             iteratorThis->setToRow ( curRow );
-            int safeToProcess = diagProcessed;
-            for ( int ctCol = std::min ( iteratorChol->column(), iteratorThis->column() ); ctCol < curRow; ) {
+            long int safeToProcess = diagProcessed;
+            for ( size_t ctCol = std::min ( iteratorChol->column(), iteratorThis->column() ); ctCol < curRow; ) {
                 double rowSum[blockSize_];
                 double blockData[blockSize_];
                 bool isDirect;
                 double *blockThis, *blockTarget;
                 //Find pointers to source and target blocks to factorize
                 while ( iteratorChol->isValid() && iteratorThis->isValid() ) {
-                    int cChol = iteratorChol->column();
-                    int cThis = iteratorThis->column();
+                    auto cChol = iteratorChol->column();
+                    auto cThis = iteratorThis->column();
                     if ( cChol == ctCol && cThis == ctCol ) break;
                     if ( cChol < ctCol ) iteratorChol->next();
                     if ( cThis < ctCol ) iteratorThis->next();
@@ -433,12 +433,12 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol ( bool makeReport )
                 //This is checking for atomic variable
                 bool processed = false;
                 while ( !processed ) {
-                    if ( ctCol <= safeToProcess || ctCol <= diagProcessed ) {
+                    if ( static_cast<long int>(ctCol) <= safeToProcess || static_cast<long int>(ctCol) <= diagProcessed ) {
                         //OK diagonal of column ctCol is already processed
                         iteratorCholRow0->setToRow ( curRow );
                         iteratorCholRow1->setToRow ( ctCol );
-                        int col0 = iteratorCholRow0->column();
-                        int col1 = iteratorCholRow1->column();
+                        auto col0 = iteratorCholRow0->column();
+                        auto col1 = iteratorCholRow1->column();
                         while ( iteratorCholRow0->isValid() && iteratorCholRow1->isValid() ) {
                             col0 = iteratorCholRow0->column();
                             col1 = iteratorCholRow1->column();
@@ -562,7 +562,7 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createLDLT ( bool makeReport )
                                                          usingNumThreads ) );
     ldltFactor->null();
 
-    std::atomic<int> diagProcessed ( -1 );
+    std::atomic<long int> diagProcessed ( -1 );
 
     sbfThreadPool pool ( usingNumThreads );
     //One computing function will be called from this thread
@@ -579,21 +579,21 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createLDLT ( bool makeReport )
             for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
                     sumShift[ct1][ct2] = shift++;
         }
-        for ( int curRow = 0 + computerID; curRow < numNodes_; curRow += numComputors )
+        for ( size_t curRow = 0 + computerID; curRow < numNodes_; curRow += numComputors )
         {
             //Process blocks in this row until diagonal block
             iteratorL->setToRow ( curRow );
             iteratorThis->setToRow ( curRow );
-            int safeToProcess = diagProcessed;
-            for ( int ctCol = std::min ( iteratorL->column(), iteratorThis->column() ); ctCol < curRow; ) {
+            long int safeToProcess = diagProcessed;
+            for ( size_t ctCol = std::min ( iteratorL->column(), iteratorThis->column() ); ctCol < curRow; ) {
                 double rowSum[blockSize_];
                 double blockData[blockSize_];
                 bool isDirect;
                 double *blockThis, *blockTarget;
                 //Find pointers to source and target blocks to factorize
                 while ( iteratorL->isValid() && iteratorThis->isValid() ) {
-                    int cChol = iteratorL->column();
-                    int cThis = iteratorThis->column();
+                    auto cChol = iteratorL->column();
+                    auto cThis = iteratorThis->column();
                     if ( cChol == ctCol && cThis == ctCol ) break;
                     if ( cChol < ctCol ) iteratorL->next();
                     if ( cThis < ctCol ) iteratorThis->next();
@@ -608,12 +608,12 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createLDLT ( bool makeReport )
                 //This is checking for atomic variable
                 bool processed = false;
                 while ( !processed ) {
-                    if ( ctCol <= safeToProcess || ctCol <= diagProcessed ) {
+                    if ( static_cast<long int>(ctCol) <= safeToProcess || static_cast<long int>(ctCol) <= diagProcessed ) {
                         //OK diagonal of column ctCol is already processed
                         iteratorLRow0->setToRow ( curRow );
                         iteratorLRow1->setToRow ( ctCol );
-                        int col0 = iteratorLRow0->column();
-                        int col1 = iteratorLRow1->column();
+                        auto col0 = iteratorLRow0->column();
+                        auto col1 = iteratorLRow1->column();
                         while ( iteratorLRow0->isValid() && iteratorLRow1->isValid() ) {
                             col0 = iteratorLRow0->column();
                             col1 = iteratorLRow1->column();
@@ -745,7 +745,7 @@ void sbfStiffMatrixBand<dim>::solve_L_LT_u_eq_f ( double *u, double *f,
     //L u' = f
     int ctRow = 0;
     int ctColumn = 0;
-    for ( int ctBlock = 0; ctBlock < numBlocks_; ctBlock++, ctColumn++ ) { //Loop on blocks
+    for ( size_t ctBlock = 0; ctBlock < numBlocks_; ctBlock++, ctColumn++ ) { //Loop on blocks
         if ( ctBlock == shiftInd_[ctRow + 1] ) {
             ctRow++;
             ctColumn = indJ_[ctRow * 2];
@@ -811,7 +811,7 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
     //L u' = f
     int ctRow = 0;
     int ctColumn = 0;
-    for ( int ctBlock = 0; ctBlock < numBlocks_; ctBlock++, ctColumn++ ) { //Loop on blocks
+    for ( size_t ctBlock = 0; ctBlock < numBlocks_; ctBlock++, ctColumn++ ) { //Loop on blocks
         if ( ctBlock == shiftInd_[ctRow + 1] ) {
             ctRow++;
             ctColumn = indJ_[ctRow * 2];
@@ -839,7 +839,7 @@ void sbfStiffMatrixBand<dim>::solve_L_D_LT_u_eq_f ( double *u, double *f,
         }
     }//Loop on blocks
     //D u'' = u'
-    for ( int ct = 0; ct < numNodes_; ++ct ) {
+    for ( size_t ct = 0; ct < numNodes_; ++ct ) {
         block = blockPtr ( ct, ct );
         for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) {
             u[ct * blockDim_ + ct1] = u[ct * blockDim_ + ct1] / block[ct1 * ( blockDim_ + 1 )];
@@ -909,7 +909,7 @@ void sbfStiffMatrixBand<dim>::construct ( sbfStiffMatrixConstructData *constrDat
     ptrDataAlter_ = cData->ptrDataAlter;
     size_t minColID = std::numeric_limits<size_t>::max();
     size_t maxColID = std::numeric_limits<size_t>::min();
-    for ( int ct = 0; ct < numNodes_; ++ct ) {
+    for ( size_t ct = 0; ct < numNodes_; ++ct ) {
         int s0 = shiftInd_[ct];
         int s1 = shiftInd_[ct + 1];
         if ( s0 != s1 ) {
