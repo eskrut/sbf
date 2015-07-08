@@ -78,7 +78,9 @@ public:
     //! Returns reference to specific element
     sbfElement &elem(const int seqNumber);
     const sbfElement &elem(const int seqNumber) const;
-    sbfElement * elemPtr(const int sequenceNumber);//Returns pointer to specific element
+    //Returns pointer to specific element
+    sbfElement * elemPtr(const int sequenceNumber);
+    const sbfElement * elemPtr(const int sequenceNumber) const;
 
     //Mesh information
 public:

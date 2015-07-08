@@ -380,6 +380,13 @@ sbfElement * sbfMesh::elemPtr(const int sequenceNumber)
     return & elems_[sequenceNumber];
 }
 
+const sbfElement * sbfMesh::elemPtr(const int sequenceNumber) const
+{
+    if(sequenceNumber >= (int)elems_.size())
+        return nullptr;
+    return & elems_[sequenceNumber];
+}
+
 int sbfMesh::numElements() const
 {
     return (int) elems_.size();
