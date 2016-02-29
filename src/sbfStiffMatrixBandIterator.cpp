@@ -21,7 +21,7 @@ sbfStiffMatrixBandIterator<dim>::sbfStiffMatrixBandIterator ( const sbfStiffMatr
 }
 
 template <int dim>
-void sbfStiffMatrixBandIterator<dim>::setToRow ( const int rowIndex )
+void sbfStiffMatrixBandIterator<dim>::setToRow (const unsigned int rowIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToRow and sbfStiffMatrixBandIterator<dim>::setToRow
     //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
@@ -66,7 +66,7 @@ void sbfStiffMatrixBandIterator<dim>::setToRow ( const int rowIndex )
 }
 
 template <int dim>
-void sbfStiffMatrixBandIterator<dim>::setToColumn ( const int columnIndex )
+void sbfStiffMatrixBandIterator<dim>::setToColumn (const unsigned int columnIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToColumn and sbfStiffMatrixBandIterator<dim>::setToColumn
     //are SAME
@@ -110,7 +110,7 @@ void sbfStiffMatrixBandIterator<dim>::setToColumn ( const int columnIndex )
 }
 
 template <int dim>
-void sbfStiffMatrixBandIterator<dim>::setToRowInverse ( const int rowIndex )
+void sbfStiffMatrixBandIterator<dim>::setToRowInverse (const unsigned int rowIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToRowInverse and sbfStiffMatrixBandIterator<dim>::setToRowInverse
     //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
@@ -155,7 +155,7 @@ void sbfStiffMatrixBandIterator<dim>::setToRowInverse ( const int rowIndex )
 }
 
 template <int dim>
-void sbfStiffMatrixBandIterator<dim>::setToColumnInverse ( const int columnIndex )
+void sbfStiffMatrixBandIterator<dim>::setToColumnInverse (const unsigned int columnIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToColumnInverse and sbfStiffMatrixBandIterator<dim>::setToColumnInverse
     //are SAME
@@ -346,7 +346,7 @@ bool sbfStiffMatrixBandIterator<dim>::isInNormal() const
 }
 
 template <int dim>
-double *sbfStiffMatrixBandIterator<dim>::diagonal ( const int index ) const
+double *sbfStiffMatrixBandIterator<dim>::diagonal (const unsigned int index ) const
 {
     //Diagonal should be always be in normal storage
     if ( columnsByRowsNormal_[index * 2 + 1] == index )

@@ -10,17 +10,17 @@ sbfMatrixIterator::~sbfMatrixIterator()
 {
 }
 
-int sbfMatrixIterator::row() const
+unsigned int sbfMatrixIterator::row() const
 {
     return curRowIndex_;
 }
 
-int sbfMatrixIterator::column() const
+unsigned int sbfMatrixIterator::column() const
 {
     return curColumnIndex_;
 }
 
-std::pair<int, int> sbfMatrixIterator::rowColumn() const
+std::pair<unsigned int, unsigned int> sbfMatrixIterator::rowColumn() const
 {
-    return std::pair<int, int>{curRowIndex_, curColumnIndex_};
+    return std::make_pair(curRowIndex_, curColumnIndex_);
 }

@@ -35,39 +35,40 @@ private:
     //! Length of single block stored in matrix
     static const int blockSize_ = blockDim_ * blockDim_;
 
+    //TODO consider types of numNodes, numBlocks, numBlocksAlter
     //! Number of nodes used to construct stiffness matrix (nodes in FE mesh)
-    int numNodes_;
+    size_t numNodes_;
     //! Number of stiffness blocks in matrix
-    int numBlocks_;
+    size_t numBlocks_;
     //! Number of stiffness blocks in alternative storage. To deal with symetry
-    int numBlocksAlter_;
+    size_t numBlocksAlter_;
     //! Linear storage array for stiffness data by blocks
     //! Length is [blockDim_^2*numBlocks_]
     double *data_;
     //! Indexes of first and last (included) stiffness blocks in data_
     //! Length is [numNodes_*2]
     //! Content is [indJ0(of indI0), indJK(of indI0), ...].
-    int *indJ_;
+    size_t *indJ_;
     //! Array for indexing to certain stiff block row
     //! Length is [numNodes_+1]
-    int *shiftInd_;
+    size_t *shiftInd_;
     //! Indexes of stiffness blocks with alternative storage
     //! shiftInd_ != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
-    int *indJAlter_;
+    size_t *indJAlter_;
     //! Array for indexing to certain stiff block row with alternative storage
     //! shiftIndAlter_ != nullptr when UP_TREANGLE_MATRIX or
     //! DOWN_TREANGLE_MATRIX
-    int *shiftIndAlter_;
+    size_t *shiftIndAlter_;
     //! Array of pointers to data corresponded to alternative indexation
     //! ptrDataAlter_ != nullptr when UP_TREANGLE_MATRIX or DOWN_TREANGLE_MATRIX
     double **ptrDataAlter_;
     //! Column iteration indexation
     std::vector<std::vector<
-    std::pair<int /*rowId*/, double * /*ptr*/> /*column*/
+    std::pair<size_t /*rowId*/, double * /*ptr*/> /*column*/
     > > columnsIndsPtrs_;
     //! Column iteration indexation in alter storage
     std::vector<std::vector<
-    std::pair<int /*rowId*/, double * /*ptr*/> /*column*/
+    std::pair<size_t /*rowId*/, double * /*ptr*/> /*column*/
     > > columnsIndsPtrsAlter_;
 
     //! Basic initialization function
@@ -103,7 +104,7 @@ private:
     void updataAlterPtr();
     //! Returns pointer to stiffness block with indexes indI, indJ.
     //! Search in regular storage ONLY
-    double *blockPtr ( int indI, int indJ );
+    double *blockPtr (size_t indI, size_t indJ );
     //! Update columns indexing
     void updateColumnsIndsPtrs();
 
@@ -165,14 +166,14 @@ template <int dim>
 struct sbfStiffMatrixBandConstructData : public sbfStiffMatrixConstructData {
     static const int blockDim = dim;
     static const int blockSize = blockDim * blockDim;
-    int numNodes;
-    int numBlocks;
-    int numBlocksAlter;
+    size_t numNodes;
+    size_t numBlocks;
+    size_t numBlocksAlter;
     double *data;
-    int *indJ;
-    int *shiftInd;
-    int *indJAlter;
-    int *shiftIndAlter;
+    size_t *indJ;
+    size_t *shiftInd;
+    size_t *indJAlter;
+    size_t *shiftIndAlter;
     double **ptrDataAlter;
 };
 

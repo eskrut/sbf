@@ -50,7 +50,7 @@ bool sbfStiffMatrix::write ( const char *name ) const
     return true;
 }
 
-void sbfStiffMatrix::computeSequantially()
+void sbfStiffMatrix::compute()
 {
     compute ( 0, mesh_->numElements() );
 }
@@ -187,9 +187,9 @@ void sbfStiffMatrix::multiplyByVector ( double *vector, double *result, sbfMatri
     if ( !iterator ) delete iter;
 }
 
-void sbfStiffMatrix::lockDof ( int nodeIndex, int dofIndex, double value, double *force, LockType lockType )
+void sbfStiffMatrix::lockDof ( unsigned int nodeIndex, unsigned int dofIndex, double value, double *force, LockType lockType )
 {
-    const int numDofPerNode = numDof();
+    const unsigned int numDofPerNode = numDof();
     assert ( dofIndex < numDofPerNode );
     //TODO implement up & down triadonal matrixes
     assert ( type_ == MatrixType::FULL_MATRIX );
@@ -202,16 +202,16 @@ void sbfStiffMatrix::lockDof ( int nodeIndex, int dofIndex, double value, double
     }
     else {
         //TODO add more tests for this lock type
-        const int numNodes = mesh_->numNodes();
-        for ( int ctRow = 0; ctRow < numNodes; ++ctRow ) {
+        const unsigned int numNodes = mesh_->numNodes();
+        for ( unsigned int ctRow = 0; ctRow < numNodes; ++ctRow ) {
             iter->setToRow ( ctRow );
             if ( ctRow == nodeIndex ) {
                 while ( iter->isValid() ) {
                     double *block = iter->data();
                     const int columnID = iter->column();
-                    if ( force ) for ( int ctDof = 0; ctDof < numDofPerNode;
+                    if ( force ) for ( unsigned int ctDof = 0; ctDof < numDofPerNode;
                                            ++ctDof ) force[columnID * numDofPerNode + ctDof] -= block[numDofPerNode * dofIndex + ctDof] * value;
-                    for ( int ctDof = 0; ctDof < numDofPerNode; ++ctDof ) block[numDofPerNode * dofIndex + ctDof] = 0.0;
+                    for ( unsigned int ctDof = 0; ctDof < numDofPerNode; ++ctDof ) block[numDofPerNode * dofIndex + ctDof] = 0.0;
                     iter->next();
                 }
             }
@@ -219,14 +219,14 @@ void sbfStiffMatrix::lockDof ( int nodeIndex, int dofIndex, double value, double
                 while ( iter->isValid() ) {
                     if ( iter->column() == nodeIndex ) {
                         double *block = iter->data();
-                        for ( int ctDof = 0; ctDof < numDofPerNode; ++ctDof ) block[dofIndex + numDofPerNode * ctDof] = 0.0;
+                        for ( unsigned int ctDof = 0; ctDof < numDofPerNode; ++ctDof ) block[dofIndex + numDofPerNode * ctDof] = 0.0;
                     }
                     iter->next();
                 }
             }
         }
         double *block = iter->diagonal ( nodeIndex );
-        for ( int ctDof = 0; ctDof < numDofPerNode; ++ctDof ) block[dofIndex + numDofPerNode * ctDof] = 0.0;
+        for ( unsigned int ctDof = 0; ctDof < numDofPerNode; ++ctDof ) block[dofIndex + numDofPerNode * ctDof] = 0.0;
         block[dofIndex * ( numDofPerNode + 1 )] = 1.0;
         force[nodeIndex * numDofPerNode + dofIndex] = value;
     }

@@ -74,7 +74,7 @@ public:
     virtual void computeSM() = 0;
     virtual double computeVolume() { return 0; }
     double *data() const { return data_; }
-    using RowColData = std::list<std::pair<std::pair<int/*rowID*/, int/*columnID*/>, const double */*data*/>>;
+    using RowColData = std::list<std::pair<std::pair<unsigned int/*rowID*/, unsigned int/*columnID*/>, const double */*data*/>>;
     virtual RowColData rowColData() = 0;
     int numIntPoints() const;
     void setNumIntPoints(int numIntPoints);

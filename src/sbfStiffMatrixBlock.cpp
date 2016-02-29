@@ -3,10 +3,12 @@
 #include "sbfMesh.h"
 #include "sbfElement.h"
 #include "sbfAdditions.h"
+#include "sbfthreadpool.hpp"
 #include <cassert>
 #include <cmath>
 #include <vector>
 #include <set>
+#include <array>
 
 template <int dim>
 sbfStiffMatrixBlock<dim>::sbfStiffMatrixBlock ( sbfMesh *mesh,
@@ -66,22 +68,22 @@ void sbfStiffMatrixBlock<dim>::allocate()
     clean();
     data_ = new double [blockSize_ * numBlocks_];
     null();
-    indJ_ = new int [numBlocks_];
+    indJ_ = new size_t [numBlocks_];
     //+1 to allow unique iteration through rows,
     //i.e. from shiftInd_[ct] to shiftInd_[ct+1]
-    shiftInd_ = new int [numNodes_ + 1];
+    shiftInd_ = new size_t [numNodes_ + 1];
     if ( numBlocksAlter_ > 0 ) {
-        indJAlter_ = new int [numBlocksAlter_];
-        shiftIndAlter_ = new int [numNodes_ + 1];
+        indJAlter_ = new size_t [numBlocksAlter_];
+        shiftIndAlter_ = new size_t [numNodes_ + 1];
         ptrDataAlter_ = new double * [numBlocksAlter_];
-        for ( int ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
+        for ( size_t ct = 0; ct < numBlocksAlter_; ++ct ) ptrDataAlter_[ct] = nullptr;
     }
     columnsIndsPtrs_.resize ( numNodes_ );
     columnsIndsPtrsAlter_.resize ( numNodes_ );
 }
 
 template <int dim>
-void sbfStiffMatrixBlock<dim>::setNumBlocksNodes ( int numBlocks, int numNodes, int numBlocksAlter )
+void sbfStiffMatrixBlock<dim>::setNumBlocksNodes (size_t numBlocks, size_t numNodes, size_t numBlocksAlter )
 {
     clean();
     numBlocks_ = numBlocks;
@@ -91,17 +93,35 @@ void sbfStiffMatrixBlock<dim>::setNumBlocksNodes ( int numBlocks, int numNodes, 
 }
 
 template <int dim>
-void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh ( int *begin, int *end )
+void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh ( unsigned int *begin, unsigned int *end, bool makeReport )
 {
-    std::vector<std::set<int>> indexes;
-    std::vector<int> elementIDs ( begin, end );
+    if ( makeReport ) report.createNewProgress ( "Update stiff indexes" );
+    std::vector<std::set<unsigned int>> indexes;
     numNodes_ = mesh_->numNodes();
     indexes.resize ( numNodes_ );
-    for ( auto ind : elementIDs ) {
-        std::vector<int> nodeIDs = mesh_->elemPtr ( ind )->indexes();
-        for ( auto node1 : nodeIDs ) for ( auto node2 : nodeIDs ) indexes[node1].insert ( node2 );
-    }
-    int indLength = 0;
+    sbfThreadPool pool ( sbfNumThreads );
+    std::array<std::mutex, sbfNumThreads> indexesPartLocks;
+    std::array<std::future<int>, sbfNumThreads> futures;
+    auto computer = [&] ( int computorID, int numComputors, int numAllRows ) -> int {
+        unsigned int *localStart = begin + ( end - begin ) * computorID / numComputors ;
+        unsigned int *localStop = begin + ( end - begin ) * ( computorID + 1 ) / numComputors;
+        if ( localStop > end ) localStop = end;
+        for ( unsigned int *ind = localStart; ind < localStop; ++ind )
+        {
+            std::vector<int> nodeIDs = mesh_->elemPtr ( *ind )->indexes();
+            for ( auto node1 : nodeIDs ) {
+                std::unique_lock<std::mutex> lock ( indexesPartLocks[node1 * numComputors / numAllRows] );
+                indexes[node1].insert ( nodeIDs.begin(), nodeIDs.end() );
+            }
+        }
+        return 0;
+    };
+    for ( int ct = 1; ct < sbfNumThreads; ++ct )
+        futures[ct] = pool.enqueue ( computer, ct, sbfNumThreads, numNodes_ );
+    computer ( 0, sbfNumThreads, numNodes_ );
+    for ( int ct = 1; ct < sbfNumThreads; ++ct )
+        futures[ct].get();
+    size_t indLength = 0;
     for ( auto &row : indexes ) indLength += row.size();
 
     if ( type_ & MatrixType::FULL_MATRIX ) {
@@ -116,9 +136,9 @@ void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh ( int *begin, int *end )
         }
     }//MatrixType::FULL_MATRIX
     else if ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX ) {
-        int numBeforeDiagonal = 0, numAfterDiagonal = 0;
-        int size = static_cast<int> ( indexes.size() );
-        for ( int ct = 0; ct < size; ++ct ) {
+        size_t numBeforeDiagonal = 0, numAfterDiagonal = 0;
+        size_t size = indexes.size();
+        for ( size_t ct = 0; ct < size; ++ct ) {
             auto &row = indexes[ct];
             for ( auto &id : row ) {
                 if ( id < ct ) ++numBeforeDiagonal;
@@ -139,7 +159,7 @@ void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh ( int *begin, int *end )
         shiftInd_[countNorm++] = ctNorm;
         shiftIndAlter_[countAlter++] = ctAlter;
         size = static_cast<int> ( indexes.size() );
-        for ( int ct = 0; ct < size; ++ct ) {
+        for ( size_t ct = 0; ct < size; ++ct ) {
             auto &row = indexes[ct];
             for ( auto nodeID : row ) {
                 if ( type_ & UP_TREANGLE_MATRIX ) {
@@ -158,22 +178,30 @@ void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh ( int *begin, int *end )
     }//type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX
     else
         throw std::runtime_error ( "Not supported matrix type" );
-    updateColumnsIndsPtrs();
+    try {
+        updateColumnsIndsPtrs();
+    }
+    catch ( std::exception &e ) {
+        std::string err = "Cought exception during update of stiffness matrix columns indexing.";
+        report.error ( err );
+        throw std::runtime_error ( err );
+    }
+    if ( makeReport ) report.finalizeProgress();
 }
 
 template <int dim>
-void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh ( int startElemIndex, int stopElemIndex )
+void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh (unsigned int startElemIndex, unsigned int stopElemIndex, bool makeReport )
 {
-    std::vector<int> indexes;
+    std::vector<unsigned int> indexes;
     indexes.resize ( stopElemIndex - startElemIndex );
-    for ( int ct = startElemIndex; ct < stopElemIndex; ++ct ) indexes[ct] = ct;
-    updateIndexesFromMesh ( indexes.data(), indexes.data() + indexes.size() );
+    for ( unsigned int ct = startElemIndex; ct < stopElemIndex; ++ct ) indexes[ct] = ct;
+    updateIndexesFromMesh ( indexes.data(), indexes.data() + indexes.size(), makeReport );
 }
 
 template <int dim>
-void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh()
+void sbfStiffMatrixBlock<dim>::updateIndexesFromMesh(bool makeReport)
 {
-    updateIndexesFromMesh ( 0, mesh_->numElements() );
+    updateIndexesFromMesh ( 0, mesh_->numElements(), makeReport );
 }
 
 template <int dim>
@@ -181,21 +209,21 @@ void sbfStiffMatrixBlock<dim>::updataAlterPtr()
 {
     if ( ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX ) && numBlocksAlter_ > 0 ) {
         int count = 0;
-        for ( int ctIndI = 0; ctIndI < numNodes_; ctIndI++ ) {
-            for ( int shift = shiftIndAlter_[ctIndI]; shift < shiftIndAlter_[ctIndI + 1]; shift++ )
+        for ( size_t ctIndI = 0; ctIndI < numNodes_; ctIndI++ ) {
+            for ( size_t shift = shiftIndAlter_[ctIndI]; shift < shiftIndAlter_[ctIndI + 1]; shift++ )
                 ptrDataAlter_[count++] = blockPtr ( indJAlter_[shift], ctIndI );
         }
     }
 }
 
 template <int dim>
-double *sbfStiffMatrixBlock<dim>::blockPtr ( int indI, int indJ )
+double *sbfStiffMatrixBlock<dim>::blockPtr ( unsigned int indI, unsigned int indJ )
 {
     //Search in regular storage ONLY
-    int shift = shiftInd_[indI];
+    size_t shift = shiftInd_[indI];
     double *base = data_ + shift * blockSize_;
-    int searchLength = shiftInd_[indI + 1] - shift;
-    for ( int ct = 0; ct < searchLength; ct++ ) { //Search through row indI for column indJ
+    size_t searchLength = shiftInd_[indI + 1] - shift;
+    for ( size_t ct = 0; ct < searchLength; ct++ ) { //Search through row indI for column indJ
         if ( indJ_[shift + ct] == indJ )
             return base;
         base += blockSize_;
@@ -209,20 +237,20 @@ void sbfStiffMatrixBlock<dim>::updateColumnsIndsPtrs()
 {
     for ( auto &col : columnsIndsPtrs_ ) col.clear();
     for ( auto &col : columnsIndsPtrsAlter_ ) col.clear();
-    for ( int indI = 0; indI < numNodes_; ++indI ) {
-        int shift = shiftInd_[indI];
+    for ( size_t indI = 0; indI < numNodes_; ++indI ) {
+        size_t shift = shiftInd_[indI];
         double *base = data_ + shift * blockSize_;
-        int searchLength = shiftInd_[indI + 1] - shift;
-        for ( int ct = 0; ct < searchLength; ct++ ) {
+        size_t searchLength = shiftInd_[indI + 1] - shift;
+        for ( size_t ct = 0; ct < searchLength; ct++ ) {
             columnsIndsPtrs_[indJ_[shift + ct]].push_back ( std::make_pair ( indI, base ) );
             base += blockSize_;
         }
     }
     if ( ( type_ & UP_TREANGLE_MATRIX || type_ & DOWN_TREANGLE_MATRIX ) &&
          numBlocksAlter_ > 0 ) {
-        int count = 0;
-        for ( int indI = 0; indI < numNodes_; indI++ ) {
-            for ( int shift = shiftIndAlter_[indI]; shift < shiftIndAlter_[indI + 1]; shift++ )
+        size_t count = 0;
+        for ( size_t indI = 0; indI < numNodes_; indI++ ) {
+            for ( size_t shift = shiftIndAlter_[indI]; shift < shiftIndAlter_[indI + 1]; shift++ )
                 columnsIndsPtrsAlter_[indJAlter_[shift]].push_back (
                     std::make_pair ( indI, ptrDataAlter_[count++] )
                 );
@@ -239,8 +267,8 @@ void sbfStiffMatrixBlock<dim>::updateColumnsIndsPtrs()
 template <int dim>
 void sbfStiffMatrixBlock<dim>::null()
 {
-    const int length = numBlocks_ * blockSize_;
-    for ( int ct = 0; ct < length; ct++ ) data_[ct] = 0.0;
+    const size_t length = numBlocks_ * blockSize_;
+    for ( size_t ct = 0; ct < length; ct++ ) data_[ct] = 0.0;
 }
 
 template <int dim>
@@ -292,7 +320,7 @@ void sbfStiffMatrixBlock<dim>::read_stream ( std::ifstream &in )
         std::vector<int> shiftPtrDataAlter;
         shiftPtrDataAlter.resize ( numBlocksAlter_ );
         in.read ( reinterpret_cast<char *> ( & ( shiftPtrDataAlter[0] ) ), numBlocksAlter_ * sizeof ( shiftPtrDataAlter[0] ) );
-        for ( int ct = 0; ct < numBlocksAlter_; ct++ )
+        for ( size_t ct = 0; ct < numBlocksAlter_; ct++ )
             ptrDataAlter_[ct] = data_ + shiftPtrDataAlter[ct];
     }//Alternate information
 }
@@ -315,7 +343,7 @@ void sbfStiffMatrixBlock<dim>::write_stream ( std::ofstream &out ) const
         out.write ( reinterpret_cast<const char *> ( shiftIndAlter_ ), ( numNodes_ + 1 ) *sizeof ( shiftIndAlter_[0] ) );
         std::vector<int> shiftPtrDataAlter;
         shiftPtrDataAlter.resize ( numBlocksAlter_ );
-        for ( int ct = 0; ct < numBlocksAlter_; ct++ )
+        for ( size_t ct = 0; ct < numBlocksAlter_; ct++ )
             shiftPtrDataAlter[ct] = static_cast<int> ( ptrDataAlter_[ct] - data_ );
         out.write ( reinterpret_cast<const char *> ( & ( shiftPtrDataAlter[0] ) ),
                     numBlocksAlter_ * sizeof ( shiftPtrDataAlter[0] ) );
@@ -344,7 +372,7 @@ sbfStiffMatrix *sbfStiffMatrixBlock<dim>::createIncompleteChol()
         for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = ct1 + 1; ct2 < blockDim_; ++ct2 )
                 sumShift[ct1][ct2] = shift++;
     }
-    for ( int diagCt = 0; diagCt < numNodes_; diagCt++ ) { //Loop on block rows
+    for ( size_t diagCt = 0; diagCt < numNodes_; diagCt++ ) { //Loop on block rows
         //Process diagonal block
 
         blockDiag = iteratorThis->diagonal ( diagCt );
@@ -360,7 +388,7 @@ sbfStiffMatrix *sbfStiffMatrixBlock<dim>::createIncompleteChol()
 
         iteratorChol->setToRow ( diagCt );
         while ( iteratorChol->isValid() ) {
-            if ( iteratorChol->column() >= diagCt ) break;
+            if ( static_cast<size_t>(iteratorChol->column()) >= diagCt ) break;
             blockCt = iteratorChol->data();
             for ( int ct1 = 0; ct1 < blockDim_; ++ct1 ) for ( int ct2 = 0; ct2 < blockDim_; ++ct2 )
                     sum[ct1] += blockCt[ct1 * blockDim_ + ct2] * blockCt[ct1 * blockDim_ + ct2];
@@ -394,7 +422,7 @@ sbfStiffMatrix *sbfStiffMatrixBlock<dim>::createIncompleteChol()
         iteratorChol->setToColumn ( diagCt );
         iteratorThis->setToColumn ( diagCt );
         while ( iteratorChol->isValid() ) { //Loop on blocks under current diagonal block
-            int rowCt = iteratorChol->row();
+            unsigned int rowCt = iteratorChol->row();
             if ( rowCt <= diagCt ) {
                 iteratorChol->next();
                 iteratorThis->next();
@@ -413,8 +441,8 @@ sbfStiffMatrix *sbfStiffMatrixBlock<dim>::createIncompleteChol()
 
             iteratorCholRow0->setToRow ( rowCt );
             iteratorCholRow1->setToRow ( diagCt );
-            int col0 = iteratorCholRow0->column();
-            int col1 = iteratorCholRow1->column();
+            unsigned int col0 = iteratorCholRow0->column();
+            unsigned int col1 = iteratorCholRow1->column();
             while ( iteratorCholRow0->isValid() && iteratorCholRow1->isValid() ) {
                 if ( col0 >= diagCt ) break;
                 if ( col0 < col1 ) {
@@ -470,8 +498,8 @@ void sbfStiffMatrixBlock<dim>::solve_L_LT_u_eq_f ( double *u, double *f, sbfMatr
     //L u' = f
     int ctRow = 0;
     int ctColumn = 0;
-    for ( int ctBlock = 0; ctBlock < numBlocks_; ctBlock++ ) { //Loop on blocks
-        if ( ctBlock == shiftInd_[ctRow + 1] ) {
+    for ( size_t ctBlock = 0; ctBlock < numBlocks_; ctBlock++ ) { //Loop on blocks
+        if ( ctBlock == static_cast<size_t>(shiftInd_[ctRow + 1]) ) {
             ctRow++;
             for ( int ct = 0; ct < blockDim_; ++ct ) sum[ct] = 0.0;
         }

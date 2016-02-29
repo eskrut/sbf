@@ -21,7 +21,7 @@ sbfStiffMatrixBlockIterator<dim>::sbfStiffMatrixBlockIterator ( const sbfStiffMa
 }
 
 template <int dim>
-void sbfStiffMatrixBlockIterator<dim>::setToRow ( const int rowIndex )
+void sbfStiffMatrixBlockIterator<dim>::setToRow ( const unsigned int rowIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToRow and sbfStiffMatrixBandIterator<dim>::setToRow
     //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
@@ -64,7 +64,7 @@ void sbfStiffMatrixBlockIterator<dim>::setToRow ( const int rowIndex )
 }
 
 template <int dim>
-void sbfStiffMatrixBlockIterator<dim>::setToColumn ( const int columnIndex )
+void sbfStiffMatrixBlockIterator<dim>::setToColumn ( const unsigned int columnIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToColumn and sbfStiffMatrixBandIterator<dim>::setToColumn
     //are SAME
@@ -108,7 +108,7 @@ void sbfStiffMatrixBlockIterator<dim>::setToColumn ( const int columnIndex )
 }
 
 template <int dim>
-void sbfStiffMatrixBlockIterator<dim>::setToRowInverse ( const int rowIndex )
+void sbfStiffMatrixBlockIterator<dim>::setToRowInverse ( const unsigned int rowIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToRowInverse and sbfStiffMatrixBandIterator<dim>::setToRowInverse
     //are NEARLY same, except dealing with columnsByRowsNormal_ and columnsByRowsAlter_
@@ -153,7 +153,7 @@ void sbfStiffMatrixBlockIterator<dim>::setToRowInverse ( const int rowIndex )
 }
 
 template <int dim>
-void sbfStiffMatrixBlockIterator<dim>::setToColumnInverse ( const int columnIndex )
+void sbfStiffMatrixBlockIterator<dim>::setToColumnInverse ( const unsigned int columnIndex )
 {
     //sbfStiffMatrixBlockIterator<dim>::setToColumnInverse and sbfStiffMatrixBandIterator<dim>::setToColumnInverse
     //are SAME
@@ -344,7 +344,7 @@ bool sbfStiffMatrixBlockIterator<dim>::isInNormal() const
 }
 
 template <int dim>
-double *sbfStiffMatrixBlockIterator<dim>::diagonal ( const int index ) const
+double *sbfStiffMatrixBlockIterator<dim>::diagonal ( const unsigned int index ) const
 {
     //Diagonal should be always be in normal storage
     int shiftStop = shiftsRowNormal_[index + 1];
