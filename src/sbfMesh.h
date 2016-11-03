@@ -446,7 +446,7 @@ public:
     template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
     template <class StorageType = DefaultStorageDataType> int readFromFile();
     int writeNames();
-    int readNames();
+    int readNames(const char* catalog = nullptr);
     bool exist();//Check if file with current step exists
 };
 template <class ArrayType, int numArrays>
@@ -547,6 +547,8 @@ int SolutionBundle<ArrayType, numArrays>::readFromFile(const char * baseName, in
         }
     }
     in.close();
+    if( stepToProceed_ == 1 )
+        readNames(catalog);
     stepToProceed_++;
     return 0;
 }
@@ -574,12 +576,13 @@ bool SolutionBundle<ArrayType, numArrays>::exist()
     return exist;
 }
 template <class ArrayType, int numArrays>
-int SolutionBundle<ArrayType, numArrays>::readNames()
+int SolutionBundle<ArrayType, numArrays>::readNames(const char *catalog)
 {
     std::stringstream sstr;
+    if(catalog) sstr << catalog << "/";
     sstr << baseName_ << "_Names" << extension_;
     std::ifstream in(sstr.str().c_str());
-    if(!in.good()){return 1;}
+    if(!in.good()){report("Cant read names file", sstr.str()); return 1;}
     for(int ct = 0; ct < numArrays; ct++){
         if(in.eof()){return 2;}
         in >> names_[ct];
