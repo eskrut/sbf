@@ -112,6 +112,11 @@ void sbfReporter::updateProgress(int min, int max, int cur)
     updateProgress(percantage);
 }
 
+void sbfReporter::updateProgress(double fractionOfOne)
+{
+    updateProgress(static_cast<int>(fractionOfOne * 100));
+}
+
 void sbfReporter::finalizeProgress()
 {
     if ( isOnProgress_ ) {

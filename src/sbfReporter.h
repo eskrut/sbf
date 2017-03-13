@@ -45,6 +45,7 @@ private:
 public:
     void updateProgress(int percantage);
     void updateProgress(int min, int max, int cur);
+    void updateProgress(double fractionOfOne);
     void finalizeProgress();
 
 private:

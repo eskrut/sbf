@@ -94,7 +94,7 @@ sbfMaterialProperties *sbfMaterialProperties::makeMPropertiesSteel()
 {
     sbfMaterialProperties *mProperties = new sbfMaterialProperties("steel");
     sbfPropertyTable *eTable = new sbfPropertyTable("elastic module");
-    eTable->addNodeValue(24.0f, 200000.0f);
+    eTable->addNodeValue(24.0f, 200e9);
     eTable->setCurParam(24.0f);
     mProperties->addTable(eTable);
 

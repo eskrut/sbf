@@ -8,10 +8,44 @@ sbfGroupFilter::sbfGroupFilter()
     mtrF_ = xMaxF_ = xMinF_ = yMaxF_ = yMinF_ = zMaxF_ = zMinF_ = typeF_ = false;
     xMin_ = yMin_ = zMin_ = -std::numeric_limits<float>::max();
     xMax_ = yMax_ = zMax_ = std::numeric_limits<float>::max();
-    mesh_ = nullptr;
 }
 sbfGroupFilter::~sbfGroupFilter()
 {}
+
+sbfGroupFilter sbfGroupFilter::makeNearX(float crd, float tolerance)
+{
+    sbfGroupFilter filt;
+    filt.setCrdXF(crd - tolerance, crd + tolerance);
+    return filt;
+}
+
+sbfGroupFilter sbfGroupFilter::makeNearY(float crd, float tolerance)
+{
+    sbfGroupFilter filt;
+    filt.setCrdYF(crd - tolerance, crd + tolerance);
+    return filt;
+}
+
+sbfGroupFilter sbfGroupFilter::makeNearZ(float crd, float tolerance)
+{
+    sbfGroupFilter filt;
+    filt.setCrdZF(crd - tolerance, crd + tolerance);
+    return filt;
+}
+
+sbfGroupFilter sbfGroupFilter::makeNodeFunc(std::function<bool (const sbfNode &)> func)
+{
+    sbfGroupFilter filt;
+    filt.setNodeFunction(func);
+    return filt;
+}
+
+sbfGroupFilter sbfGroupFilter::makeElemFunc(std::function<bool (const sbfElement &)> func)
+{
+    sbfGroupFilter filt;
+    filt.setElemFunction(func);
+    return filt;
+}
 void sbfGroupFilter::setMtrF(int mtr)
 {
     mtrF_ = true;
@@ -64,17 +98,22 @@ void sbfGroupFilter::unsetCrdF()
     xMin_ = yMin_ = zMin_ = -std::numeric_limits<float>::max();
     xMax_ = yMax_ = zMax_ = std::numeric_limits<float>::max();
 }
-void sbfGroupFilter::setMesh(sbfMesh *mesh)
+
+void sbfGroupFilter::setNodeFunction(std::function<bool (const sbfNode &)> func)
 {
-    mesh_ = mesh;
+    nodeFiltFunction = func;
+}
+
+void sbfGroupFilter::setElemFunction(std::function<bool (const sbfElement &)> func)
+{
+    elemFiltFunction = func;
 }
 bool sbfGroupFilter::isPass(const sbfElement &elem)
 {
-    if(mesh_ == nullptr)
-        return false;
     bool passMtr = true;
     bool passType = true;
     bool passCrd = true;
+    bool passFunc = true;
     if(mtrF_ && mtr_ != elem.mtr())
         passMtr = false;
     if(passMtr && typeF_ && type_ != elem.type())
@@ -100,32 +139,32 @@ bool sbfGroupFilter::isPass(const sbfElement &elem)
             if(zMin_ >= node.z())
                 passCrd = false;
     }
-    //else
-        return passMtr && passCrd && passType;
+    if(elemFiltFunction && passMtr && passType && passCrd){
+        passFunc = elemFiltFunction(elem);
+    }
+    return passMtr && passCrd && passType && passFunc;
 }
 bool sbfGroupFilter::isPass(const sbfNode &node)
 {
-    if(mesh_ == nullptr)
+    if(xMaxF_)
+        if(xMax_ <= node.x())
+            return false;
+    if(yMaxF_)
+        if(yMax_ <= node.y())
+            return false;
+    if(zMaxF_)
+        if(zMax_ <= node.z())
+            return false;
+    if(xMinF_)
+        if(xMin_ >= node.x())
+            return false;
+    if(yMinF_)
+        if(yMin_ >= node.y())
+            return false;
+    if(zMinF_)
+        if(zMin_ >= node.z())
+            return false;
+    if(nodeFiltFunction && !nodeFiltFunction(node))
         return false;
-    {
-        if(xMaxF_)
-            if(xMax_ <= node.x())
-                return false;
-        if(yMaxF_)
-            if(yMax_ <= node.y())
-                return false;
-        if(zMaxF_)
-            if(zMax_ <= node.z())
-                return false;
-        if(xMinF_)
-            if(xMin_ >= node.x())
-                return false;
-        if(yMinF_)
-            if(yMin_ >= node.y())
-                return false;
-        if(zMinF_)
-            if(zMin_ >= node.z())
-                return false;
-    }
     return true;
 }

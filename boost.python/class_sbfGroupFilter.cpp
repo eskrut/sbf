@@ -24,5 +24,11 @@ void class_sbfGroupFilter_object()
             .def("unsetCrdF", &sbfGroupFilter::unsetCrdF)
             .def("isPass", static_cast<bool (sbfGroupFilter::*)(const sbfElement&)>(&sbfGroupFilter::isPass))
             .def("isPass", static_cast<bool (sbfGroupFilter::*)(const sbfNode&)>(&sbfGroupFilter::isPass))
+            .def("makeNearX", &sbfGroupFilter::makeNearX)
+            .staticmethod("makeNearX")
+            .def("makeNearY", &sbfGroupFilter::makeNearY)
+            .staticmethod("makeNearY")
+            .def("makeNearZ", &sbfGroupFilter::makeNearZ)
+            .staticmethod("makeNearZ")
             ;
 }

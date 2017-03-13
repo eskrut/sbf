@@ -51,9 +51,9 @@ void class_sbfMesh_object()
             .def("addElementGroup",
                  static_cast<sbfElementGroup * (sbfMesh::*)(sbfGroupFilter)>(&sbfMesh::addElementGroup),
                  return_internal_reference<>())
-            .def("elementGroup", &sbfMesh::group, return_internal_reference<>())
-            .def("clearElementGroups", &sbfMesh::clearGroups)
-            .def("processGroups", &sbfMesh::processGroups)
+            .def("elementGroup", &sbfMesh::elemGroup, return_internal_reference<>())
+            .def("clearElementGroups", &sbfMesh::clearElemGroups)
+            .def("processGroups", &sbfMesh::processElemGroups)
             .def("makeBlock",
                  static_cast<sbfMesh *(*)(vf &, vf &, vf &, ElementType)>(&sbfMesh::makeBlock),
                  return_value_policy<manage_new_object>())

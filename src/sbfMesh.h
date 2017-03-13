@@ -170,11 +170,11 @@ public:
     //Groups
 public:
     //Returns pointer to a specific group of elements
-    sbfElementGroup * group(const int sequenceNumber) const;
+    sbfElementGroup * elemGroup(const int sequenceNumber) const;
     //Process all groups - evaluetes indexes of elements in groups.
-    void processGroups();
+    void processElemGroups();
     //Process specific group
-    void processGroup(const int sequenceNumber);
+    void processElemGroup(const int sequenceNumber);
     //Returns pointer to a specific group of nodes
     sbfNodeGroup * nodeGroup(const int sequenceNumber) const;
     //Process all groups - evaluetes indexes of nodes in groups.
@@ -182,7 +182,7 @@ public:
     //Process specific group
     void processNodeGroup(const int sequenceNumber);
     //Clear list of groups. To clear information of elements in group without deleting group use sbfElementGroup::clearGroup() method.
-    void clearGroups();
+    void clearElemGroups();
     void clearNodeGroups();
     void clearAllGroups();
 
