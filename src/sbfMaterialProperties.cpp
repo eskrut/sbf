@@ -23,6 +23,14 @@ void sbfMaterialProperties::addTable(const std::string &name)
     tables_[name]=table;
 }
 
+void sbfMaterialProperties::addTable(const std::string &name, float param, float value)
+{
+    sbfPropertyTable *table = new sbfPropertyTable(name);
+    table->addNodeValue(param, value);
+    table->setCurParam(param);
+    tables_[name]=table;
+}
+
 void sbfMaterialProperties::addTable(sbfPropertyTable *table)
 {
     tables_[table->name()]=table;
@@ -94,7 +102,7 @@ sbfMaterialProperties *sbfMaterialProperties::makeMPropertiesSteel()
 {
     sbfMaterialProperties *mProperties = new sbfMaterialProperties("steel");
     sbfPropertyTable *eTable = new sbfPropertyTable("elastic module");
-    eTable->addNodeValue(24.0f, 200000.0f);
+    eTable->addNodeValue(24.0f, 200e9);
     eTable->setCurParam(24.0f);
     mProperties->addTable(eTable);
 

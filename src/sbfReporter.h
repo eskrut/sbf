@@ -41,26 +41,28 @@ public:
     //TODO meke nested progresses
     void createNewProgress(std::string title, int percantage = 0);
 private:
-    std::string progressLine(int progress);
+    std::string progressLine(int progress, const std::string &msg = std::string());
 public:
-    void updateProgress(int percantage);
-    void updateProgress(int min, int max, int cur);
-    void finalizeProgress();
+    void updateProgress(int percantage, const std::string &msg = std::string());
+    void updateProgress(int min, int max, int cur, const std::string &msg = std::string());
+    void updateProgress(double fractionOfOne, const std::string &msg = std::string());
+    void finalizeProgress(const std::string &msg = std::string());
 
 private:
     template <class T>
     void makeOutput(const T & obj, std::ostream * stream);
-    template<typename T = void>
-    void unpack(std::stringstream & sstr);
-    template<typename T, typename ...Ts>
-    void unpack(std::stringstream & sstr, T && t, Ts && ... ts);
+    void unpack(std::stringstream & sstr) { sstr << std::endl; return; }
+    template<class T, class... Ts>
+    void unpack(std::stringstream & sstr, T t, Ts... ts);
 public:
 //    template <class T>
 //    sbfReporter & operator<<(T obj);
     template <class First, class... Rest>
-    void operator()(First && first, Rest&&... rest);
+    void operator()(First first, Rest... rest);
     template <class First, class... Rest>
-    void error(First && first, Rest&&... rest);
+    void error(First first, Rest... rest);
+    template <class First, class... Rest>
+    void raiseError(First first, Rest... rest);
     bool placeDelimeterAtOutput() const;
     void setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput);
     char delemeter() const;
@@ -86,32 +88,41 @@ void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
 //    return *this;
 //}
 
-template<typename T>
-void sbfReporter::unpack(std::stringstream & sstr) { sstr << std::endl; return; }
-template<typename T, typename ...Ts>
-void sbfReporter::unpack(std::stringstream & sstr, T && t, Ts && ... ts) {
+//template<typename T>
+
+template<class T, class... Ts>
+void sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
     if(placeDelimeterAtOutput_) sstr << delemeter_;
     sstr << std::forward<T>(t);
-    unpack(sstr, std::forward<Ts>(ts)...);
+    unpack(sstr, ts...);
     return;
 }
 
 template <class First, class... Rest>
-void sbfReporter::operator()(First && first, Rest&&... rest)
+void sbfReporter::operator()(First first, Rest... rest)
 {
     std::stringstream sstr;
     sstr << std::forward<First>(first);
-    unpack(sstr, std::forward<Rest>(rest)...);
+    unpack(sstr, rest...);
     makeOutput(sstr.str().c_str(), out_);
 }
 template <class First, class... Rest>
-void sbfReporter::error(First && first, Rest&&... rest)
+void sbfReporter::error(First first, Rest... rest)
 {
     std::stringstream sstr;
     sstr << std::forward<First>(first);
-    unpack(sstr, std::forward<Rest>(rest)...);
+    unpack(sstr, rest...);
     makeOutput(sstr.str(), err_);
     errors_.push_back(sstr.str());
+}
+template <class First, class... Rest>
+void sbfReporter::raiseError(First first, Rest... rest)
+{
+    std::stringstream sstr;
+    sstr << std::forward<First>(first);
+    unpack(sstr, rest...);
+    error(sstr.str());
+    throw std::runtime_error(sstr.str());
 }
 
 static sbfReporter report;

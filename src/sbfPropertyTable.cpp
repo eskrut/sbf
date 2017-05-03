@@ -1,5 +1,8 @@
 #include "sbfPropertyTable.h"
 #include <limits>
+#include <algorithm>
+#include <cmath>
+#include "sbfReporter.h"
 
 sbfPropertyTable::sbfPropertyTable()
 {
@@ -16,6 +19,28 @@ sbfPropertyTable::sbfPropertyTable(const std::string & name)
 sbfPropertyTable::~sbfPropertyTable()
 {
     table_.clear();
+}
+
+sbfPropertyTable sbfPropertyTable::makeTable(const std::string &name, float param, float value)
+{
+    sbfPropertyTable t(name);
+    t.addNodeValue(param, value);
+    t.setCurParam(param);
+    return t;
+}
+
+void sbfPropertyTable::setNodeValue(const float param, const float value)
+{
+    auto p = std::find_if(table_.begin(), table_.end(), [&param](const PropertyNode &node){
+        if( std::fabs(node.param - param) <= std::numeric_limits<float>::epsilon() )
+            return true;
+        return false;
+    });
+    if( p != table_.end() ) {
+        p->value = value;
+    }
+    else
+        report.raiseError("No node with param ", param, " in table ", name_);
 }
 
 void sbfPropertyTable::addNodeValue(float param, float value)
@@ -63,6 +88,11 @@ void sbfPropertyTable::setCurParam(const float param)
 float sbfPropertyTable::curValue() const
 {
     return curValue_;
+}
+
+float sbfPropertyTable::curParam() const
+{
+    return curParam_;
 }
 
 const std::string & sbfPropertyTable::name() const

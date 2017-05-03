@@ -50,9 +50,9 @@ bool sbfStiffMatrix::write ( const char *name ) const
     return true;
 }
 
-void sbfStiffMatrix::compute()
+void sbfStiffMatrix::compute(bool makeReport)
 {
-    compute ( 0, mesh_->numElements() );
+    compute ( 0, mesh_->numElements(), makeReport );
 }
 
 void sbfStiffMatrix::compute ( int startID, int stopID, bool makeReport )

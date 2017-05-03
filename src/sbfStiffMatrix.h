@@ -31,7 +31,7 @@ public:
     bool write ( const char *name ) const;
     MatrixType type() const { return type_; }
     virtual MatrixStoreType storeType() const { return MatrixStoreType::NO_DEFINED_STORE_TYPE; }
-    void compute();
+    void compute(bool makeReport = true);
     void compute ( int startID, int stopID, bool makeReport = true );
 
     //! Create new instance of stiff matrix of specific type

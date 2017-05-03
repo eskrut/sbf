@@ -1,10 +1,14 @@
 #include "sbfStiffMatrixBand.h"
 #include "sbfStiffMatrixBandIterator.h"
 #include "sbfPropertiesSet.h"
+#include "sbfMaterialProperties.h"
 #include "sbfGroupFilter.h"
 #include "sbfNodeGroup.h"
+#include "sbfElement.h"
+#include "sbfAdditions.h"
 #include <vector>
 #include <initializer_list>
+#include <cmath>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_log.hpp>
@@ -62,7 +66,7 @@ BOOST_AUTO_TEST_CASE ( simpleBrickLoad )
                                                           MatrixType::FULL_MATRIX ) );
     sbfStiffMatrixBand<3> *stiff = stiff_up.get();
 
-    stiff->compute();
+    stiff->compute(false);
 
     sbfGroupFilter lockFilt;
     lockFilt.setCrdXF ( -0.001, 0.001 );
@@ -78,6 +82,104 @@ BOOST_AUTO_TEST_CASE ( simpleBrickLoad )
     lockGroup->addFilter ( lockFilt );
     m->processNodeGroups();
     BOOST_REQUIRE ( lockGroup->nodeIndList().size() == 1 );
+}
+
+BOOST_AUTO_TEST_CASE( simpleBeam )
+{
+    const float L = 1.0;
+    const size_t numNodes = 100;
+    auto mesh = std::make_unique<sbfMesh>();
+    int prevNode = mesh->addNode(0, 0, 0);
+    for(size_t ct = 1; ct < numNodes; ++ct) {
+        int nextNode = mesh->addNode(L / (numNodes - 1) * ct, 0, 0);
+        mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {prevNode, nextNode}));
+        prevNode = nextNode;
+    }
+    mesh->setMtr(1);
+    BOOST_REQUIRE( mesh->numNodes() == numNodes );
+    BOOST_REQUIRE( mesh->numElements() == (numNodes-1) );
+
+    //mesh->rotate(0, std::atan(1)*2, 0);
+
+    //FIXME
+    //Smart pointer couses crash mat deleted at props destruction
+    auto mat = new sbfMaterialProperties();
+    auto props = std::make_unique<sbfPropertiesSet>();
+    mat->addTable("elastic module", 0, 1);
+    mat->addTable("shear module", 0, 1);
+    mat->addTable("area", 0, 1);
+    mat->addTable("Ix", 0, 1);
+    mat->addTable("Iy", 0, 1);
+    mat->addTable("Iz", 0, 1);
+    props->addMaterial(mat);
+
+
+    NodesData<double, 6> d(mesh.get()), f(mesh.get());
+
+    {
+        //Test for stretshing
+        auto stif = std::make_unique<sbfStiffMatrixBand<6>>(mesh.get(), props.get());
+        stif->compute(false);
+        f.null();
+        f.data(numNodes-1, 0) = 1;
+        for(auto dof : {0, 1, 2, 3, 4, 5})
+            stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
+
+        auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        chol->solve_L_LT_u_eq_f(d.data(), f.data());
+
+        for(auto ct : std::list<int>({0, numNodes-1}))
+//        for(auto ct = 0; ct < numNodes; ++ct)
+            report(d.data(ct, 0), d.data(ct, 1), d.data(ct, 2), d.data(ct, 3), d.data(ct, 4), d.data(ct, 5));
+    }
+
+    {
+        //Test for bending by force
+        auto stif = std::make_unique<sbfStiffMatrixBand<6>>(mesh.get(), props.get());
+        stif->compute(false);
+        f.null();
+        f.data(numNodes-1, 1) = 3;
+        for(auto dof : {0, 1, 2, 3, 4, 5})
+            stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
+
+        auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        chol->solve_L_LT_u_eq_f(d.data(), f.data());
+
+        for(auto ct : std::list<int>({0, numNodes-1}))
+            report(d.data(ct, 0), d.data(ct, 1), d.data(ct, 2), d.data(ct, 3), d.data(ct, 4), d.data(ct, 5));
+    }
+
+    {
+        //Test for bending by moment
+        auto stif = std::make_unique<sbfStiffMatrixBand<6>>(mesh.get(), props.get());
+        stif->compute(false);
+        f.null();
+        f.data(numNodes-1, 5) = 2;
+        for(auto dof : {0, 1, 2, 3, 4, 5})
+            stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
+
+        auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        chol->solve_L_LT_u_eq_f(d.data(), f.data());
+
+        for(auto ct : std::list<int>({0, numNodes-1}))
+            report(d.data(ct, 0), d.data(ct, 1), d.data(ct, 2), d.data(ct, 3), d.data(ct, 4), d.data(ct, 5));
+    }
+
+    {
+        //Test for rotating by moment
+        auto stif = std::make_unique<sbfStiffMatrixBand<6>>(mesh.get(), props.get());
+        stif->compute(false);
+        f.null();
+        f.data(numNodes-1, 3) = 1;
+        for(auto dof : {0, 1, 2, 3, 4, 5})
+            stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
+
+        auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        chol->solve_L_LT_u_eq_f(d.data(), f.data());
+
+        for(auto ct : std::list<int>({0, numNodes-1}))
+            report(d.data(ct, 0), d.data(ct, 1), d.data(ct, 2), d.data(ct, 3), d.data(ct, 4), d.data(ct, 5));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -64,10 +64,12 @@ public:
     int readIndFromFile(const char* indName = "ind.sba", FileVersion version = FileVersion::AUTO_FORMAT);
     int readMtrFromFile(const char* mtrName = "mtr001.sba");
     int readMeshFromFiles(const char* indName = "ind.sba", const char* crdName = "crd.sba", const char* mtrName = "mtr001.sba", FileVersion version = FileVersion::AUTO_FORMAT);
+    int readMeshFromFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName);
     int writeCrdToFile(const char* crdName = "crd.sba");
     int writeIndToFile(const char* indName = "ind.sba", const FileVersion version = FileVersion::NEW_FORMAT);
     int writeMtrToFile(const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT) const;
     int writeMeshToFiles(const char* indName = "ind.sba", const char* crdName = "crd.sba", const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT);
+    int writeMeshToFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName);
 
     int writeToVTKFile(const char* baseName);
 
@@ -170,11 +172,11 @@ public:
     //Groups
 public:
     //Returns pointer to a specific group of elements
-    sbfElementGroup * group(const int sequenceNumber) const;
+    sbfElementGroup * elemGroup(const int sequenceNumber) const;
     //Process all groups - evaluetes indexes of elements in groups.
-    void processGroups();
+    void processElemGroups();
     //Process specific group
-    void processGroup(const int sequenceNumber);
+    void processElemGroup(const int sequenceNumber);
     //Returns pointer to a specific group of nodes
     sbfNodeGroup * nodeGroup(const int sequenceNumber) const;
     //Process all groups - evaluetes indexes of nodes in groups.
@@ -182,7 +184,7 @@ public:
     //Process specific group
     void processNodeGroup(const int sequenceNumber);
     //Clear list of groups. To clear information of elements in group without deleting group use sbfElementGroup::clearGroup() method.
-    void clearGroups();
+    void clearElemGroups();
     void clearNodeGroups();
     void clearAllGroups();
 
@@ -221,7 +223,8 @@ private:
 public:
     ArrayType * data(); // Return pointer to data
     ArrayType *data() const;
-    ArrayType & data(int nodeIndex, int compIndex); // Return  reference to value of specific component in specific node
+    ArrayType &data(int nodeIndex, int compIndex); // Return  reference to value of specific component in specific node
+    ArrayType data(int nodeIndex, int compIndex) const;
     //! Return data assuming type_ == ByNodes
     ArrayType operator()(int nodeIndex, int compIndex) const;
     ArrayType &operator()(int nodeIndex, int compIndex);
@@ -254,6 +257,10 @@ public:
     {NodesData<ArrayType, numComp> result(this->numNodes()); ArrayType *srcDataLeft = this->data(), *trgData = result.data(); if(srcDataLeft) for(int ct = 0; ct < numNodes_*numComp; ct++) trgData[ct] = srcDataLeft[ct]*mult; return result;}
     ArrayType scalMul(/*const */NodesData<ArrayType, numComp> & nodesData)
     { ArrayType sum = std::numeric_limits<ArrayType>::quiet_NaN(); ArrayType * srcData = nodesData.data(), * thisData = this->data(); if(srcData && thisData) {sum = 0; for(int ct = 0; ct < numNodes_*numComp; ct++) sum += thisData[ct]*srcData[ct];} return sum; }
+
+    //Some info
+    ArrayType max(int dof) const;
+    ArrayType min(int dof) const;
 };
 
 
@@ -286,6 +293,9 @@ ArrayType * NodesData<ArrayType, numComp>::data() const { return data_; }
 
 template < class ArrayType, int numComp>
 ArrayType & NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) { if(type_ == ByNodes) return data_[nodeIndex*numComp+compIndex]; else /*if(type_ == ByKort)*/ return data_[compIndex*numNodes_+nodeIndex]; }
+
+template < class ArrayType, int numComp>
+ArrayType NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) const { if(type_ == ByNodes) return data_[nodeIndex*numComp+compIndex]; else /*if(type_ == ByKort)*/ return data_[compIndex*numNodes_+nodeIndex]; }
 
 template < class ArrayType, int numComp>
 ArrayType NodesData<ArrayType, numComp>::operator()(int nodeIndex, int compIndex) const { return *(data_ + numComp*nodeIndex + compIndex); }
@@ -415,6 +425,30 @@ bool NodesData<ArrayType, numComp>::exist()
     return exist;
 }
 
+template<class ArrayType, int numComp>
+ArrayType NodesData<ArrayType, numComp>::max(int dof) const
+{
+    if(numNodes_ > 0) {
+        ArrayType val = data(0, dof);
+        for(int ct = 1; ct < numNodes_; ++ct)
+            val = std::max(val, data(1, dof));
+        return val;
+    }
+    return std::numeric_limits<ArrayType>::quiet_NaN();
+}
+
+template<class ArrayType, int numComp>
+ArrayType NodesData<ArrayType, numComp>::min(int dof) const
+{
+    if(numNodes_ > 0) {
+        ArrayType val = data(0, dof);
+        for(int ct = 1; ct < numNodes_; ++ct)
+            val = std::min(val, data(1, dof));
+        return val;
+    }
+    return std::numeric_limits<ArrayType>::quiet_NaN();
+}
+
 template <class ArrayType, int numArrays> class SolutionBundle
 {
 public:
@@ -446,7 +480,7 @@ public:
     template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
     template <class StorageType = DefaultStorageDataType> int readFromFile();
     int writeNames();
-    int readNames();
+    int readNames(const char* catalog = nullptr);
     bool exist();//Check if file with current step exists
 };
 template <class ArrayType, int numArrays>
@@ -547,6 +581,8 @@ int SolutionBundle<ArrayType, numArrays>::readFromFile(const char * baseName, in
         }
     }
     in.close();
+    if( stepToProceed_ == 1 )
+        readNames(catalog);
     stepToProceed_++;
     return 0;
 }
@@ -574,12 +610,13 @@ bool SolutionBundle<ArrayType, numArrays>::exist()
     return exist;
 }
 template <class ArrayType, int numArrays>
-int SolutionBundle<ArrayType, numArrays>::readNames()
+int SolutionBundle<ArrayType, numArrays>::readNames(const char *catalog)
 {
     std::stringstream sstr;
+    if(catalog) sstr << catalog << "/";
     sstr << baseName_ << "_Names" << extension_;
     std::ifstream in(sstr.str().c_str());
-    if(!in.good()){return 1;}
+    if(!in.good()){report("Cant read names file", sstr.str()); return 1;}
     for(int ct = 0; ct < numArrays; ct++){
         if(in.eof()){return 2;}
         in >> names_[ct];
