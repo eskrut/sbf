@@ -223,7 +223,8 @@ private:
 public:
     ArrayType * data(); // Return pointer to data
     ArrayType *data() const;
-    ArrayType & data(int nodeIndex, int compIndex); // Return  reference to value of specific component in specific node
+    ArrayType &data(int nodeIndex, int compIndex); // Return  reference to value of specific component in specific node
+    ArrayType data(int nodeIndex, int compIndex) const;
     //! Return data assuming type_ == ByNodes
     ArrayType operator()(int nodeIndex, int compIndex) const;
     ArrayType &operator()(int nodeIndex, int compIndex);
@@ -256,6 +257,10 @@ public:
     {NodesData<ArrayType, numComp> result(this->numNodes()); ArrayType *srcDataLeft = this->data(), *trgData = result.data(); if(srcDataLeft) for(int ct = 0; ct < numNodes_*numComp; ct++) trgData[ct] = srcDataLeft[ct]*mult; return result;}
     ArrayType scalMul(/*const */NodesData<ArrayType, numComp> & nodesData)
     { ArrayType sum = std::numeric_limits<ArrayType>::quiet_NaN(); ArrayType * srcData = nodesData.data(), * thisData = this->data(); if(srcData && thisData) {sum = 0; for(int ct = 0; ct < numNodes_*numComp; ct++) sum += thisData[ct]*srcData[ct];} return sum; }
+
+    //Some info
+    ArrayType max(int dof) const;
+    ArrayType min(int dof) const;
 };
 
 
@@ -288,6 +293,9 @@ ArrayType * NodesData<ArrayType, numComp>::data() const { return data_; }
 
 template < class ArrayType, int numComp>
 ArrayType & NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) { if(type_ == ByNodes) return data_[nodeIndex*numComp+compIndex]; else /*if(type_ == ByKort)*/ return data_[compIndex*numNodes_+nodeIndex]; }
+
+template < class ArrayType, int numComp>
+ArrayType NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) const { if(type_ == ByNodes) return data_[nodeIndex*numComp+compIndex]; else /*if(type_ == ByKort)*/ return data_[compIndex*numNodes_+nodeIndex]; }
 
 template < class ArrayType, int numComp>
 ArrayType NodesData<ArrayType, numComp>::operator()(int nodeIndex, int compIndex) const { return *(data_ + numComp*nodeIndex + compIndex); }
@@ -415,6 +423,30 @@ bool NodesData<ArrayType, numComp>::exist()
     if(in.good()) exist = true;
     in.close();
     return exist;
+}
+
+template<class ArrayType, int numComp>
+ArrayType NodesData<ArrayType, numComp>::max(int dof) const
+{
+    if(numNodes_ > 0) {
+        ArrayType val = data(0, dof);
+        for(int ct = 1; ct < numNodes_; ++ct)
+            val = std::max(val, data(1, dof));
+        return val;
+    }
+    return std::numeric_limits<ArrayType>::quiet_NaN();
+}
+
+template<class ArrayType, int numComp>
+ArrayType NodesData<ArrayType, numComp>::min(int dof) const
+{
+    if(numNodes_ > 0) {
+        ArrayType val = data(0, dof);
+        for(int ct = 1; ct < numNodes_; ++ct)
+            val = std::min(val, data(1, dof));
+        return val;
+    }
+    return std::numeric_limits<ArrayType>::quiet_NaN();
 }
 
 template <class ArrayType, int numArrays> class SolutionBundle

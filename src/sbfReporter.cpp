@@ -80,7 +80,7 @@ void sbfReporter::createNewProgress(std::string title, int percantage)
     out_->flush();
 }
 
-std::string sbfReporter::progressLine(int progress)
+std::string sbfReporter::progressLine(int progress, const std::string &msg)
 {
     if ( progress < 0 ) progress = 0;
     if ( progress > 100 ) progress = 100;
@@ -95,29 +95,30 @@ std::string sbfReporter::progressLine(int progress)
     line.width(3);
     line << progress << "% " << timer_.timeSpanStr();
     //TODO add exec time output if required
+    line << msg;
     return line.str();
 }
 
-void sbfReporter::updateProgress(int percantage)
+void sbfReporter::updateProgress(int percantage, const std::string &msg)
 {
     if ( isOnProgress_ ) {
-        *out_ << "\r" << progressLine(percantage);
+        *out_ << "\r" << progressLine(percantage, msg);
         out_->flush();
     }
 }
 
-void sbfReporter::updateProgress(int min, int max, int cur)
+void sbfReporter::updateProgress(int min, int max, int cur, const std::string &msg)
 {
     const int percantage = (cur - min) * 100 / (max - min);
-    updateProgress(percantage);
+    updateProgress(percantage, msg);
 }
 
-void sbfReporter::updateProgress(double fractionOfOne)
+void sbfReporter::updateProgress(double fractionOfOne, const std::string &msg)
 {
-    updateProgress(static_cast<int>(fractionOfOne * 100));
+    updateProgress(static_cast<int>(fractionOfOne * 100), msg);
 }
 
-void sbfReporter::finalizeProgress()
+void sbfReporter::finalizeProgress(const std::string &msg)
 {
     if ( isOnProgress_ ) {
 //        if ( flagTrackExeTime_ )

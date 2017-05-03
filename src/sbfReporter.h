@@ -41,12 +41,12 @@ public:
     //TODO meke nested progresses
     void createNewProgress(std::string title, int percantage = 0);
 private:
-    std::string progressLine(int progress);
+    std::string progressLine(int progress, const std::string &msg = std::string());
 public:
-    void updateProgress(int percantage);
-    void updateProgress(int min, int max, int cur);
-    void updateProgress(double fractionOfOne);
-    void finalizeProgress();
+    void updateProgress(int percantage, const std::string &msg = std::string());
+    void updateProgress(int min, int max, int cur, const std::string &msg = std::string());
+    void updateProgress(double fractionOfOne, const std::string &msg = std::string());
+    void finalizeProgress(const std::string &msg = std::string());
 
 private:
     template <class T>
