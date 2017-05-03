@@ -23,6 +23,14 @@ void sbfMaterialProperties::addTable(const std::string &name)
     tables_[name]=table;
 }
 
+void sbfMaterialProperties::addTable(const std::string &name, float param, float value)
+{
+    sbfPropertyTable *table = new sbfPropertyTable(name);
+    table->addNodeValue(param, value);
+    table->setCurParam(param);
+    tables_[name]=table;
+}
+
 void sbfMaterialProperties::addTable(sbfPropertyTable *table)
 {
     tables_[table->name()]=table;

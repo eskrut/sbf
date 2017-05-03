@@ -46,6 +46,14 @@ sbfGroupFilter sbfGroupFilter::makeElemFunc(std::function<bool (const sbfElement
     filt.setElemFunction(func);
     return filt;
 }
+
+sbfGroupFilter sbfGroupFilter::makeMtr(int mtr)
+{
+    sbfGroupFilter filt;
+    filt.setMtrF(mtr);
+    return filt;
+}
+
 void sbfGroupFilter::setMtrF(int mtr)
 {
     mtrF_ = true;

@@ -36,6 +36,13 @@ void sbfElemStiffMatrixBeam6Dof::clean()
 void sbfElemStiffMatrixBeam6Dof::computeSM()
 {
     sbfMaterialProperties *mp = propSet_->material(elem_->mtr() - 1);
+    assert(mp);
+    assert(mp->propertyTable("elastic module"));
+    assert(mp->propertyTable("shear module"));
+    assert(mp->propertyTable("area"));
+    assert(mp->propertyTable("Ix"));
+    assert(mp->propertyTable("Iy"));
+    assert(mp->propertyTable("Iz"));
     double E = mp->propertyTable("elastic module")->curValue();
     double G = mp->propertyTable("shear module")->curValue();
     double A = mp->propertyTable("area")->curValue();
@@ -124,9 +131,9 @@ void sbfElemStiffMatrixBeam6Dof::computeSM()
     //Rotate matrix
 
     double cosA = (crd_[1] - crd_[0])/L;
-    if(cosA == 1.0) return;
+    if(cosA >= 1.0 - std::numeric_limits<double>::epsilon()) return;
     double rot[3] = {0, -(crd_[5] - crd_[4]), crd_[3] - crd_[2]};
-    if (cosA == -1) {rot[0] = 0; rot[1] = 0; rot[2] = 1;}
+    if (cosA <= -1.0 + std::numeric_limits<double>::epsilon()) {rot[0] = 0; rot[1] = 0; rot[2] = 1;}
     double norm = std::sqrt( std::pow(rot[1], 2.0) + std::pow(rot[2], 2.0) );
     rot[1] /= norm; rot[2] /= norm;
     double angle = std::fabs(std::acos(cosA));

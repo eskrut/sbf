@@ -17,6 +17,7 @@ private:
 public:
     sbfPropertyTable *propertyTable(const std::string & name);
     void addTable(const std::string &name);
+    void addTable(const std::string &name, float param, float value);
     void addTable(sbfPropertyTable *table);
     bool removeTable(const std::string &name);
 

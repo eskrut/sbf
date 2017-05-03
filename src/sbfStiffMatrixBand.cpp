@@ -10,14 +10,14 @@
 #include <array>
 
 template <int dim>
-sbfStiffMatrixBand<dim>::sbfStiffMatrixBand ( sbfMesh *mesh,
+sbfStiffMatrixBand<dim>::sbfStiffMatrixBand (sbfMesh *mesh,
                                               sbfPropertiesSet *propSet,
-                                              MatrixType type ) :
+                                              MatrixType type , bool makeReport) :
     sbfStiffMatrix ( mesh, propSet, type )
 {
     init();
     if ( !mesh_ ) throw std::runtime_error ( "nullptr in mesh" );
-    updateIndexesFromMesh();
+    updateIndexesFromMesh(makeReport);
 }
 
 template <int dim>
@@ -531,7 +531,8 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol ( bool makeReport )
             //OK update diagProcessed
             diagProcessed = curRow;
 
-            if ( makeReport && computerID == 0 && curRow > ( numNodes_ / 40 ) && curRow % ( numNodes_ / 40 ) == 0 )
+            //FIXME
+            if ( makeReport && computerID == 0 && numNodes_ > 42 && curRow > ( numNodes_ / 42 ) && curRow % ( numNodes_ / 42 ) == 0 )
                 report.updateProgress ( 0, numNodes_, curRow );
         }
         return 0;

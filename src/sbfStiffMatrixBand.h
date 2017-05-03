@@ -25,7 +25,8 @@ public:
     //! Construct matrix, initialize arrays and prepare indexation
     explicit sbfStiffMatrixBand ( sbfMesh *mesh,
                                   sbfPropertiesSet *propSet,
-                                  MatrixType type = MatrixType::FULL_MATRIX );
+                                  MatrixType type = MatrixType::FULL_MATRIX,
+                                  bool makeReport = false);
     explicit sbfStiffMatrixBand (sbfStiffMatrixConstructData *constrData );
     //! Destroy object, clean arrays
     ~sbfStiffMatrixBand();

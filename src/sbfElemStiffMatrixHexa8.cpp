@@ -163,7 +163,11 @@ void sbfElemStiffMatrixHexa8::computeSM()
      */
 
     if(propSet_ == nullptr)
-    {/*Throw an exception*/debugMsg("ERROR!!! properties are not set correctly!!!");}
+    {
+        /*Throw an exception*/
+        debugMsg("ERROR!!! properties are not set correctly!!!");
+        return;
+    }
 
     sbfMaterialProperties *mp = propSet_->material(elem_->mtr() - 1);
     double E = mp->propertyTable("elastic module")->curValue();

@@ -1,4 +1,5 @@
 #include "sbfPropertiesSet.h"
+#include <assert.h>
 
 sbfPropertiesSet::~sbfPropertiesSet()
 {
@@ -10,12 +11,19 @@ sbfPropertiesSet::~sbfPropertiesSet()
 
 sbfMaterialProperties *sbfPropertiesSet::material(const int seqNumber) const
 {
+    assert(seqNumber >= 0);
+    assert(seqNumber < static_cast<int>(materials_.size()));
     return materials_[seqNumber];
 }
 
 void sbfPropertiesSet::addMaterial(sbfMaterialProperties *material)
 {
     materials_.push_back(material);
+}
+
+void sbfPropertiesSet::clear()
+{
+    materials_.clear();
 }
 
 void sbfPropertiesSet::read(const char *fileName)

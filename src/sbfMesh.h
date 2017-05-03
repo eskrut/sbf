@@ -64,10 +64,12 @@ public:
     int readIndFromFile(const char* indName = "ind.sba", FileVersion version = FileVersion::AUTO_FORMAT);
     int readMtrFromFile(const char* mtrName = "mtr001.sba");
     int readMeshFromFiles(const char* indName = "ind.sba", const char* crdName = "crd.sba", const char* mtrName = "mtr001.sba", FileVersion version = FileVersion::AUTO_FORMAT);
+    int readMeshFromFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName);
     int writeCrdToFile(const char* crdName = "crd.sba");
     int writeIndToFile(const char* indName = "ind.sba", const FileVersion version = FileVersion::NEW_FORMAT);
     int writeMtrToFile(const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT) const;
     int writeMeshToFiles(const char* indName = "ind.sba", const char* crdName = "crd.sba", const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT);
+    int writeMeshToFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName);
 
     int writeToVTKFile(const char* baseName);
 

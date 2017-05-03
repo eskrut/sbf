@@ -14,6 +14,7 @@ public:
     sbfPropertyTable();
     sbfPropertyTable(const std::string &name);
     ~sbfPropertyTable();
+    static sbfPropertyTable makeTable(const std::string &name, float param, float value);
 private:
     std::string name_;
     std::vector<PropertyNode> table_;
@@ -22,8 +23,10 @@ private:
 public:
     float value(const float param);
     void addNodeValue(const float param, const float value);
+    void setNodeValue(const float param, const float value);
     void setCurParam(const float param);
     float curValue() const;
+    float curParam() const;
     const std::string &name() const;
 
     void read(std::ifstream &in);

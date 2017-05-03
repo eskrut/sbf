@@ -14,6 +14,7 @@ private:
 public:
     sbfMaterialProperties *material(const int seqNumber) const;
     void addMaterial(sbfMaterialProperties *material);
+    void clear();
 
     void read(const char *fileName);
     void write(const char *fileName) const;

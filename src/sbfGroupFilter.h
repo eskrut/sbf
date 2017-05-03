@@ -20,6 +20,8 @@ public:
     static sbfGroupFilter makeNearZ(float crd, float tolerance = 1e-7);
     static sbfGroupFilter makeNodeFunc(std::function<bool (const sbfNode & node)> func);
     static sbfGroupFilter makeElemFunc(std::function<bool (const sbfElement & elem)> func);
+    static sbfGroupFilter makeMtr(int mtr);
+
 private:
     bool mtrF_;
     bool xMaxF_, xMinF_, yMaxF_, yMinF_, zMaxF_, zMinF_;
@@ -29,6 +31,7 @@ private:
     ElementType type_;
     std::function<bool (const sbfNode & node)> nodeFiltFunction{nullptr};
     std::function<bool (const sbfElement & elem)> elemFiltFunction{nullptr};
+
 public:
     void setMtrF(int mtr);
     void unsetMtrF();
