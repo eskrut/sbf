@@ -130,6 +130,8 @@ void sbfReporter::finalizeProgress(const std::string &msg)
             lastProgressDuration_ = timer_.getCount<std::chrono::seconds>();
             *out_ << " in " << timer_.getCount<std::chrono::seconds>() << " seconds";
         }
+        if(msg.size())
+            *out_ << " " << msg;
         *out_ << std::endl;
         out_->flush();
         isOnProgress_ = false;

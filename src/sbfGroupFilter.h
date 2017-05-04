@@ -2,6 +2,7 @@
 #define SBFGROUPFILTER_H
 
 #include <limits>
+#include <functional>
 #include "sbfDeclspec.h"
 enum class ElementType: short;
 class sbfMesh;

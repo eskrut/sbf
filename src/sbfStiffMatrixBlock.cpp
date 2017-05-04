@@ -11,14 +11,14 @@
 #include <array>
 
 template <int dim>
-sbfStiffMatrixBlock<dim>::sbfStiffMatrixBlock ( sbfMesh *mesh,
+sbfStiffMatrixBlock<dim>::sbfStiffMatrixBlock (sbfMesh *mesh,
                                                 sbfPropertiesSet *propSet,
-                                                MatrixType type ) :
+                                                MatrixType type , bool makeReport) :
     sbfStiffMatrix ( mesh, propSet, type )
 {
     init();
     if ( !mesh_ ) throw std::runtime_error ( "nullptr in mesh" );
-    updateIndexesFromMesh();
+    updateIndexesFromMesh(makeReport);
 }
 
 template <int dim>

@@ -21,7 +21,8 @@ class sbfStiffMatrixBlock : public sbfStiffMatrix
 public:
     explicit sbfStiffMatrixBlock ( sbfMesh *mesh,
                                    sbfPropertiesSet *propSet,
-                                   MatrixType type = MatrixType::FULL_MATRIX );
+                                   MatrixType type = MatrixType::FULL_MATRIX,
+                                   bool makeReport = false);
     ~sbfStiffMatrixBlock();
 
 private:
