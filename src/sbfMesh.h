@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <limits>
 #include <functional>
+#include <assert.h>
 
 #include "sbfReporter.h"
 
@@ -42,8 +43,6 @@ public:
     ~sbfMesh();
 
 private:
-    int nNodes_;//Normally number of nodes can be geted by numNodes()
-    int nElements_;//Normally number of nodes can be geted by numElements()
     int kort_;//Number of coordinates, stored in mesh (X, Y, Z)
 
     std::vector <sbfNode> nodes_;
@@ -70,6 +69,7 @@ public:
     int writeMtrToFile(const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT) const;
     int writeMeshToFiles(const char* indName = "ind.sba", const char* crdName = "crd.sba", const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT);
     int writeMeshToFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName);
+    int writeMeshToFiles(const std::string &prefix);
 
     int writeToVTKFile(const char* baseName);
 
@@ -241,6 +241,7 @@ public:
     void setNumDigits(int numDigits) {numDigits_ = numDigits;}
     Type type() {return type_;}
     void setType(Type type) {type_ = type;}
+    const sbfMesh *mesh() const {return mesh_;}
     template <class StorageType = DefaultStorageDataType> int writeToFile(const char *name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
     template <class StorageType = DefaultStorageDataType> int readFromFile(const char * name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
     template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
@@ -292,10 +293,26 @@ template < class ArrayType, int numComp>
 ArrayType * NodesData<ArrayType, numComp>::data() const { return data_; }
 
 template < class ArrayType, int numComp>
-ArrayType & NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) { if(type_ == ByNodes) return data_[nodeIndex*numComp+compIndex]; else /*if(type_ == ByKort)*/ return data_[compIndex*numNodes_+nodeIndex]; }
+ArrayType & NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex)
+{
+    assert(nodeIndex < numNodes_);
+    assert( compIndex < numComp );
+    if(type_ == ByNodes)
+        return data_[nodeIndex*numComp+compIndex];
+    else /*if(type_ == ByKort)*/
+        return data_[compIndex*numNodes_+nodeIndex];
+}
 
 template < class ArrayType, int numComp>
-ArrayType NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) const { if(type_ == ByNodes) return data_[nodeIndex*numComp+compIndex]; else /*if(type_ == ByKort)*/ return data_[compIndex*numNodes_+nodeIndex]; }
+ArrayType NodesData<ArrayType, numComp>::data(int nodeIndex, int compIndex) const
+{
+    assert(nodeIndex < numNodes_);
+    assert(compIndex < numComp);
+    if(type_ == ByNodes)
+        return data_[nodeIndex*numComp+compIndex];
+    else /*if(type_ == ByKort)*/
+        return data_[compIndex*numNodes_+nodeIndex];
+}
 
 template < class ArrayType, int numComp>
 ArrayType NodesData<ArrayType, numComp>::operator()(int nodeIndex, int compIndex) const { return *(data_ + numComp*nodeIndex + compIndex); }
@@ -431,7 +448,7 @@ ArrayType NodesData<ArrayType, numComp>::max(int dof) const
     if(numNodes_ > 0) {
         ArrayType val = data(0, dof);
         for(int ct = 1; ct < numNodes_; ++ct)
-            val = std::max(val, data(1, dof));
+            val = std::max(val, data(ct, dof));
         return val;
     }
     return std::numeric_limits<ArrayType>::quiet_NaN();
@@ -443,7 +460,7 @@ ArrayType NodesData<ArrayType, numComp>::min(int dof) const
     if(numNodes_ > 0) {
         ArrayType val = data(0, dof);
         for(int ct = 1; ct < numNodes_; ++ct)
-            val = std::min(val, data(1, dof));
+            val = std::min(val, data(ct, dof));
         return val;
     }
     return std::numeric_limits<ArrayType>::quiet_NaN();

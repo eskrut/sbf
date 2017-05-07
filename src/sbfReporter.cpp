@@ -95,7 +95,7 @@ std::string sbfReporter::progressLine(int progress, const std::string &msg)
     line.width(3);
     line << progress << "% " << timer_.timeSpanStr();
     //TODO add exec time output if required
-    line << msg;
+    line << msg << " ";
     return line.str();
 }
 

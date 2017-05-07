@@ -34,8 +34,8 @@ sbfMesh::sbfMesh()
 sbfMesh::sbfMesh(const sbfMesh &mesh)
 {
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    reserveNodesNumber(1000);
-    reserveElementsNumber(1000);
+    reserveNodesNumber(mesh.numNodeGroups());
+    reserveElementsNumber(mesh.numElements());
     kort_ = mesh.kort_;
     int nnode = mesh.numNodes();
     for(int ct = 0; ct < nnode; ct++)
@@ -70,16 +70,16 @@ int sbfMesh::readCrdFromFile(const char* crdName)
     int temp;
     crdFile.read((char *)&temp, sizeof(temp));
     crdFile.read((char *)&kort_, sizeof(kort_));
-    nNodes_ = temp/kort_;
+    int numN = temp/kort_;
 
-    nodes_.reserve(nNodes_);
+    nodes_.reserve(numN);
 
     float *tempF;
-    tempF = new float [kort_*nNodes_];
-    crdFile.read((char *)tempF, kort_*nNodes_*sizeof(tempF[0]));
+    tempF = new float [kort_*numN];
+    crdFile.read((char *)tempF, kort_*numN*sizeof(tempF[0]));
 
-    for(int ct = 0; ct < nNodes_; ct++)
-        nodes_.push_back(sbfNode(tempF[0*nNodes_+ct], tempF[1*nNodes_+ct], tempF[2*nNodes_+ct]));
+    for(int ct = 0; ct < numN; ct++)
+        nodes_.push_back(sbfNode(tempF[0*numN+ct], tempF[1*numN+ct], tempF[2*numN+ct]));
     delete [] tempF;
 
     crdFile.close();
@@ -121,11 +121,12 @@ int sbfMesh::readIndFromFile(const char* indName, FileVersion fileFormatVersion)
 
     if(fileFormatVersion == FileVersion::OLD_FORMAT){
         int temp;
-        indFile.read((char *)&nElements_, sizeof(nElements_));
+        int numE;
+        indFile.read((char *)&numE, sizeof(numE));
         indFile.read((char *)&temp, sizeof(temp));
-        nElements_ /= temp;
-        elems_.reserve(nElements_);
-        for(int ct = 0; ct < nElements_; ct++)
+        numE /= temp;
+        elems_.reserve(numE);
+        for(int ct = 0; ct < numE; ct++)
         {
             elems_.push_back(sbfElement());
             elems_.back().setNumNodes(temp);
@@ -364,6 +365,11 @@ int sbfMesh::writeMeshToFiles(const char* indName, const char* crdName, const ch
 int sbfMesh::writeMeshToFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName)
 {
     return writeMeshToFiles(indName.c_str(), crdName.c_str(), mtrName.c_str());
+}
+
+int sbfMesh::writeMeshToFiles(const std::string &prefix)
+{
+    return writeMeshToFiles(prefix + "ind.sba", prefix + "crd.sba", prefix + "mtr001.sba");
 }
 
 sbfNode & sbfMesh::node(const int seqNumber)
