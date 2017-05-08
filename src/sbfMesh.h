@@ -64,12 +64,13 @@ public:
     int readMtrFromFile(const char* mtrName = "mtr001.sba");
     int readMeshFromFiles(const char* indName = "ind.sba", const char* crdName = "crd.sba", const char* mtrName = "mtr001.sba", FileVersion version = FileVersion::AUTO_FORMAT);
     int readMeshFromFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName);
+    int readMeshFromFilesWithPrefix(const std::string &prefix);
     int writeCrdToFile(const char* crdName = "crd.sba");
     int writeIndToFile(const char* indName = "ind.sba", const FileVersion version = FileVersion::NEW_FORMAT);
     int writeMtrToFile(const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT) const;
     int writeMeshToFiles(const char* indName = "ind.sba", const char* crdName = "crd.sba", const char* mtrName = "mtr001.sba", const FileVersion version = FileVersion::NEW_FORMAT);
     int writeMeshToFiles(const std::string &indName, const std::string &crdName, const std::string &mtrName);
-    int writeMeshToFiles(const std::string &prefix);
+    int writeMeshToFilesWithPrefix(const std::string &prefix);
 
     int writeToVTKFile(const char* baseName);
 
@@ -238,6 +239,7 @@ public:
     void setStep(int step) {stepToProceed_ = step;}
     int step() {return stepToProceed_;}
     void setName(const char * name) {name_ = name;}
+    void setName(const std::string &name) {setName(name.c_str());}
     void setNumDigits(int numDigits) {numDigits_ = numDigits;}
     Type type() {return type_;}
     void setType(Type type) {type_ = type;}
@@ -251,13 +253,48 @@ public:
 
     //Useful mathematics functions
     NodesData<ArrayType, numComp> operator+(/*const */NodesData<ArrayType, numComp> & right)
-    {NodesData<ArrayType, numComp> result(this->numNodes()); ArrayType *srcDataLeft = this->data(), *srcDataRight = right.data(), *trgData = result.data(); if(srcDataLeft && srcDataRight) for(int ct = 0; ct < numNodes_*numComp; ct++) trgData[ct] = srcDataLeft[ct] + srcDataRight[ct]; return result;}
+    {
+        NodesData<ArrayType, numComp> result(this->numNodes());
+        ArrayType *srcDataLeft = this->data(), *srcDataRight = right.data(), *trgData = result.data();
+        if(srcDataLeft && srcDataRight)
+            for(int ct = 0; ct < numNodes_*numComp; ct++)
+                trgData[ct] = srcDataLeft[ct] + srcDataRight[ct];
+        return result;
+    }
     NodesData<ArrayType, numComp> operator-(/*const */NodesData<ArrayType, numComp> & right)
-    {NodesData<ArrayType, numComp> result(this->numNodes()); ArrayType *srcDataLeft = this->data(), *srcDataRight = right.data(), *trgData = result.data(); if(srcDataLeft && srcDataRight) for(int ct = 0; ct < numNodes_*numComp; ct++) trgData[ct] = srcDataLeft[ct] - srcDataRight[ct]; return result;}
+    {
+        NodesData<ArrayType, numComp> result(this->numNodes());
+        ArrayType *srcDataLeft = this->data(), *srcDataRight = right.data(), *trgData = result.data();
+        if(srcDataLeft && srcDataRight)
+            for(int ct = 0; ct < numNodes_*numComp; ct++)
+                trgData[ct] = srcDataLeft[ct] - srcDataRight[ct];
+        return result;
+    }
     NodesData<ArrayType, numComp> operator*(const ArrayType & mult)
-    {NodesData<ArrayType, numComp> result(this->numNodes()); ArrayType *srcDataLeft = this->data(), *trgData = result.data(); if(srcDataLeft) for(int ct = 0; ct < numNodes_*numComp; ct++) trgData[ct] = srcDataLeft[ct]*mult; return result;}
+    {
+        NodesData<ArrayType, numComp> result(this->numNodes());
+        ArrayType *srcDataLeft = this->data(), *trgData = result.data();
+        if(srcDataLeft)
+            for(int ct = 0; ct < numNodes_*numComp; ct++)
+                trgData[ct] = srcDataLeft[ct]*mult;
+        return result;
+    }
+    void operator*=(const ArrayType & mult)
+    {
+            for(int ct = 0; ct < numNodes_*numComp; ct++)
+                data_[ct] *= mult;
+    }
     ArrayType scalMul(/*const */NodesData<ArrayType, numComp> & nodesData)
-    { ArrayType sum = std::numeric_limits<ArrayType>::quiet_NaN(); ArrayType * srcData = nodesData.data(), * thisData = this->data(); if(srcData && thisData) {sum = 0; for(int ct = 0; ct < numNodes_*numComp; ct++) sum += thisData[ct]*srcData[ct];} return sum; }
+    {
+        ArrayType sum = std::numeric_limits<ArrayType>::quiet_NaN();
+        ArrayType * srcData = nodesData.data(), * thisData = this->data();
+        if(srcData && thisData) {
+            sum = 0;
+            for(int ct = 0; ct < numNodes_*numComp; ct++)
+                sum += thisData[ct]*srcData[ct];
+        }
+        return sum;
+    }
 
     //Some info
     ArrayType max(int dof) const;
