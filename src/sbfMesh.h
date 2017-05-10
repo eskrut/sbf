@@ -250,6 +250,7 @@ public:
     template <class StorageType = DefaultStorageDataType> int readFromFile();
     template <class StorageType = DefaultStorageDataType, int numInOneFile> int writeToFileSplited();
     bool exist();//Check if file with current step exists
+    int numExistedSteps();
 
     //Useful mathematics functions
     NodesData<ArrayType, numComp> operator+(/*const */NodesData<ArrayType, numComp> & right)
@@ -477,6 +478,18 @@ bool NodesData<ArrayType, numComp>::exist()
     if(in.good()) exist = true;
     in.close();
     return exist;
+}
+template < class ArrayType, int numComp>
+int NodesData<ArrayType, numComp>::numExistedSteps()
+{
+    int numSteps = 0;
+    NodesData<ArrayType, numComp> tmp(name_, numNodes_);
+    tmp.setStep(step());
+    while(tmp.exist()) {
+        ++numSteps;
+        tmp.setStep(step() + numSteps);
+    }
+    return numSteps;
 }
 
 template<class ArrayType, int numComp>
