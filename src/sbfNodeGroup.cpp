@@ -1,5 +1,6 @@
 #include "sbfNodeGroup.h"
 #include "sbfMesh.h"
+#include <algorithm>
 
 sbfNodeGroup::sbfNodeGroup() : sbfGroup()
 {}
