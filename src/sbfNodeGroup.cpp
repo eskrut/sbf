@@ -34,3 +34,23 @@ std::vector<int> sbfNodeGroup::nodeIndList()
 {
     return list_;
 }
+
+//TODO add common method in sbfGroup
+std::vector<int> sbfNodeGroup::intersect(const std::list<sbfNodeGroup *> &list)
+{
+    std::vector<std::vector<int>> ids;
+    ids.reserve(list.size());
+    for(const auto g : list) {
+        ids.push_back(g->nodeIndList());
+        std::sort(ids.back().begin(), ids.back().end());
+    }
+    std::vector<int> result = ids.front();
+    for(auto it = ids.begin() + 1; it < ids.end(); ++it) {
+        std::vector<int> localResult;
+        localResult.reserve(result.size());
+        std::set_intersection(result.begin(), result.end(), it->begin(), it->end(), std::back_inserter(localResult));
+        result = localResult;
+    }
+
+    return result;
+}
