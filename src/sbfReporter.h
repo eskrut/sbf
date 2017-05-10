@@ -2,6 +2,7 @@
 #define SBFREPORTER_H
 
 #include <iostream>
+#include <fstream>
 #include <ostream>
 #include <string>
 #include <sstream>
@@ -19,6 +20,7 @@ public:
 private:
     std::ostream * out_;
     std::ostream * err_;
+    std::ofstream * outMirror_;
     char delemeter_;
     bool placeDelimeterAtOutput_;
     std::string progressBarTitle_;
@@ -68,6 +70,8 @@ public:
     char delemeter() const;
     void setDelemeter(char delemeter);
     double lastProgressDuration() const { return lastProgressDuration_; }
+    void setMirrorOutput(const std::string &fileName);
+    void unsetMirrorOutput();
 };
 
 
@@ -78,6 +82,10 @@ void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
         if (flagExclusiveOut_) critSecBegin(lockOut_);
         *stream << obj;
         stream->flush();
+        if(outMirror_) {
+            *outMirror_ << obj;
+            outMirror_->flush();
+        }
         if (flagExclusiveOut_) critSecEnd(lockOut_);
     }
 }
