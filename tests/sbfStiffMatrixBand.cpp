@@ -5,6 +5,7 @@
 #include "sbfGroupFilter.h"
 #include "sbfNodeGroup.h"
 #include "sbfElement.h"
+#include "sbfMeshBuilders.h"
 #include "sbfAdditions.h"
 #include <vector>
 #include <initializer_list>
@@ -51,7 +52,7 @@ BOOST_AUTO_TEST_CASE ( construct )
 
 BOOST_AUTO_TEST_CASE ( simpleBrickLoad )
 {
-    std::unique_ptr<sbfMesh> m_up ( sbfMesh::makeBlock ( 100.0, 5.0, 1.0, 20, 10, 2, ElementType::HEXAHEDRON_LINEAR ) );
+    std::unique_ptr<sbfMesh> m_up ( sbfMeshBuilder::makeBlock ( 100.0, 5.0, 1.0, 20, 10, 2, ElementType::HEXAHEDRON_LINEAR ) );
     sbfMesh *m = m_up.get();
 
     NodesData<double, 3> displ ( "displ", m ), force ( "force", m );

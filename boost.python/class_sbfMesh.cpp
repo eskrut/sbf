@@ -11,6 +11,7 @@
 #include "sbfElement.h"
 #include "sbfGroupFilter.h"
 #include "sbfElementGroup.h"
+#include "sbfMeshBuilders.h"
 
 void class_sbfMesh_object()
 {
@@ -59,17 +60,17 @@ void class_sbfMesh_object()
             .def("setMtr", &sbfMesh::setMtr)
             .def("increaseMtr", &sbfMesh::increaseMtr)
             .def("makeBlock",
-                 static_cast<sbfMesh *(*)(vf &, vf &, vf &, ElementType)>(&sbfMesh::makeBlock),
+                 static_cast<sbfMesh *(*)(vf &, vf &, vf &, ElementType)>(&sbfMeshBuilder::makeBlock),
                  return_value_policy<manage_new_object>())
             .def("makeBlock",
-                 static_cast<sbfMesh *(*)(float, float, float, int, int, int, ElementType)>(&sbfMesh::makeBlock),
+                 static_cast<sbfMesh *(*)(float, float, float, int, int, int, ElementType)>(&sbfMeshBuilder::makeBlock),
                  return_value_policy<manage_new_object>())
             .staticmethod("makeBlock")
             .def("makeCylinderPart",
-                 static_cast<sbfMesh *(*)(vf &, vf &, vf &, ElementType)>(&sbfMesh::makeCylinderPart),
+                 static_cast<sbfMesh *(*)(vf &, vf &, vf &, ElementType)>(&sbfMeshBuilder::makeTubePart),
                  return_value_policy<manage_new_object>())
             .def("makeCylinderPart",
-                 static_cast<sbfMesh *(*)(float, float, float, float, float, float, int, int, int, ElementType)>(&sbfMesh::makeCylinderPart),
+                 static_cast<sbfMesh *(*)(float, float, float, float, float, float, int, int, int, ElementType)>(&sbfMeshBuilder::makeTubePart),
                  return_value_policy<manage_new_object>())
             .staticmethod("makeCylinderPart")
             ;

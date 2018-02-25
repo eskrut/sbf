@@ -187,13 +187,6 @@ public:
     void clearElemGroups();
     void clearNodeGroups();
     void clearAllGroups();
-
-    //Make some standard meshes
-public:
-    static sbfMesh * makeBlock(std::vector<float> & crdX, std::vector<float> & crdY, std::vector<float> & crdZ, ElementType type = ElementType::HEXAHEDRON_LINEAR);//General nonuniform block
-    static sbfMesh * makeBlock(float xSide, float ySide, float zSide, int xPart, int yPart, int zPart, ElementType type = ElementType::HEXAHEDRON_LINEAR);//Uniform block
-    static sbfMesh * makeCylinderPart(float rInner, float rOuter, float phiStart, float phiStop, float zStart, float zStop, int rPart, int phiPart, int zPart, ElementType type = ElementType::HEXAHEDRON_LINEAR);//Uniform part of cylinder
-    static sbfMesh * makeCylinderPart(std::vector<float> &radiuses, std::vector<float> &angles, std::vector<float> &zCrds, ElementType type = ElementType::HEXAHEDRON_LINEAR);//Nonniform part of cylinder
 };
 
 template < class ArrayType, int numComp> class NodesData

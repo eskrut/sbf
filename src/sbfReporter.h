@@ -8,7 +8,7 @@
 #include <utility>
 #include <list>
 #include "sbfTimer.h"
-#include "sbfDeclspec.h" //for critical section
+#include "sbfDeclspec.h" //for critical section and is_container
 
 class sbfReporter
 {
@@ -57,12 +57,21 @@ private:
 public:
 //    template <class T>
 //    sbfReporter & operator<<(T obj);
+
     template <class First, class... Rest>
-    void operator()(First first, Rest... rest);
+    typename std::enable_if<is_container<First>::value, void>::type
+     operator()(First first, Rest... rest);
+
+    template <class First, class... Rest>
+    typename std::enable_if<! is_container<First>::value, void>::type
+     operator()(First first, Rest... rest);
+
     template <class First, class... Rest>
     void error(First first, Rest... rest);
+
     template <class First, class... Rest>
     void raiseError(First first, Rest... rest);
+
     bool placeDelimeterAtOutput() const;
     void setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput);
     char delemeter() const;
@@ -81,14 +90,6 @@ void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
         if (flagExclusiveOut_) critSecEnd(lockOut_);
     }
 }
-//template <class T>
-//sbfReporter &sbfReporter::operator<<(T obj)
-//{
-//    makeOutput(obj, out_);
-//    return *this;
-//}
-
-//template<typename T>
 
 template<class T, class... Ts>
 void sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
@@ -99,13 +100,29 @@ void sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
 }
 
 template <class First, class... Rest>
-void sbfReporter::operator()(First first, Rest... rest)
+typename std::enable_if<! is_container<First>::value, void>::type
+ sbfReporter::operator()(First first, Rest... rest)
 {
     std::stringstream sstr;
     sstr << std::forward<First>(first);
     unpack(sstr, rest...);
     makeOutput(sstr.str().c_str(), out_);
 }
+
+template <class First, class... Rest>
+typename std::enable_if<is_container<First>::value, void>::type
+ sbfReporter::operator()(First first, Rest... rest)
+{
+    std::stringstream sstr;
+    for(auto &r : std::forward<First>(first))
+    {
+        sstr << r;
+        if(placeDelimeterAtOutput_) sstr << delemeter_;
+    }
+    unpack(sstr, rest...);
+    makeOutput(sstr.str().c_str(), out_);
+}
+
 template <class First, class... Rest>
 void sbfReporter::error(First first, Rest... rest)
 {
@@ -115,6 +132,7 @@ void sbfReporter::error(First first, Rest... rest)
     makeOutput(sstr.str(), err_);
     errors_.push_back(sstr.str());
 }
+
 template <class First, class... Rest>
 void sbfReporter::raiseError(First first, Rest... rest)
 {

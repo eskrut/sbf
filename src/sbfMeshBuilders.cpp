@@ -1,8 +1,9 @@
+#include "sbfMeshBuilders.h"
 #include "sbfMesh.h"
 #include "sbfNode.h"
 #include "sbfElement.h"
 
-sbfMesh * sbfMesh::makeBlock(std::vector<float> & crdX, std::vector<float> & crdY, std::vector<float> & crdZ, ElementType type)
+sbfMesh * sbfMeshBuilder::makeBlock(std::vector<float> & crdX, std::vector<float> & crdY, std::vector<float> & crdZ, ElementType type)
 {
     //TODO is there a requirement to check vectors validity?
     sbfMesh * block = new sbfMesh();
@@ -52,7 +53,7 @@ sbfMesh * sbfMesh::makeBlock(std::vector<float> & crdX, std::vector<float> & crd
 
     return block;
 }
-sbfMesh * sbfMesh::makeBlock(float xSide, float ySide, float zSide, int xPart, int yPart, int zPart, ElementType type)
+sbfMesh * sbfMeshBuilder::makeBlock(float xSide, float ySide, float zSide, int xPart, int yPart, int zPart, ElementType type)
 {
     if (xSide == 0 || ySide == 0 || zSide == 0 || xPart <= 0 || yPart <= 0 || zPart <= 0) return nullptr;
     if (type != ElementType::HEXAHEDRON_LINEAR && type != ElementType::HEXAHEDRON_QUADRATIC) return nullptr;
@@ -70,12 +71,12 @@ sbfMesh * sbfMesh::makeBlock(float xSide, float ySide, float zSide, int xPart, i
     step = zSide/zPart;
     for(int ct = 0; ct <= zPart; ct++)
         crdZ.push_back(step*ct);
-    return sbfMesh::makeBlock(crdX, crdY, crdZ, type);
+    return sbfMeshBuilder::makeBlock(crdX, crdY, crdZ, type);
 }
 
-sbfMesh * sbfMesh::makeCylinderPart(float rInner, float rOuter, float phiStart, float phiStop, float zStart, float zStop, int rPart, int phiPart, int zPart, ElementType type)
+sbfMesh * sbfMeshBuilder::makeTubePart(float rInner, float rOuter, float phiStart, float phiStop, float zStart, float zStop, int rPart, int phiPart, int zPart, ElementType type)
 {
-    sbfMesh * cylinder = sbfMesh::makeBlock(rOuter-rInner, phiStop-phiStart, zStop-zStart, rPart, phiPart, zPart, type);
+    sbfMesh * cylinder = sbfMeshBuilder::makeBlock(rOuter-rInner, phiStop-phiStart, zStop-zStart, rPart, phiPart, zPart, type);
     cylinder->translate(rInner, phiStart, zStart);
     //Perform coordinate system transformation
     cylinder->applyToAllNodes([](sbfNode &node){
@@ -88,9 +89,9 @@ sbfMesh * sbfMesh::makeCylinderPart(float rInner, float rOuter, float phiStart, 
     return cylinder;
 }
 
-sbfMesh *sbfMesh::makeCylinderPart(std::vector<float> &radiuses, std::vector<float> &angles, std::vector<float> &zCrds, ElementType type)
+sbfMesh *sbfMeshBuilder::makeTubePart(std::vector<float> &radiuses, std::vector<float> &angles, std::vector<float> &zCrds, ElementType type)
 {
-    sbfMesh * cylinder = sbfMesh::makeBlock(radiuses, angles, zCrds, type);
+    sbfMesh * cylinder = sbfMeshBuilder::makeBlock(radiuses, angles, zCrds, type);
     //Perform coordinate system transformation
     cylinder->applyToAllNodes([](sbfNode &node){
         auto r = node.x();
@@ -100,4 +101,22 @@ sbfMesh *sbfMesh::makeCylinderPart(std::vector<float> &radiuses, std::vector<flo
     });
 
     return cylinder;
+}
+
+sbfMesh *sbfMeshBuilder::makeCylinderPart(float radius, float length, float angle,
+                                          int phiPart, int zPart,
+                                          float innerSquarePortion,
+                                          ElementType type
+                                          )
+{
+    return nullptr;
+}
+
+sbfMesh *sbfMeshBuilder::makeCylinderPart(float radius, float length, float angle,
+                                          std::vector<float> phiPart, std::vector<float> zPart,
+                                          float innerSquarePortion,
+                                          ElementType type
+                                          )
+{
+    return nullptr;
 }

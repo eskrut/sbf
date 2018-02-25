@@ -11,6 +11,7 @@ main.cpp
 sbfStiffMatrixBand.cpp
 #sbfStiffMatrixBlockIterator.cpp
 sbfSElement.cpp
+meshbuilders.cpp
 )
 
 find_package(sbf REQUIRED)
@@ -23,5 +24,3 @@ add_executable(${PROJECT_NAME} ${SRC_LIST})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${SBF_LIBRARIES})
 enable_testing()
 add_test(${PROJECT_NAME} ${PROJECT_NAME})
-
-set(CMAKE_VERBOSE_MAKEFILE ON)

@@ -227,4 +227,35 @@ static inline void critSecDestroy(CritSecType *) { /*Do nothing*/ }
  #define USE_MATMUL_UNROLL//Allows usage of unrolled functions in matrix multiplication
 #endif
 
+ template<typename T, typename _ = void>
+ struct is_container : std::false_type {};
+
+ template<typename... Ts>
+ struct is_container_helper {};
+
+ template<typename T>
+ struct is_container<
+         T,
+         std::conditional<
+         false,
+         is_container_helper<
+         typename std::enable_if<
+         ! std::is_same<typename T::value_type, char>::value, void>::type,
+         typename std::enable_if<
+         std::is_arithmetic<typename T::value_type>::value, void>::type,
+         typename T::value_type,
+         typename T::size_type,
+         typename T::allocator_type,
+         typename T::iterator,
+         typename T::const_iterator,
+         decltype(std::declval<T>().size()),
+ decltype(std::declval<T>().begin()),
+ decltype(std::declval<T>().end()),
+ decltype(std::declval<T>().cbegin()),
+ decltype(std::declval<T>().cend())
+ >,
+ void
+ >
+ > : public std::true_type {};
+
 #endif // SBFDECLSPEC_H

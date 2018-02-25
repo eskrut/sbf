@@ -38,8 +38,21 @@ public:
     bool isSameZ(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
     //Returns the distance between nodes
     float distance(const sbfNode &node) const;
+    //Returns the angle betwiin oa and ob as a vector. o is this
+    sbfNode angle(const sbfNode &a, const sbfNode&b) const;
     //Rotate node around vector with components to angle of vector length
     void rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, CrdFloatType rotOriginX = 0.0, CrdFloatType rotOriginY = 0.0, CrdFloatType rotOriginZ = 0.0);
+
+    sbfNode &operator += (const sbfNode &operand);
+    sbfNode &operator -= (const sbfNode &operand);
+    sbfNode &operator *= (float scale);
+
 };
+
+sbfNode operator+(sbfNode left, const sbfNode &right);
+sbfNode operator-(sbfNode left, const sbfNode &right);
+sbfNode operator*(sbfNode left, float scale);
+
+std::ostream & operator<<(std::ostream &, const sbfNode&);
 
 #endif // SBFNODE_H

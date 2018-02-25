@@ -1,4 +1,5 @@
 #include "sbfNode.h"
+#include <iostream>
 
 sbfNode::sbfNode()
 {
@@ -78,6 +79,30 @@ float sbfNode::distance(const sbfNode &node) const
 {
     return std::sqrt(std::pow(x()-node.x(), static_cast<CrdFloatType>(2)) +std:: pow(y()-node.y(), static_cast<CrdFloatType>(2)) + std::pow(z()-node.z(), static_cast<CrdFloatType>(2)));
 }
+
+sbfNode sbfNode::angle(const sbfNode &a, const sbfNode &b) const
+{
+    auto oa = a - *this;
+    auto ob = b - *this;
+    oa *= 1.0/sbfNode().distance(oa);
+    ob *= 1.0/sbfNode().distance(ob);
+    auto dir = sbfNode(
+            oa.crd_[1] * ob.crd_[2] - oa.crd_[2] * ob.crd_[1],
+            oa.crd_[2] * ob.crd_[0] - oa.crd_[0] * ob.crd_[2],
+            oa.crd_[0] * ob.crd_[1] - oa.crd_[1] * ob.crd_[0]
+            );
+    auto length = sbfNode().distance(dir);
+    if(length > 0)
+        dir *= (1.0/length);
+    auto ang = std::acos(oa.crd_[0]*ob.crd_[0] + oa.crd_[1]*ob.crd_[1] + oa.crd_[2]*ob.crd_[2]);
+
+    dir *= ang;
+
+    auto angle = *this + dir;
+
+    return angle;
+}
+
 void sbfNode::rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, CrdFloatType rotOriginX, CrdFloatType rotOriginY, CrdFloatType rotOriginZ)
 {
     //Rotate around vector (rotX, rotY, rotZ) to angle |(rotX, rotY, rotZ)|
@@ -113,4 +138,55 @@ void sbfNode::rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, Cr
     setX(rot[0][0]*oldCrd_[0] + rot[0][1]*oldCrd_[1] + rot[0][2]*oldCrd_[2] + rotOriginX);
     setY(rot[1][0]*oldCrd_[0] + rot[1][1]*oldCrd_[1] + rot[1][2]*oldCrd_[2] + rotOriginY);
     setZ(rot[2][0]*oldCrd_[0] + rot[2][1]*oldCrd_[1] + rot[2][2]*oldCrd_[2] + rotOriginZ);
+}
+
+sbfNode &sbfNode::operator +=(const sbfNode &operand)
+{
+    this->crd_[0] += operand.crd_[0];
+    this->crd_[1] += operand.crd_[1];
+    this->crd_[2] += operand.crd_[2];
+
+    return *this;
+}
+
+sbfNode &sbfNode::operator -=(const sbfNode &operand)
+{
+    this->crd_[0] -= operand.crd_[0];
+    this->crd_[1] -= operand.crd_[1];
+    this->crd_[2] -= operand.crd_[2];
+
+    return *this;
+}
+
+sbfNode &sbfNode::operator *=(float scale)
+{
+    this->crd_[0] *= scale;
+    this->crd_[1] *= scale;
+    this->crd_[2] *= scale;
+
+    return *this;
+}
+
+sbfNode operator+(sbfNode left, const sbfNode &right)
+{
+    left += right;
+    return left;
+}
+
+sbfNode operator-(sbfNode left, const sbfNode &right)
+{
+    left -= right;
+    return left;
+}
+
+sbfNode operator*(sbfNode left, float scale)
+{
+    left *= scale;
+    return left;
+}
+
+std::ostream &operator<<(std::ostream &os, const sbfNode &node)
+{
+    os << node.x() << "\t" << node.y() << "\t" << node.z();
+    return os;
 }
