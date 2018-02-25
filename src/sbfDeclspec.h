@@ -227,6 +227,7 @@ static inline void critSecDestroy(CritSecType *) { /*Do nothing*/ }
  #define USE_MATMUL_UNROLL//Allows usage of unrolled functions in matrix multiplication
 #endif
 
+#include <type_traits>
  template<typename T, typename _ = void>
  struct is_container : std::false_type {};
 
