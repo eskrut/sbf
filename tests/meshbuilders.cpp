@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE( baseExtrusionn ) {
     auto m = f.extrude(sbfNode(0, 0, 1), 1, 2);
 
     m->printInfo();
-    m->writeMeshToFiles(std::string("extrusion"));
+    m->writeMeshToFilesWithPrefix(std::string("extrusion"));
 
 }
 
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE( baseBrick ) {
     auto m = std::unique_ptr<sbfMesh>(sbfMeshBuilder::makeBlock(10, 1, 1, 20, 2, 2));
 
     m->printInfo();
-    m->writeMeshToFiles(std::string("block"));
+    m->writeMeshToFilesWithPrefix(std::string("block"));
 
 }
 

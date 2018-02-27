@@ -228,51 +228,17 @@ static inline void critSecDestroy(CritSecType *) { /*Do nothing*/ }
 #endif
 
 #include <type_traits>
- template<typename T/*, typename _ = void*/>
- struct is_container : std::false_type {};
-
-
- //FIXME this is workaround. should be implemented with normal
- //container detection
-#include <vector>
-#include <set>
-#include <list>
- template<typename T>
- struct is_container<std::vector<T>> : std::true_type {};
+ template<typename T, typename = void>
+ struct is_iterable_for_reporter : std::false_type {};
 
  template<typename T>
- struct is_container<std::list<T>> : std::true_type {};
-
- template<typename T>
- struct is_container<std::set<T>> : std::true_type {};
-
- template<typename... Ts>
- struct is_container_helper {};
-
- //not working :(
-// template<typename T>
-// struct is_container<
-//         T,
-//         std::conditional<
-//         false,
-//         is_container_helper<
-//         typename std::enable_if<
-//         ! std::is_same<typename T::value_type, char>::value, void>::type,
-//         typename std::enable_if<
-//         std::is_arithmetic<typename T::value_type>::value, void>::type,
-//         typename T::value_type,
-//         typename T::size_type,
-//         typename T::allocator_type,
-//         typename T::iterator,
-//         typename T::const_iterator,
-//         decltype(std::declval<T>().size()),
-// decltype(std::declval<T>().begin()),
-// decltype(std::declval<T>().end()),
-// decltype(std::declval<T>().cbegin()),
-// decltype(std::declval<T>().cend())
-// >,
-// void
-// >
-// > : public std::true_type {};
+ struct is_iterable_for_reporter<
+            T,
+            std::void_t<
+                decltype(std::declval<T>().begin()),
+                decltype(std::declval<T>().end()),
+                typename std::enable_if<! std::is_same<typename T::value_type, char>::value, void>::type
+            >
+         > :std::true_type {};
 
 #endif // SBFDECLSPEC_H

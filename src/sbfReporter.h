@@ -55,21 +55,21 @@ private:
     void makeOutput(const T & obj, std::ostream * stream);
     void unpack(std::stringstream & sstr) { sstr << std::endl; return; }
     template<class T, class... Ts>
-    typename std::enable_if<! is_container<T>::value, void>::type
+    typename std::enable_if<! is_iterable_for_reporter<T>::value, void>::type
     /*void*/ unpack(std::stringstream & sstr, T t, Ts... ts);
     template<class T, class... Ts>
-    typename std::enable_if<is_container<T>::value, void>::type
+    typename std::enable_if<is_iterable_for_reporter<T>::value, void>::type
     /*void*/ unpack(std::stringstream & sstr, T t, Ts... ts);
 public:
 //    template <class T>
 //    sbfReporter & operator<<(T obj);
 
     template <class First, class... Rest>
-    typename std::enable_if<is_container<First>::value, void>::type
+    typename std::enable_if<is_iterable_for_reporter<First>::value, void>::type
      operator()(First first, Rest... rest);
 
     template <class First, class... Rest>
-    typename std::enable_if<! is_container<First>::value, void>::type
+    typename std::enable_if<! is_iterable_for_reporter<First>::value, void>::type
      operator()(First first, Rest... rest);
 
     template <class First, class... Rest>
@@ -104,7 +104,7 @@ void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
 }
 
 template<class T, class... Ts>
-typename std::enable_if<! is_container<T>::value, void>::type
+typename std::enable_if<! is_iterable_for_reporter<T>::value, void>::type
 /*void*/ sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
     if(placeDelimeterAtOutput_) sstr << delemeter_;
     sstr << std::forward<T>(t);
@@ -113,7 +113,7 @@ typename std::enable_if<! is_container<T>::value, void>::type
 }
 
 template<class T, class... Ts>
-typename std::enable_if<is_container<T>::value, void>::type
+typename std::enable_if<is_iterable_for_reporter<T>::value, void>::type
 /*void*/ sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
     if(placeDelimeterAtOutput_) sstr << delemeter_;
     for(auto &r : std::forward<T>(t)) {
@@ -125,7 +125,7 @@ typename std::enable_if<is_container<T>::value, void>::type
 }
 
 template <class First, class... Rest>
-typename std::enable_if<! is_container<First>::value, void>::type
+typename std::enable_if<! is_iterable_for_reporter<First>::value, void>::type
  sbfReporter::operator()(First first, Rest... rest)
 {
     std::stringstream sstr;
@@ -135,7 +135,7 @@ typename std::enable_if<! is_container<First>::value, void>::type
 }
 
 template <class First, class... Rest>
-typename std::enable_if<is_container<First>::value, void>::type
+typename std::enable_if<is_iterable_for_reporter<First>::value, void>::type
  sbfReporter::operator()(First first, Rest... rest)
 {
     std::stringstream sstr;
