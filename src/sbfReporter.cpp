@@ -9,6 +9,7 @@ sbfReporter::sbfReporter() :
 sbfReporter::sbfReporter(std::streambuf *out, std::streambuf *err) :
     out_(new std::ostream(out)),
     err_(new std::ostream(err)),
+    outMirror_(nullptr),
     delemeter_('\t'),
     placeDelimeterAtOutput_(true),
     progressBarTitle_(),
@@ -48,6 +49,26 @@ char sbfReporter::delemeter() const
 void sbfReporter::setDelemeter(char delemeter)
 {
     delemeter_ = delemeter;
+}
+
+void sbfReporter::setMirrorOutput(const std::string &fileName)
+{
+    unsetMirrorOutput();
+    outMirror_ = new std::ofstream;
+    outMirror_->open(fileName);
+    if( !*outMirror_ ) {
+        delete outMirror_;
+        outMirror_ = nullptr;
+        makeOutput("Cant make output mirroring to " + fileName, err_);
+    }
+}
+
+void sbfReporter::unsetMirrorOutput()
+{
+    if( outMirror_ ) {
+        delete outMirror_;
+    }
+    outMirror_ = nullptr;
 }
 
 bool sbfReporter::allowOtput() const

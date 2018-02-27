@@ -3,6 +3,8 @@
 
 #include "sbfGroup.h"
 
+#include <list>
+
 class sbfMesh;
 
 class DECLSPEC sbfNodeGroup : public sbfGroup
@@ -23,6 +25,8 @@ public:
     int numNodes();
     void setMesh(sbfMesh * mesh);
     std::vector<int> nodeIndList();
+
+    static std::vector<int> intersect(const std::list<sbfNodeGroup *> &list);
 };
 
 #endif // SBFNODEGROUP_H
