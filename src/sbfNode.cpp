@@ -94,7 +94,13 @@ sbfNode sbfNode::angle(const sbfNode &a, const sbfNode &b) const
     auto length = sbfNode().distance(dir);
     if(length > 0)
         dir *= (1.0/length);
-    auto ang = std::acos(oa.crd_[0]*ob.crd_[0] + oa.crd_[1]*ob.crd_[1] + oa.crd_[2]*ob.crd_[2]);
+    auto dot = oa.crd_[0]*ob.crd_[0] + oa.crd_[1]*ob.crd_[1] + oa.crd_[2]*ob.crd_[2];
+    auto det =
+            (oa.crd_[1] * ob.crd_[2] - oa.crd_[2] * ob.crd_[1])*dir.crd_[0] +
+            (oa.crd_[2] * ob.crd_[0] - oa.crd_[0] * ob.crd_[2])*dir.crd_[1] +
+            (oa.crd_[0] * ob.crd_[1] - oa.crd_[1] * ob.crd_[0])*dir.crd_[2];
+//    auto ang = std::acos(oa.crd_[0]*ob.crd_[0] + oa.crd_[1]*ob.crd_[1] + oa.crd_[2]*ob.crd_[2]);
+    auto ang = std::atan2(det, dot);
 
     dir *= ang;
 

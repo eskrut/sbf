@@ -53,7 +53,11 @@ private:
     void makeOutput(const T & obj, std::ostream * stream);
     void unpack(std::stringstream & sstr) { sstr << std::endl; return; }
     template<class T, class... Ts>
-    void unpack(std::stringstream & sstr, T t, Ts... ts);
+    typename std::enable_if<! is_container<T>::value, void>::type
+    /*void*/ unpack(std::stringstream & sstr, T t, Ts... ts);
+    template<class T, class... Ts>
+    typename std::enable_if<is_container<T>::value, void>::type
+    /*void*/ unpack(std::stringstream & sstr, T t, Ts... ts);
 public:
 //    template <class T>
 //    sbfReporter & operator<<(T obj);
@@ -92,9 +96,22 @@ void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
 }
 
 template<class T, class... Ts>
-void sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
+typename std::enable_if<! is_container<T>::value, void>::type
+/*void*/ sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
     if(placeDelimeterAtOutput_) sstr << delemeter_;
     sstr << std::forward<T>(t);
+    unpack(sstr, ts...);
+    return;
+}
+
+template<class T, class... Ts>
+typename std::enable_if<is_container<T>::value, void>::type
+/*void*/ sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
+    if(placeDelimeterAtOutput_) sstr << delemeter_;
+    for(auto &r : std::forward<T>(t)) {
+        sstr << r;
+        if(placeDelimeterAtOutput_) sstr << delemeter_;
+    }
     unpack(sstr, ts...);
     return;
 }
