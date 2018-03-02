@@ -3,6 +3,14 @@
 
 #include <utility>
 
+#include <memory>
+
+#include <iomanip>
+#include <string>
+#include <sstream>
+
+namespace sbf {
+
 enum class SortDirection { Up, Down };
 
 template <class TypeToSort> void quickSort(TypeToSort * arrayToSort, int left, int right, SortDirection dir = SortDirection::Up){
@@ -81,7 +89,6 @@ template <class TypeToSort, class AssociatedType> void quickAssociatedSort(TypeT
         quickAssociatedSort<TypeToSort, AssociatedType>(arrayToSort, associatedArray, i, right, dir);
 }
 
-#include <memory>
 #define CreateSmartAndRawPtr_3(Type, object, name) \
     std::unique_ptr< Type > name ## Ptr (object); \
     Type * name = (name ## Ptr).get();
@@ -90,4 +97,13 @@ template <class TypeToSort, class AssociatedType> void quickAssociatedSort(TypeT
     CreateSmartAndRawPtr_3(Type, new Type, name);
 #define GET_MACRO(_1,_2,_3,NAME,...) NAME
 #define CreateSmartAndRawPtr(...) GET_MACRO(__VA_ARGS__, CreateSmartAndRawPtr_3, CreateSmartAndRawPtr_2)(__VA_ARGS__)
+
+template <int width = 4, char f = '0'>
+std::string makeFilledSuffix(int id) {
+    std::stringstream sstr;
+    sstr << std::setw(width) << std::setfill(f) << id;
+    return sstr.str();
+}
+
+}
 #endif // SBFADDITIONS_H

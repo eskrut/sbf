@@ -664,7 +664,7 @@ int sbfMesh::mergeNodes(float tol)
     std::vector<float> crdX;
     crdX.resize(nnodes, 0.0);
     for(int ct = 0; ct < nnodes; ct++) crdX[ct] = nodes_[ct].x();
-    quickAssociatedSort<float, int>(&crdX[0], &sortX[0], 0, nnodes-1);
+    sbf::quickAssociatedSort<float, int>(&crdX[0], &sortX[0], 0, nnodes-1);
     newSortX = sortX;
 
     std::vector<int> equalInd;
@@ -711,7 +711,7 @@ int sbfMesh::mergeNodes(float tol)
 
     renumberNodes(&newInd[0]);
 
-    quickSort<int>(&toDelete[0], 0, (int)toDelete.size()-1, SortDirection::Down);
+    sbf::quickSort<int>(&toDelete[0], 0, (int)toDelete.size()-1, sbf::SortDirection::Down);
     for(int ct = 0; ct < (int)toDelete.size(); ct++){//Loop on indexes of nodes to delete
         std::vector<sbfNode>::iterator it = nodes_.begin();
         for(int ct1 = 0; ct1 < toDelete[ct]; ct1++) it++;
@@ -749,7 +749,7 @@ void sbfMesh::renumberNodes(int * newIndexes)
         indexesMap1[ct] = newIndexes[ct];
         indexesMap2[ct] = ct;
     }
-    quickAssociatedSort<int, int>(&indexesMap1[0], &indexesMap2[0], 0, numNodes()-1);
+    sbf::quickAssociatedSort<int, int>(&indexesMap1[0], &indexesMap2[0], 0, numNodes()-1);
     for(std::vector<sbfElement>::iterator it = elems_.begin(); it != elems_.end(); it++){//Loop on elements in mesh
         int nnodes = (*it).numNodes();
         for(int ct = 0; ct < nnodes; ct++)
@@ -1194,7 +1194,7 @@ void findUnnumberedNeighbors(int ** graph, int * mask, int * tmp, /*I do not kno
             count++;
         }
     }
-    quickAssociatedSort<int, int>(deg, tmp, 0, count-1);
+    sbf::quickAssociatedSort<int, int>(deg, tmp, 0, count-1);
 }
 void makeRCM(int ** graph, int numNodes, int startNode, int * newToOld, int *oldToNew)
 {

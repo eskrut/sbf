@@ -85,7 +85,7 @@ std::vector<int> sbfElementGroup::nodeIndList()
     }
     int nodeListSize = (int)nodeList.size();
     if(nodeListSize != 0)
-        quickSort<int>(&nodeList[0], 0, nodeListSize-1);
+        sbf::quickSort<int>(&nodeList[0], 0, nodeListSize-1);
     std::vector<int> nodeList_;
     if(nodeListSize > 0){
         nodeList_.reserve(nodeListSize*sizeof(int));
