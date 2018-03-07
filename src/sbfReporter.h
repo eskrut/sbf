@@ -56,10 +56,10 @@ private:
     void unpack(std::stringstream & sstr) { sstr << std::endl; return; }
     template<class T, class... Ts>
     typename std::enable_if<! is_iterable_for_reporter<T>::value, void>::type
-    /*void*/ unpack(std::stringstream & sstr, T t, Ts... ts);
+    unpack(std::stringstream & sstr, T t, Ts... ts);
     template<class T, class... Ts>
     typename std::enable_if<is_iterable_for_reporter<T>::value, void>::type
-    /*void*/ unpack(std::stringstream & sstr, T t, Ts... ts);
+    unpack(std::stringstream & sstr, T t, Ts... ts);
 public:
 //    template <class T>
 //    sbfReporter & operator<<(T obj);
@@ -87,6 +87,24 @@ public:
     void unsetMirrorOutput();
 };
 
+namespace sbf {
+
+template<class S, class T>
+S& pushToStream(S &s, const T &t)
+{
+    s << t;
+    return s;
+}
+
+template<class S, class T1, class T2>
+S& pushToStream(S &s, const std::pair<T1, T2> &t)
+{
+    s << "pair(" << t.first << ", " << t.second << ")";
+    return s;
+}
+
+}
+
 
 template <class T>
 void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
@@ -105,19 +123,19 @@ void sbfReporter::makeOutput(const T & obj, std::ostream * stream)
 
 template<class T, class... Ts>
 typename std::enable_if<! is_iterable_for_reporter<T>::value, void>::type
-/*void*/ sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
+sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
     if(placeDelimeterAtOutput_) sstr << delemeter_;
-    sstr << std::forward<T>(t);
+    sbf::pushToStream(sstr, /*std::forward<T>(*/t/*)*/);
     unpack(sstr, ts...);
     return;
 }
 
 template<class T, class... Ts>
 typename std::enable_if<is_iterable_for_reporter<T>::value, void>::type
-/*void*/ sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
+sbfReporter::unpack(std::stringstream & sstr, T t, Ts... ts) {
     if(placeDelimeterAtOutput_) sstr << delemeter_;
-    for(auto &r : std::forward<T>(t)) {
-        sstr << r;
+    for(auto &r : std::forward<T>(t)) {\
+        sbf::pushToStream(sstr, r);
         if(placeDelimeterAtOutput_) sstr << delemeter_;
     }
     unpack(sstr, ts...);

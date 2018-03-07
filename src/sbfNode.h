@@ -55,4 +55,9 @@ sbfNode operator*(sbfNode left, float scale);
 
 std::ostream & operator<<(std::ostream &, const sbfNode&);
 
+namespace sbf {
+    template<class S>
+    S& pushToStream(S &s, const sbfNode& n);
+}
+
 #endif // SBFNODE_H

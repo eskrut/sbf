@@ -196,3 +196,10 @@ std::ostream &operator<<(std::ostream &os, const sbfNode &node)
     os << node.x() << "\t" << node.y() << "\t" << node.z();
     return os;
 }
+
+template<class S>
+S& sbf::pushToStream(S &s, const sbfNode &n)
+{
+    s << "node(" << n.x() << ", " << n.y() << ", " << n.z() <<")";
+    return s;
+}
