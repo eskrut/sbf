@@ -15,6 +15,7 @@
 #include <assert.h>
 
 #include "sbfReporter.h"
+#include "sbfAdditions.h"
 
 class sbfNode;
 class sbfElement;
@@ -230,10 +231,13 @@ public:
     int numComponents();
     std::string & name();
     void setStep(int step) {stepToProceed_ = step;}
-    int step() {return stepToProceed_;}
+    int step() const {return stepToProceed_;}
     void setName(const char * name) {name_ = name;}
     void setName(const std::string &name) {setName(name.c_str());}
     void setNumDigits(int numDigits) {numDigits_ = numDigits;}
+    int numDigits() const {return numDigits_;}
+    void setExtention(const char *extension) {extension_ = extension;}
+    std::string extention() const {return extension_;}
     Type type() {return type_;}
     void setType(Type type) {type_ = type;}
     const sbfMesh *mesh() const {return mesh_;}
@@ -243,6 +247,7 @@ public:
     template <class StorageType = DefaultStorageDataType> int readFromFile();
     template <class StorageType = DefaultStorageDataType, int numInOneFile> int writeToFileSplited();
     bool exist();//Check if file with current step exists
+    static bool exist(const char *name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
     int numExistedSteps();
 
     //Useful mathematics functions
@@ -471,6 +476,19 @@ bool NodesData<ArrayType, numComp>::exist()
     if(in.good()) exist = true;
     in.close();
     return exist;
+}
+
+template<class ArrayType, int numComp>
+bool NodesData<ArrayType, numComp>::exist(const char *name, int step, const char *extension, int numDigits, const char *catalog)
+{
+    std::string fName;
+    if(catalog) fName += catalog + std::string("/");
+    fName += name;
+    NodesData<ArrayType, numComp> d(fName.c_str(), nullptr);
+    d.setNumDigits(numDigits);
+    d.setExtention(extension);
+    d.setStep(step);
+    return d.exist();
 }
 template < class ArrayType, int numComp>
 int NodesData<ArrayType, numComp>::numExistedSteps()

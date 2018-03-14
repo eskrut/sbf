@@ -197,9 +197,22 @@ std::ostream &operator<<(std::ostream &os, const sbfNode &node)
     return os;
 }
 
+template<>
+bool sbfNodeComparer<sbfNodeCompareType::ByCoordinates>::operator()(const sbfNode &left, const sbfNode &right) const
+{
+    if( std::fabs(left.x() - right.x()) > eps )
+        return left.x() < right.x();
+    if( std::fabs(left.y() - right.y()) > eps )
+        return left.y() < right.y();
+    if( std::fabs(left.z() - right.z()) > eps )
+        return left.z() < right.z();
+    return true;
+}
+
 template<class S>
 S& sbf::pushToStream(S &s, const sbfNode &n)
 {
     s << "node(" << n.x() << ", " << n.y() << ", " << n.z() <<")";
     return s;
 }
+

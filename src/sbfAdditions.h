@@ -105,5 +105,7 @@ std::string makeFilledSuffix(int id) {
     return sstr.str();
 }
 
+std::string makeFilledSuffix(int id, int width, char f = '0');
+
 }
 #endif // SBFADDITIONS_H

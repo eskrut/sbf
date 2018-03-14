@@ -38,7 +38,7 @@ public:
     bool isSameZ(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
     //Returns the distance between nodes
     float distance(const sbfNode &node) const;
-    //Returns the angle betwiin oa and ob as a vector. o is this
+    //Returns the angle [-pi:pi] betwiin oa and ob as a vector. o is this
     sbfNode angle(const sbfNode &a, const sbfNode&b) const;
     //Rotate node around vector with components to angle of vector length
     void rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, CrdFloatType rotOriginX = 0.0, CrdFloatType rotOriginY = 0.0, CrdFloatType rotOriginZ = 0.0);
@@ -54,6 +54,21 @@ sbfNode operator-(sbfNode left, const sbfNode &right);
 sbfNode operator*(sbfNode left, float scale);
 
 std::ostream & operator<<(std::ostream &, const sbfNode&);
+
+enum class sbfNodeCompareType {
+    ByCoordinates
+};
+
+template<sbfNodeCompareType type>
+struct sbfNodeComparer {
+    sbfNodeComparer(float tolerance = std::numeric_limits<float>::epsilon()) : eps(tolerance) {}
+    bool operator()(const sbfNode &left, const sbfNode &right) const;
+
+    float eps;
+};
+
+template<>
+bool sbfNodeComparer<sbfNodeCompareType::ByCoordinates>::operator()(const sbfNode &left, const sbfNode &right) const;
 
 namespace sbf {
     template<class S>

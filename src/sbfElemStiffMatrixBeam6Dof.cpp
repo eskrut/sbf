@@ -171,7 +171,7 @@ void sbfElemStiffMatrixBeam6Dof::computeSM()
     xTemp[1] = t[1][0]*xOrig[0] + t[1][1]*xOrig[1] + t[1][2]*xOrig[2];
     xTemp[2] = t[2][0]*xOrig[0] + t[2][1]*xOrig[1] + t[2][2]*xOrig[2];
 
-    if (std::fabs(xCur[0] - xTemp[0]) > 1e-10 || std::fabs(xCur[1] - xTemp[1]) > 1e-10 || std::fabs(xCur[1] - xTemp[1]) > 1e-10) {
+    if (std::fabs(xCur[0] - xTemp[0]) > 1e-10 || std::fabs(xCur[1] - xTemp[1]) > 1e-10 || std::fabs(xCur[2] - xTemp[2]) > 1e-10) {
         angle *= -1;
         cs = std::cos(angle);
         sn = std::sin(angle);
@@ -182,7 +182,7 @@ void sbfElemStiffMatrixBeam6Dof::computeSM()
         xTemp[1] = t[1][0]*xOrig[0] + t[1][1]*xOrig[1] + t[1][2]*xOrig[2];
         xTemp[2] = t[2][0]*xOrig[0] + t[2][1]*xOrig[1] + t[2][2]*xOrig[2];
 
-        if (std::fabs(xCur[0] - xTemp[0]) > 1e-10 || std::fabs(xCur[1] - xTemp[1]) > 1e-10 || std::fabs(xCur[1] - xTemp[1]) > 1e-10)
+        if (std::fabs(xCur[0] - xTemp[0]) > 1e-10 || std::fabs(xCur[1] - xTemp[1]) > 1e-10 || std::fabs(xCur[2] - xTemp[2]) > 1e-10)
             assert(false);
     }
 
