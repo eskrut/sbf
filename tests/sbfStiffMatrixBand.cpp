@@ -88,11 +88,11 @@ BOOST_AUTO_TEST_CASE ( simpleBrickLoad )
 BOOST_AUTO_TEST_CASE( simpleBeam )
 {
     const float L = 1.0;
-    const size_t numNodes = 100;
+    const size_t numNodes = 10000;
     auto mesh = std::make_unique<sbfMesh>();
     int prevNode = mesh->addNode(0, 0, 0);
     for(size_t ct = 1; ct < numNodes; ++ct) {
-        int nextNode = mesh->addNode(L / (numNodes - 1) * ct, 0, 0);
+        int nextNode = mesh->addNode(L / (numNodes - 1) * ct, 0, 0, false);
         mesh->addElement(sbfElement(ElementType::BEAM_LINEAR_6DOF, {prevNode, nextNode}));
         prevNode = nextNode;
     }
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE( simpleBeam )
     NodesData<double, 6> d(mesh.get()), f(mesh.get());
 
     {
-        //Test for stretshing
+        //Test for stretching
         auto stif = std::make_unique<sbfStiffMatrixBand<6>>(mesh.get(), props.get());
         stif->compute(false);
         f.null();
@@ -127,6 +127,7 @@ BOOST_AUTO_TEST_CASE( simpleBeam )
             stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
 
         auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        assert(chol->isValid());
         chol->solve_L_LT_u_eq_f(d.data(), f.data());
 
         for(auto ct : std::list<int>({0, numNodes-1}))
@@ -144,6 +145,7 @@ BOOST_AUTO_TEST_CASE( simpleBeam )
             stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
 
         auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        assert(chol->isValid());
         chol->solve_L_LT_u_eq_f(d.data(), f.data());
 
         for(auto ct : std::list<int>({0, numNodes-1}))
@@ -160,6 +162,7 @@ BOOST_AUTO_TEST_CASE( simpleBeam )
             stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
 
         auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        assert(chol->isValid());
         chol->solve_L_LT_u_eq_f(d.data(), f.data());
 
         for(auto ct : std::list<int>({0, numNodes-1}))
@@ -176,6 +179,7 @@ BOOST_AUTO_TEST_CASE( simpleBeam )
             stif->lockDof(0, dof, 0, f.data(), LockType::EXACT_LOCK_TYPE);
 
         auto chol = reinterpret_cast<sbfStiffMatrixBand<6> *>(stif->createChol(false));
+        assert(chol->isValid());
         chol->solve_L_LT_u_eq_f(d.data(), f.data());
 
         for(auto ct : std::list<int>({0, numNodes-1}))

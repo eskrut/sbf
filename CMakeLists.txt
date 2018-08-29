@@ -42,8 +42,11 @@ add_subdirectory(src)
 source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 if(UNIX)
-    set(CMAKE_CXX_FLAGS "-std=c++1z -Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
 endif()
 
 

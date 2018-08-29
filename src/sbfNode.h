@@ -2,6 +2,7 @@
 #define SBFNODE_H
 
 #include <cmath>
+#include <climits>
 #include "sbfDeclspec.h"
 
 using CrdFloatType = float;

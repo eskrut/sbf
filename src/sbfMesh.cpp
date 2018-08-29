@@ -219,9 +219,12 @@ int sbfMesh::readMeshFromFiles(const std::string &indName, const std::string &cr
     return readMeshFromFiles(indName.c_str(), crdName.c_str(), mtrName.c_str());
 }
 
-int sbfMesh::readMeshFromFilesWithPrefix(const std::string &prefix)
+int sbfMesh::readMeshFromFilesWithPrefix(const std::string &prefix,
+                                         const std::string &indName,
+                                         const std::string &crdName,
+                                         const std::string &mtrName)
 {
-    return readMeshFromFiles(prefix + "ind.sba", prefix + "crd.sba", prefix + "mtr001.sba");
+    return readMeshFromFiles(prefix + indName, prefix + crdName, prefix + mtrName);
 }
 
 int sbfMesh::writeCrdToFile(const char* crdName)

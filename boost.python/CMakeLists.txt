@@ -1,4 +1,4 @@
-find_package(Boost COMPONENTS python REQUIRED)
+find_package(Boost COMPONENTS python36 REQUIRED)
 find_package(PythonLibs REQUIRED)
 
 include_directories(../src)
@@ -28,7 +28,7 @@ set_target_properties( sbfpy
 #    PREFIX ""
 #)
 target_link_libraries(sbfpy
-${Boost_LIBRARIES}
+Boost::python36
 ${PYTHON_LIBRARIES}
 sbf
 )
