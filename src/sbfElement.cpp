@@ -2,6 +2,8 @@
 #include "sbfNode.h"
 #include "sbfMesh.h"
 
+#include <numeric>
+
 sbfElement::sbfElement() :
     mtr_(0),
     type_(ElementType::NO_DEFINED_ELEMENT),
@@ -137,6 +139,27 @@ sbfElement::FacesNodesIndsContainer sbfElement::facesNodesIndexes() const
         break;
     }
     return facesNodes;
+}
+
+std::vector<std::size_t> sbfElement::facesHashes() const
+{
+    auto fi = facesNodesIndexes();
+    std::vector<std::size_t> hashes;
+    hashes.reserve(fi.size());
+
+    for(auto &f : fi) {
+        auto indsOriginal = f;
+        std::iota(indsOriginal.begin(), indsOriginal.end(), 0);
+        sbf::quickAssociatedSort(f.data(), indsOriginal.data(), 0, f.size()-1);
+        std::size_t h = 0;
+        for(int ct = 0; ct < f.size(); ++ct) {
+            sbf::hash_combine(h, f[ct]);
+        }
+        //Possibly add coordinate hash
+        hashes.push_back(h);
+    }
+
+    return hashes;
 }
 sbfNode sbfElement::centreOfMass() const
 {

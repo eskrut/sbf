@@ -107,5 +107,14 @@ std::string makeFilledSuffix(int id) {
 
 std::string makeFilledSuffix(int id, int width, char f = '0');
 
+inline void hash_combine(std::size_t& seed) { std::ignore = seed; }
+
+template <typename T, typename... Rest>
+inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+    hash_combine(seed, rest...);
+}
+
 }
 #endif // SBFADDITIONS_H

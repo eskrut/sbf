@@ -109,6 +109,50 @@ sbfNode sbfNode::angle(const sbfNode &a, const sbfNode &b) const
     return angle;
 }
 
+double sbfNode::angleVal(const sbfNode &a, const sbfNode &b) const
+{
+    auto oa = a - *this;
+    auto ob = b - *this;
+    oa *= 1.0/sbfNode().distance(oa);
+    ob *= 1.0/sbfNode().distance(ob);
+    auto dir = sbfNode(
+            oa.crd_[1] * ob.crd_[2] - oa.crd_[2] * ob.crd_[1],
+            oa.crd_[2] * ob.crd_[0] - oa.crd_[0] * ob.crd_[2],
+            oa.crd_[0] * ob.crd_[1] - oa.crd_[1] * ob.crd_[0]
+            );
+    auto length = sbfNode().distance(dir);
+    if(length > 0)
+        dir *= (1.0/length);
+    auto dot = oa.crd_[0]*ob.crd_[0] + oa.crd_[1]*ob.crd_[1] + oa.crd_[2]*ob.crd_[2];
+    auto det =
+            (oa.crd_[1] * ob.crd_[2] - oa.crd_[2] * ob.crd_[1])*dir.crd_[0] +
+            (oa.crd_[2] * ob.crd_[0] - oa.crd_[0] * ob.crd_[2])*dir.crd_[1] +
+            (oa.crd_[0] * ob.crd_[1] - oa.crd_[1] * ob.crd_[0])*dir.crd_[2];
+    auto ang = std::atan2(det, dot);
+
+    return ang;
+}
+
+sbfNode sbfNode::normal(const sbfNode &a, const sbfNode &b) const
+{
+    auto oa = a - *this;
+    auto ob = b - *this;
+    oa *= 1.0/sbfNode().distance(oa);
+    ob *= 1.0/sbfNode().distance(ob);
+    auto dir = sbfNode(
+            oa.crd_[1] * ob.crd_[2] - oa.crd_[2] * ob.crd_[1],
+            oa.crd_[2] * ob.crd_[0] - oa.crd_[0] * ob.crd_[2],
+            oa.crd_[0] * ob.crd_[1] - oa.crd_[1] * ob.crd_[0]
+            );
+    auto length = sbfNode().distance(dir);
+    if(length > 0)
+        dir *= (1.0/length);
+
+    auto normal = *this + dir;
+
+    return normal;
+}
+
 void sbfNode::rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, CrdFloatType rotOriginX, CrdFloatType rotOriginY, CrdFloatType rotOriginZ)
 {
     //Rotate around vector (rotX, rotY, rotZ) to angle |(rotX, rotY, rotZ)|

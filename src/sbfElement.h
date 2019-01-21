@@ -55,6 +55,7 @@ public:
     //Returns nodes indexes on all element faces
     using FacesNodesIndsContainer = std::vector<std::vector<int>>;
     FacesNodesIndsContainer facesNodesIndexes() const;
+    std::vector<std::size_t> facesHashes() const;
     //Returns average coordinate of all nodes
     sbfNode centreOfMass() const;
     //Get information about max/min coordinates of element nodes

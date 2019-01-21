@@ -11,6 +11,7 @@
 #include "sbfthreadpool.hpp"
 #include <atomic>
 #include <array>
+#include <set>
 
 void computeGraph(sbfMesh * mesh, int *** graph, bool makeReport);
 void computeGraphAlter(sbfMesh * mesh, int *** graph, bool makeReport);
@@ -849,6 +850,199 @@ void sbfMesh::clearAllGroups()
     for(size_t ct = 0; ct < nodeGroups_.size(); ct++) delete nodeGroups_[ct];
     nodeGroups_.clear();
 }
+
+std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(float normalAngleThreashold)
+{
+    borderFaces_.clear();
+    borderFaces_.shrink_to_fit();
+
+    //Find all external faces;
+
+    std::vector<std::set<size_t>> connectivity;
+
+    struct fhData{
+        int elemID, faceID;
+        size_t hash;
+    };
+    std::list<fhData> allFaces;
+    auto getPartialList = [this](int elemStartID, size_t length){
+        std::list<fhData> partList;
+        for(int ctElem = elemStartID; ctElem < elemStartID + length; ++ctElem) {
+            const auto hs = elemPtr(ctElem)->facesHashes();
+            for(int ctFace = 0; ctFace < hs.size(); ++ctFace){
+                fhData d;
+                d.elemID = ctElem;
+                d.faceID = ctFace;
+                d.hash = hs[ctFace];
+                partList.push_back(d);
+            }
+        }
+        return partList;
+    };
+
+    const int numAllElems = numElements();
+    const int perProcPortion = 0;//numAllElems / sbfNumThreads;
+    int remainingStart = 0;
+    std::list<std::future<std::list<fhData>>> futures;
+    if(perProcPortion > 0) {
+        //Do async jobs
+        for(int ct = 0; ct < sbfNumThreads - 1; ++ct){
+            futures.push_back(std::async(std::launch::async, getPartialList, remainingStart, perProcPortion));
+            remainingStart += perProcPortion;
+        }
+    }
+    allFaces = getPartialList(remainingStart, numAllElems - remainingStart);
+    for(auto &f : futures){
+        auto partList = f.get();
+        allFaces.splice(allFaces.begin(), partList);
+    }
+    allFaces.sort([](const fhData& left, const fhData& right){return left.hash < right.hash;});
+
+    connectivity.resize(numAllElems);
+
+    std::list<fhData> uniqueFaces;
+    auto next = allFaces.begin();
+    std::advance(next, 1);
+    auto end = allFaces.end();
+    auto end_m1 = allFaces.end();
+    std::advance(end_m1, -1);
+    for(auto it = allFaces.begin(); next != end && it != end; ++it, ++next){
+        if(it->hash != next->hash) {
+            uniqueFaces.push_back(*it);
+            if(next == end_m1)
+                uniqueFaces.push_back(*next);
+        }
+        else{
+            //it and next connected
+            connectivity[it->elemID].insert(next->elemID);
+            connectivity[next->elemID].insert(it->elemID);
+            ++it;
+            ++next;
+        }
+    }
+
+    uniqueFaces.sort([](const fhData& left, const fhData& right){
+        if(left.elemID != right.elemID)
+            return left.elemID < right.elemID;
+        else return left.faceID < right.faceID;
+    });
+
+    borderFaces_.reserve(uniqueFaces.size());
+    for(auto itU = uniqueFaces.begin(); itU != uniqueFaces.end(); itU++){
+        sbfMeshBorderFace f;
+        f.elemID = itU->elemID;
+        f.faceID = itU->faceID;
+        borderFaces_.emplace_back(std::list<sbfMeshBorderFace>{f});
+    }
+
+    std::for_each(borderFaces_.begin(), borderFaces_.end(), [this](std::list<sbfMesh::sbfMeshBorderFace> &faces){
+        for(auto &f : faces){
+            if(this->elemPtr(f.elemID)->type() != ElementType::HEXAHEDRON_LINEAR)
+                report.error("This algorithm works only with hexa elements");
+            f.nodeIDs = this->elemPtr(f.elemID)->facesNodesIndexes()[f.faceID];
+            f.norms.reserve(f.nodeIDs.size());
+            f.norms.emplace_back(node(f.nodeIDs[0]).normal(node(f.nodeIDs[1]), node(f.nodeIDs.back())));
+            for(int ct = 1; ct < f.nodeIDs.size()-1; ++ct){
+                f.norms.emplace_back(node(f.nodeIDs[ct]).normal(node(f.nodeIDs[ct+1]), node(f.nodeIDs[ct-1])));
+            }
+            f.norms.emplace_back(node(f.nodeIDs.back()).normal(node(f.nodeIDs[0]), node(f.nodeIDs[f.nodeIDs.size()-2])));
+        }
+    });
+
+    //Cluster faces with continuous normal
+
+    std::list<std::pair<size_t, size_t>> toCollapse;
+    {
+        //FIXME seems to be very slow
+
+        auto checkFunc = [
+                &bundle = std::as_const(borderFaces_),
+                &connectivity/* = std::as_const(connectivity)*/,
+                this,normalAngleThreashold
+                ](size_t baseID, size_t compareID){
+            const auto &baseFaces = bundle[baseID];
+            const auto &compareFaces = bundle[compareID];
+            for(const auto &fb : baseFaces){
+                for(const auto &fc : compareFaces){
+                    if(connectivity[fb.elemID].count(fc.elemID) == 0)
+                        continue;
+                    //FIXME make better comparision
+                    //For now just one-by-one node checking
+                    //Should be edge comparision
+                    for(int ctB = 0; ctB < fb.nodeIDs.size(); ++ctB){
+                        for(int ctC = 0; ctC < fc.nodeIDs.size(); ++ctC) {
+                            if(fb.nodeIDs[ctB] == fc.nodeIDs[ctC]){
+                                auto angle = std::fabs(node(fb.nodeIDs[ctB]).angleVal(fb.norms[ctB], fc.norms[ctC]));
+                                if(angle <= normalAngleThreashold)
+                                    return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+
+        const int numBorders = borderFaces_.size();
+        const int perProcPortion = numBorders / sbfNumThreads;
+        std::list<std::future<std::list<std::pair<size_t, size_t>>>> futures;
+
+        auto proc = [checkFunc](size_t startID, size_t step, size_t stopID){
+            std::list<std::pair<size_t, size_t>> toCollapseProc;
+            for(auto ct = startID; ct < stopID-1; ct += step){
+                for(auto ctCheck = ct + 1; ctCheck < stopID; ++ctCheck)
+                    if(checkFunc(ct, ctCheck))
+                        toCollapseProc.push_back(std::make_pair(ct, ctCheck));
+            }
+            return toCollapseProc;
+        };
+
+        size_t seedID = 0;
+        size_t step = 1;
+//        if(perProcPortion > 0) {
+//            //Do async jobs
+//            step = sbfNumThreads;
+//            for(int ct = 0; ct < sbfNumThreads - 1; ++ct){
+//                futures.push_back(std::async(std::launch::async, proc, seedID, step, borderFaces_.size()));
+//                ++seedID;
+//            }
+//        }
+        toCollapse = proc(seedID, step, borderFaces_.size());
+        for(auto &f : futures){
+            auto partList = f.get();
+            toCollapse.splice(toCollapse.begin(), partList);
+        }
+
+        toCollapse.sort([=](const std::pair<size_t, size_t> &left, const std::pair<size_t, size_t> &right){
+            return left.second > right.second;
+        });
+        auto tc = toCollapse.begin();
+        std::set<size_t> collapseSet;
+        collapseSet.insert(tc->first);
+        collapseSet.insert(tc->second);
+        auto collapsing = [&](){
+            auto it = collapseSet.begin();
+            auto end = collapseSet.end();
+            --end;
+            //FIXME unnecessary copies here!!!
+            for(; it != end; ++it)
+                borderFaces_[*it].insert(borderFaces_[*it].end(), borderFaces_[*end].begin(), borderFaces_[*end].end());
+            borderFaces_.erase(borderFaces_.begin() + *end);
+            borderFaces_.shrink_to_fit();
+        };
+        for(; tc != toCollapse.end(); ++tc) {
+            if(tc->second != *collapseSet.crbegin()){
+                collapsing();
+                collapseSet.clear();
+            }
+            collapseSet.insert(tc->first);
+            collapseSet.insert(tc->second);
+        }
+        collapsing();
+    }
+    return borderFaces_;
+}
+
 void sbfMesh::addMesh(sbfMesh & mesh, bool passGroups, bool checkExisted, float tol)
 {
     //Add existed mesh content [and pass] groups to current mesh

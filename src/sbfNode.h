@@ -41,6 +41,10 @@ public:
     float distance(const sbfNode &node) const;
     //Returns the angle [-pi:pi] betwiin oa and ob as a vector. o is this
     sbfNode angle(const sbfNode &a, const sbfNode&b) const;
+    //Returns the angle value [-pi:pi] betwiin oa and ob as a vector. o is this
+    double angleVal(const sbfNode &a, const sbfNode&b) const;
+    //Return node at normal (with unit length) from o (this). Normal formed by oa and ob.
+    sbfNode normal(const sbfNode &a, const sbfNode&b) const;
     //Rotate node around vector with components to angle of vector length
     void rotate(CrdFloatType rotX, CrdFloatType rotY, CrdFloatType rotZ, CrdFloatType rotOriginX = 0.0, CrdFloatType rotOriginY = 0.0, CrdFloatType rotOriginZ = 0.0);
 
