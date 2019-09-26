@@ -12,6 +12,7 @@
 #include <atomic>
 #include <array>
 #include <set>
+#include <algorithm>
 
 void computeGraph(sbfMesh * mesh, int *** graph, bool makeReport);
 void computeGraphAlter(sbfMesh * mesh, int *** graph, bool makeReport);
@@ -378,7 +379,7 @@ int sbfMesh::writeMeshToFiles(const std::string &indName, const std::string &crd
 
 int sbfMesh::writeMeshToFilesWithPrefix(const std::string &prefix)
 {
-    return writeMeshToFiles(prefix + "ind.sba", prefix + "crd.sba", prefix + "mtr001.sba");
+    return writeMeshToFiles(prefix + "ind.sba", prefix + "crd.sba", prefix + sbf::makeNameWithStep("mtr", 1, 4) +".sba");
 }
 
 sbfNode & sbfMesh::node(const int seqNumber)
@@ -858,6 +859,8 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
 
     //Find all external faces;
 
+    report.createNewProgress("Find all external faces");
+
     std::vector<std::set<size_t>> connectivity;
 
     struct fhData{
@@ -865,7 +868,7 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
         size_t hash;
     };
     std::list<fhData> allFaces;
-    auto getPartialList = [this](int elemStartID, size_t length){
+    auto getPartialList = [this, &r = report](int elemStartID, size_t length){
         std::list<fhData> partList;
         for(int ctElem = elemStartID; ctElem < elemStartID + length; ++ctElem) {
             const auto hs = elemPtr(ctElem)->facesHashes();
@@ -876,12 +879,15 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
                 d.hash = hs[ctFace];
                 partList.push_back(d);
             }
+            if(elemStartID == 0 && (ctElem - elemStartID) % (length/100 + 1) == 0){
+                r.updateProgress(elemStartID, elemStartID + length, ctElem);
+            }
         }
         return partList;
     };
 
     const int numAllElems = numElements();
-    const int perProcPortion = 0;//numAllElems / sbfNumThreads;
+    const int perProcPortion = numAllElems / sbfNumThreads;
     int remainingStart = 0;
     std::list<std::future<std::list<fhData>>> futures;
     if(perProcPortion > 0) {
@@ -898,13 +904,15 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
     }
     allFaces.sort([](const fhData& left, const fhData& right){return left.hash < right.hash;});
 
+    report.finalizeProgress();
+
     connectivity.resize(numAllElems);
 
     std::list<fhData> uniqueFaces;
     auto next = allFaces.begin();
     std::advance(next, 1);
     auto end = allFaces.end();
-    auto end_m1 = allFaces.end();
+    auto end_m1 = end;
     std::advance(end_m1, -1);
     for(auto it = allFaces.begin(); next != end && it != end; ++it, ++next){
         if(it->hash != next->hash) {
@@ -953,7 +961,8 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
 
     std::list<std::pair<size_t, size_t>> toCollapse;
     {
-        //FIXME seems to be very slow
+
+        report.createNewProgress("Clustering faces");
 
         auto checkFunc = [
                 &bundle = std::as_const(borderFaces_),
@@ -983,30 +992,32 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
             return false;
         };
 
-        const int numBorders = borderFaces_.size();
-        const int perProcPortion = numBorders / sbfNumThreads;
         std::list<std::future<std::list<std::pair<size_t, size_t>>>> futures;
 
-        auto proc = [checkFunc](size_t startID, size_t step, size_t stopID){
+        auto proc = [checkFunc, &r = report](size_t startID, size_t step, size_t stopID){
             std::list<std::pair<size_t, size_t>> toCollapseProc;
             for(auto ct = startID; ct < stopID-1; ct += step){
                 for(auto ctCheck = ct + 1; ctCheck < stopID; ++ctCheck)
                     if(checkFunc(ct, ctCheck))
                         toCollapseProc.push_back(std::make_pair(ct, ctCheck));
+                if(startID == 0 && (ct - startID) % ((stopID - startID) / 100 + 1) == 0)
+                    r.updateProgress(startID, stopID, ct);
             }
             return toCollapseProc;
         };
 
+        const int numBorders = borderFaces_.size();
+        const int perProcPortion = numBorders / sbfNumThreads;
         size_t seedID = 0;
         size_t step = 1;
-//        if(perProcPortion > 0) {
-//            //Do async jobs
-//            step = sbfNumThreads;
-//            for(int ct = 0; ct < sbfNumThreads - 1; ++ct){
-//                futures.push_back(std::async(std::launch::async, proc, seedID, step, borderFaces_.size()));
-//                ++seedID;
-//            }
-//        }
+        if(perProcPortion > 0) {
+            //Do async jobs
+            step = sbfNumThreads;
+            for(int ct = 0; ct < sbfNumThreads - 1; ++ct){
+                futures.push_back(std::async(std::launch::async, proc, seedID, step, borderFaces_.size()));
+                ++seedID;
+            }
+        }
         toCollapse = proc(seedID, step, borderFaces_.size());
         for(auto &f : futures){
             auto partList = f.get();
@@ -1016,6 +1027,9 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
         toCollapse.sort([=](const std::pair<size_t, size_t> &left, const std::pair<size_t, size_t> &right){
             return left.second > right.second;
         });
+
+        report.finalizeProgress();
+
         auto tc = toCollapse.begin();
         std::set<size_t> collapseSet;
         collapseSet.insert(tc->first);
@@ -1024,11 +1038,9 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
             auto it = collapseSet.begin();
             auto end = collapseSet.end();
             --end;
-            //FIXME unnecessary copies here!!!
             for(; it != end; ++it)
-                borderFaces_[*it].insert(borderFaces_[*it].end(), borderFaces_[*end].begin(), borderFaces_[*end].end());
+                borderFaces_[*it].splice(borderFaces_[*it].end(), borderFaces_[*end]);
             borderFaces_.erase(borderFaces_.begin() + *end);
-            borderFaces_.shrink_to_fit();
         };
         for(; tc != toCollapse.end(); ++tc) {
             if(tc->second != *collapseSet.crbegin()){
@@ -1039,6 +1051,7 @@ std::vector<std::list<sbfMesh::sbfMeshBorderFace> > sbfMesh::computeBorderFaces(
             collapseSet.insert(tc->second);
         }
         collapsing();
+        borderFaces_.shrink_to_fit();
     }
     return borderFaces_;
 }
@@ -1094,6 +1107,11 @@ void sbfMesh::setMtr(int mtr)
 void sbfMesh::increaseMtr(int shift)
 {
     applyToAllElements([=](sbfElement&elem){elem.setMtr(elem.mtr()+shift);});
+}
+
+void sbfMesh::replaceMtr(int oldID, int newID)
+{
+    applyToAllElements([=](sbfElement&elem){if(elem.mtr() == oldID) {elem.setMtr(newID);}});
 }
 
 //Geometry modifications

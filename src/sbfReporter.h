@@ -31,7 +31,8 @@ private:
     bool isOnProgress_;
     bool flagTrackExeTime_;
     sbfTimer<> timer_;
-    double lastProgressDuration_;
+    float minUpdateInterwalS_;
+    float lastFlushSpanS_;
     bool flagExclusiveOut_;
     CritSecType * lockOut_;
     std::list<std::string> errors_;
@@ -40,7 +41,7 @@ public:
     void setAllowOtput(bool allowOtput);
     int progressBarWidth() const;
     void setProgressBarWidth(int progressBarWidth);
-    //TODO meke nested progresses
+    //TODO make nested progresses
     void createNewProgress(std::string title, int percantage = 0);
 private:
     std::string progressLine(int progress, const std::string &msg = std::string());
@@ -82,7 +83,7 @@ public:
     void setPlaceDelimeterAtOutput(bool placeDelimeterAtOutput);
     char delemeter() const;
     void setDelemeter(char delemeter);
-    double lastProgressDuration() const { return lastProgressDuration_; }
+//    double lastProgressDuration() const { return lastProgressDuration_; }
     void setMirrorOutput(const std::string &fileName);
     void unsetMirrorOutput();
 };

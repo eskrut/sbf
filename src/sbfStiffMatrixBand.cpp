@@ -382,6 +382,7 @@ sbfStiffMatrix *sbfStiffMatrixBand<dim>::createChol ( bool makeReport )
                                                                         MatrixType::DOWN_TREANGLE_MATRIX |
                                                                         MatrixType::CHOL_FACTOR );
 
+    static_assert (sbfNumThreads == 1, "Seems to be fatal error, should be fixed");
     const int usingNumThreads = sbfNumThreads * 1;
     if ( makeReport )
         report.createNewProgress ( "Computing chol factor in parallel " + std::to_string ( usingNumThreads ) );

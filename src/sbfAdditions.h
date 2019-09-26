@@ -107,6 +107,8 @@ std::string makeFilledSuffix(int id) {
 
 std::string makeFilledSuffix(int id, int width, char f = '0');
 
+std::string makeNameWithStep(const std::string &base, std::size_t id, std::size_t width = 4, char f = '0');
+
 inline void hash_combine(std::size_t& seed) { std::ignore = seed; }
 
 template <typename T, typename... Rest>

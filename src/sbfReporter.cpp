@@ -19,6 +19,7 @@ sbfReporter::sbfReporter(std::streambuf *out, std::streambuf *err) :
     flagAllowOtput_(true),
     isOnProgress_(false),
     flagTrackExeTime_(true),
+    minUpdateInterwalS_(0.1),
     flagExclusiveOut_(false),
     lockOut_(new CritSecType)
 {
@@ -96,6 +97,7 @@ void sbfReporter::createNewProgress(std::string title, int percantage)
     progressBarTitle_ = std::move(title);
     if ( flagTrackExeTime_ )
         timer_.start();
+    lastFlushSpanS_ = - minUpdateInterwalS_;
     *out_ << std::endl << progressBarTitle_ << std::endl;
     *out_ << progressLine(percantage);
     out_->flush();
@@ -123,8 +125,11 @@ std::string sbfReporter::progressLine(int progress, const std::string &msg)
 void sbfReporter::updateProgress(int percantage, const std::string &msg)
 {
     if ( isOnProgress_ ) {
-        *out_ << "\r" << progressLine(percantage, msg);
-        out_->flush();
+        if(flagTrackExeTime_ && (timer_.getSeconds() - lastFlushSpanS_) >= minUpdateInterwalS_){
+            lastFlushSpanS_ = timer_.getSeconds();
+            *out_ << "\r" << progressLine(percantage, msg);
+            out_->flush();
+        }
     }
 }
 
@@ -148,8 +153,7 @@ void sbfReporter::finalizeProgress(const std::string &msg)
         *out_ << progressBarTitle_ << " DONE";
         if ( flagTrackExeTime_ ) {
             timer_.stop();
-            lastProgressDuration_ = timer_.getCount<std::chrono::seconds>();
-            *out_ << " in " << timer_.getCount<std::chrono::seconds>() << " seconds";
+            *out_ << " in " << timer_.getSeconds() << " seconds";
         }
         if(msg.size())
             *out_ << " " << msg;

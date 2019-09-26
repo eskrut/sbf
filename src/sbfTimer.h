@@ -18,6 +18,7 @@ public:
     void stop();
     template <class target_duration = std::chrono::seconds>
     int getCount();
+    float getSeconds();
     std::string timeSpanStr();
 };
 
@@ -39,6 +40,17 @@ void sbfTimer<clock_type, duration_type>::stop()
 {
     stop_ = clock_type::now();
     isRunning_ = false;
+}
+
+template<class clock_type, class duration_type>
+float sbfTimer<clock_type, duration_type>::getSeconds()
+{
+    std::chrono::duration<float> span;
+    if ( isRunning_ )
+        span = std::chrono::duration_cast<std::chrono::milliseconds>(clock_type::now() - start_);
+    else
+        span = std::chrono::duration_cast<std::chrono::milliseconds>(stop_ - start_);
+    return span.count() / 1000.0f;
 }
 
 template <class clock_type, class duration_type>

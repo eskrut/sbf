@@ -1,5 +1,5 @@
 project(sbf)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
 set(SBF_MAJOR_VERSION 0)
 set(SBF_MINOR_VERSION 3)
@@ -44,6 +44,7 @@ source_group("Header Files" FILES ${headers})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Threads REQUIRED)
 
 if(UNIX)
     set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic ${CMAKE_CXX_FLAGS}")
@@ -53,6 +54,9 @@ endif()
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
 
 add_library(${PROJECT_NAME} SHARED ${sources} ${headers} config.h.in)
+
+target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+#target_link_libraries(${PROJECT_NAME} Threads::Threads)
 
 #set_target_properties(sbf PROPERTIES PUBLIC_HEADER "src/sbf.h;${CMAKE_CURRENT_BINARY_DIR}/config.h")
 set_target_properties(sbf PROPERTIES PUBLIC_HEADER "${headers};${CMAKE_CURRENT_BINARY_DIR}/config.h")

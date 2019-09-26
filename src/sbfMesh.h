@@ -135,6 +135,8 @@ public:
     void setMtr(int mtr);
     //! Increase material number for all elements
     void increaseMtr(int shift);
+    //Replace mtr id
+    void replaceMtr(int oldID, int newID);
     //Reserve memory
     void reserveNodesNumber(const int newNodesNumber);
     void reserveElementsNumber(const int newElementNumber);

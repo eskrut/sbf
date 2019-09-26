@@ -16,10 +16,10 @@ BOOST_AUTO_TEST_CASE ( simple_loads )
     float zSide = 0.002;
     auto mesh = std::unique_ptr<sbfMesh>(
                 sbfMeshBuilder::makeBlock(xSide, ySide, zSide,
-                                          100, 5, 5,
+                                          100, 100, 100,
                                           ElementType::HEXAHEDRON_LINEAR)
                 );
-    auto borders = mesh->computeBorderFaces(0.1);
+    auto borders = mesh->computeBorderFaces(0.1f);
     BOOST_REQUIRE(borders.size() == 6);
 
 }
