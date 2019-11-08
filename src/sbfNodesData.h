@@ -55,9 +55,9 @@ public:
     const sbfMesh *mesh() const {return mesh_;}
     template <class StorageType = DefaultStorageDataType> int writeToFile(const char *name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
     template <class StorageType = DefaultStorageDataType> int readFromFile(const char * name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
-    template <class StorageType = DefaultStorageDataType> int writeToFile();//Short forms
-    template <class StorageType = DefaultStorageDataType> int readFromFile();
-    template <class StorageType = DefaultStorageDataType, int numInOneFile> int writeToFileSplited();
+    template <class StorageType = DefaultStorageDataType> int writeToFile(const std::string &prefix = std::string());//Short forms
+    template <class StorageType = DefaultStorageDataType> int readFromFile(const std::string &prefix = std::string());
+    template <class StorageType = DefaultStorageDataType, int numInOneFile> int writeToFileSplited(const std::string &prefix = std::string());
     bool exist();//Check if file with current step exists
     static bool exist(const char *name, int step, const char * extension = ".sba", int numDigits = 4, const char *catalog = nullptr);
     int numExistedSteps();
@@ -257,25 +257,25 @@ int NodesData<ArrayType, numComp>::readFromFile(const char * name, int step, con
 }
 template < class ArrayType, int numComp>
 template <class StorageType>
-int NodesData<ArrayType, numComp>::writeToFile()
+int NodesData<ArrayType, numComp>::writeToFile(const std::string &prefix)
 {
-    return writeToFile<StorageType>(name_.c_str(), stepToProceed_, extension_.c_str(), numDigits_);
+    return writeToFile<StorageType>((prefix + name_).c_str(), stepToProceed_, extension_.c_str(), numDigits_);
 }
 template < class ArrayType, int numComp>
 template <class StorageType>
-int NodesData<ArrayType, numComp>::readFromFile()
+int NodesData<ArrayType, numComp>::readFromFile(const std::string &prefix)
 {
-    return readFromFile<StorageType>(name_.c_str(), stepToProceed_, extension_.c_str(), numDigits_);
+    return readFromFile<StorageType>((prefix + name_).c_str(), stepToProceed_, extension_.c_str(), numDigits_);
 }
 template < class ArrayType, int numComp>
 template <class StorageType, int numInOneFile>
-int NodesData<ArrayType, numComp>::writeToFileSplited()
+int NodesData<ArrayType, numComp>::writeToFileSplited(const std::string &prefix)
 {
     NodesData<ArrayType, numInOneFile> tmp(name_+std::to_string(1), mesh_);
     tmp.setStep(step());
     for(int ct = 0;ct < numInOneFile; ct++)
         for(int ct1 = 0; ct1 < numNodes_; ct1++) tmp.data(ct1, ct) = data(ct1, ct);
-    tmp.writeToFile();
+    tmp.writeToFile(prefix);
     return 0;
 }
 template < class ArrayType, int numComp>

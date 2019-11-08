@@ -98,9 +98,11 @@ void sbfReporter::createNewProgress(std::string title, int percantage)
     if ( flagTrackExeTime_ )
         timer_.start();
     lastFlushSpanS_ = - minUpdateInterwalS_;
-    *out_ << std::endl << progressBarTitle_ << std::endl;
-    *out_ << progressLine(percantage);
-    out_->flush();
+    if(flagAllowOtput_){
+        *out_ << std::endl << progressBarTitle_ << std::endl;
+        *out_ << progressLine(percantage);
+        out_->flush();
+    }
 }
 
 std::string sbfReporter::progressLine(int progress, const std::string &msg)
@@ -127,8 +129,10 @@ void sbfReporter::updateProgress(int percantage, const std::string &msg)
     if ( isOnProgress_ ) {
         if(flagTrackExeTime_ && (timer_.getSeconds() - lastFlushSpanS_) >= minUpdateInterwalS_){
             lastFlushSpanS_ = timer_.getSeconds();
-            *out_ << "\r" << progressLine(percantage, msg);
-            out_->flush();
+            if(flagAllowOtput_){
+                *out_ << "\r" << progressLine(percantage, msg);
+                out_->flush();
+            }
         }
     }
 }
@@ -147,18 +151,23 @@ void sbfReporter::updateProgress(double fractionOfOne, const std::string &msg)
 void sbfReporter::finalizeProgress(const std::string &msg)
 {
     if ( isOnProgress_ ) {
-//        if ( flagTrackExeTime_ )
-//            timer_.getCount();
-        *out_ << "\r" << progressLine(100) << std::endl;
-        *out_ << progressBarTitle_ << " DONE";
+        //        if ( flagTrackExeTime_ )
+        //            timer_.getCount();
+        if(flagAllowOtput_){
+            *out_ << "\r" << progressLine(100) << std::endl;
+            *out_ << progressBarTitle_ << " DONE";
+        }
         if ( flagTrackExeTime_ ) {
             timer_.stop();
-            *out_ << " in " << timer_.getSeconds() << " seconds";
+            if(flagAllowOtput_)
+                *out_ << " in " << timer_.getSeconds() << " seconds";
         }
-        if(msg.size())
-            *out_ << " " << msg;
-        *out_ << std::endl;
-        out_->flush();
+        if(flagAllowOtput_){
+            if(msg.size())
+                *out_ << " " << msg;
+            *out_ << std::endl;
+            out_->flush();
+        }
         isOnProgress_ = false;
     }
 }
