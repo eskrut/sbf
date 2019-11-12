@@ -39,6 +39,8 @@ public:
     bool isSameZ(const sbfNode &node, const CrdFloatType tolerance = 0.001) const;
     //Returns the distance between nodes
     float distance(const sbfNode &node) const;
+    //Returns the distance between node and crds
+    float distance(CrdFloatType x, CrdFloatType y, CrdFloatType z) const;
     //Returns the angle [-pi:pi] betwiin oa and ob as a vector. o is this
     sbfNode angle(const sbfNode &a, const sbfNode&b) const;
     //Returns the angle value [-pi:pi] betwiin oa and ob as a vector. o is this

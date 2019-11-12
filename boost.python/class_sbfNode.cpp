@@ -22,7 +22,8 @@ void class_sbfNode_object()
             .def("isSameX", &sbfNode::isSameX)
             .def("isSameY", &sbfNode::isSameY)
             .def("isSameZ", &sbfNode::isSameZ)
-            .def("distance", &sbfNode::distance)
+            .def("distance", static_cast<CrdFloatType (sbfNode::*)(const sbfNode &)const>(&sbfNode::distance))
+            .def("distance", static_cast<CrdFloatType (sbfNode::*)(CrdFloatType, CrdFloatType, CrdFloatType)const>(&sbfNode::distance))
             .def("rotate", &sbfNode::rotate)
             ;
 }

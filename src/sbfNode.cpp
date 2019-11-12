@@ -80,6 +80,13 @@ float sbfNode::distance(const sbfNode &node) const
     return std::sqrt(std::pow(x()-node.x(), static_cast<CrdFloatType>(2)) +std:: pow(y()-node.y(), static_cast<CrdFloatType>(2)) + std::pow(z()-node.z(), static_cast<CrdFloatType>(2)));
 }
 
+float sbfNode::distance(CrdFloatType x, CrdFloatType y, CrdFloatType z) const
+{
+    return std::sqrt(std::pow(this->x()-x, static_cast<CrdFloatType>(2)) +
+                     std::pow(this->y()-y, static_cast<CrdFloatType>(2)) +
+                     std::pow(this->z()-z, static_cast<CrdFloatType>(2)));
+}
+
 sbfNode sbfNode::angle(const sbfNode &a, const sbfNode &b) const
 {
     auto oa = a - *this;

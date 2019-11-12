@@ -19,7 +19,7 @@ sbfReporter::sbfReporter(std::streambuf *out, std::streambuf *err) :
     flagAllowOtput_(true),
     isOnProgress_(false),
     flagTrackExeTime_(true),
-    minUpdateInterwalS_(0.1),
+    minUpdateInterwalS_(0.001),
     flagExclusiveOut_(false),
     lockOut_(new CritSecType)
 {
